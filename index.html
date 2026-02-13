@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>WebAR Experience</title>
+    <script src="https://cdn.jsdelivr.net/gh/aframevr/aframe@v1.3.0/dist/aframe-master.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    
+    <style>
+      :root {
+        --primary-color: #ff4757;
+        --secondary-color: #2f3542;
+        --accent-color: #ffffff;
+      }
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        user-select: none;
+      }
+      .arjs-loader {
+        height: 100%;
+        width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        background: radial-gradient(circle, #2f3542 0%, #000000 100%);
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        color: white;
+      }
+      .loader-spinner {
+        width: 50px;
+        height: 50px;
+        border: 5px solid rgba(255, 255, 255, 0.1);
+        border-top: 5px solid var(--primary-color);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 20px;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      .ui-container {
+        position: absolute;
+        bottom: 40px;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        pointer-events: none;
+      }
+      .hint-text {
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        margin-bottom: 20px;
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        animation: fadeInOut 3s infinite;
+      }
+      @keyframes fadeInOut {
+        0%, 100% { opacity: 0.7; }
+        50% { opacity: 1; }
+      }
+      .controls {
+        display: flex;
+        align-items: center;
+        gap: 30px;
+        pointer-events: auto;
+      }
+      .screenshot-btn {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        border: 5px solid white;
+        background: rgba(255, 255, 255, 0.2);
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 0 20px rgba(0,0,0,0.4);
+        position: relative;
+      }
+      .screenshot-btn::after {
+        content: '';
+        width: 60px;
+        height: 60px;
+        background: white;
+        border-radius: 50%;
+        transition: all 0.2s;
+      }
+      .screenshot-btn:active {
+        transform: scale(0.9);
+      }
+      .screenshot-btn:active::after {
+        transform: scale(0.8);
+        background: var(--primary-color);
+      }
+      .header-ui {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        z-index: 1000;
+        color: white;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      }
+      .header-ui h1 {
+        margin: 0;
+        font-size: 20px;
+        letter-spacing: 2px;
+        font-weight: 300;
+        text-transform: uppercase;
+      }
+      .flash {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: white;
+        z-index: 2000;
+        opacity: 0;
+        pointer-events: none;
+      }
+      .flash.active {
+        animation: flashAnim 0.5s;
+      }
+      @keyframes flashAnim {
+        0% { opacity: 1; }
+        100% { opacity: 0; }
+      }
+    </style>
+  </head>
+  <body style="margin: 0px; overflow: hidden;">
+    <div class="flash" id="flash-effect"></div>
+    <div class="header-ui">
+      <h1>Menú AR Experience</h1>
+    </div>
+
+    <div class="arjs-loader">
+      <div class="loader-spinner"></div>
+      <div>Iniciando Experiencia AR...</div>
+    </div>
+
+    <div class="ui-container">
+      <div class="hint-text">Enfoca un marcador para ver la comida</div>
+      <div class="controls">
+        <div class="screenshot-btn" id="screenshot"></div>
+      </div>
+    </div>
+
+    <a-scene
+      embedded
+      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+      renderer="antialias: true; logarithmicDepthBuffer: true; colorManagement: true; preserveDrawingBuffer: true;"
+      vr-mode-ui="enabled: false"
+      screenshot>
+      
+      <a-assets>
+        <a-asset-item id="coffe2-model" src="./coffe2.glb"></a-asset-item>
+        <a-asset-item id="sushi" src="./sushi.glb"></a-asset-item>
+        <a-asset-item id="pizza" src="./pizza.glb"></a-asset-item>
+        <a-asset-item id="hamburger" src="./hamburger.glb"></a-asset-item>
+      </a-assets>
+
+      <!-- Marcador de Café 2 (Carta Yu-Gi-Oh) -->
+      <a-marker 
+        type="pattern" 
+        url="./coffe2.patt">
+        <a-entity
+          gltf-model="#coffe2-model"
+          scale="10 10 10"
+          position="0 0 0"
+          rotation="0 0 0">
+        </a-entity>
+      </a-marker>
+
+      <!-- Marcador de Sushi -->
+      <a-marker type="pattern" url="./sushi.patt">
+        <a-entity
+          gltf-model="#sushi"
+          scale="10 10 10"
+          position="0 0 0"
+          rotation="0 0 0">
+        </a-entity>
+      </a-marker>
+
+      <!-- Marcador de Pizza -->
+      <a-marker type="pattern" url="./pizza.patt">
+        <a-entity
+          gltf-model="#pizza"
+          scale="8 8 8"
+          position="0 0 0"
+          rotation="0 0 0">
+        </a-entity>
+      </a-marker>
+
+      <!-- Marcador de Hamburguesa -->
+      <a-marker type="pattern" url="./hamburger.patt">
+        <a-entity
+          gltf-model="#hamburger"
+          scale="0.001 0.001 0.001"
+          position="0 0 0"
+          rotation="0 0 0">
+        </a-entity>
+      </a-marker>
+      
+      <a-entity light="type: ambient; color: #FFF; intensity: 1.2"></a-entity>
+      <a-entity light="type: directional; color: #FFF; intensity: 0.6" position="-1 1 1"></a-entity>
+      <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+      window.addEventListener('camera-init', function () {
+        document.querySelector('.arjs-loader').style.display = 'none';
+      });
+      
+      setTimeout(() => {
+        document.querySelector('.arjs-loader').style.display = 'none';
+      }, 5000);
+
+      // Funcionalidad para tomar captura (Foto)
+      document.getElementById('screenshot').addEventListener('click', function() {
+        // Efecto de flash
+        const flash = document.getElementById('flash-effect');
+        flash.classList.add('active');
+        setTimeout(() => flash.classList.remove('active'), 500);
+
+        const scene = document.querySelector('a-scene');
+        const video = document.querySelector('video');
+        
+        // Crear canvas final con el tamaño real del video
+        const finalCanvas = document.createElement('canvas');
+        finalCanvas.width = video.videoWidth;
+        finalCanvas.height = video.videoHeight;
+        const ctx = finalCanvas.getContext('2d');
+
+        // 1. Dibujar el video de fondo
+        ctx.drawImage(video, 0, 0, finalCanvas.width, finalCanvas.height);
+        
+        // 2. Dibujar la capa de AR (A-Frame)
+        scene.renderer.render(scene.object3D, scene.camera);
+        ctx.drawImage(scene.canvas, 0, 0, finalCanvas.width, finalCanvas.height);
+
+        // 3. Descargar la captura
+        try {
+          const dataURL = finalCanvas.toDataURL('image/png');
+          const link = document.createElement('a');
+          const date = new Date().getTime();
+          link.download = `Captura-MenuAR-${date}.png`;
+          link.href = dataURL;
+          link.click();
+        } catch (err) {
+          console.error("Error al tomar la captura:", err);
+        }
+      });
+    </script>
+  </body>
+</html>

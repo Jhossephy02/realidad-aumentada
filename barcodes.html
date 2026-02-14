@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Barcodes AR.js 3x3 (Imprimir)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: Segoe UI, Tahoma, sans-serif; margin: 20px; color: #222; }
+    h1 { font-size: 20px; margin: 0 0 12px; }
+    p { margin: 6px 0 16px; font-size: 14px; }
+    .actions { margin: 12px 0 18px; }
+    .btn { display: inline-block; padding: 10px 16px; background: #111; color: #fff; border-radius: 6px; text-decoration: none; }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+    .item { border: 1px dashed #bbb; padding: 12px; }
+    .label { font-size: 13px; margin-bottom: 8px; }
+    .marker { width: 100%; max-width: 380px; aspect-ratio: 1 / 1; object-fit: contain; background: #fff; }
+    @media print {
+      @page { size: A4; margin: 1cm; }
+      body { margin: 0; }
+      .item { border: none; padding: 0; }
+      .label { display: none; }
+      .grid { gap: 1cm; }
+      .marker { max-width: none; width: 9cm; height: 9cm; }
+      .actions { display: none; }
+    }
+  </style>
+  </head>
+<body>
+  <h1>Barcodes AR.js 3x3</h1>
+  <p>Imprime estos marcadores en tamaño real. En tu escena usa matrixCodeType: 3x3 y type="barcode" con el valor indicado.</p>
+  <div class="actions">
+    <a class="btn" href="#" onclick="window.print(); return false;">Imprimir A4 (4 marcadores 9×9 cm)</a>
+  </div>
+  <div class="grid">
+    <div class="item">
+      <div class="label">Valor: 5 (barcode)</div>
+      <img class="marker" src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/5.png" alt="barcode 5">
+    </div>
+    <div class="item">
+      <div class="label">Valor: 6 (barcode)</div>
+      <img class="marker" src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/6.png" alt="barcode 6">
+    </div>
+    <div class="item">
+      <div class="label">Valor: 7 (barcode)</div>
+      <img class="marker" src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/7.png" alt="barcode 7">
+    </div>
+    <div class="item">
+      <div class="label">Valor: 8 (barcode)</div>
+      <img class="marker" src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/8.png" alt="barcode 8">
+    </div>
+  </div>
+  <p>Consejos: imprime en papel blanco, sin brillo; evita usar la pantalla del teléfono para mostrar el marcador.</p>
+</body>
+</html>

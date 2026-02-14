@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>WebAR Experience</title>
     <script src="https://cdn.jsdelivr.net/gh/aframevr/aframe@v1.3.0/dist/aframe-master.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     
     <style>
       :root {
@@ -16,6 +16,14 @@
       body {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         user-select: none;
+        touch-action: none;
+      }
+      a-scene {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
       }
       .arjs-loader {
         height: 100%;
@@ -160,7 +168,7 @@
 
     <a-scene
       embedded
-      arjs="sourceType: webcam; debugUIEnabled: false; trackingMethod: best;"
+      arjs="sourceType: webcam; videoTexture: true; debugUIEnabled: false; trackingMethod: best; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
       renderer="antialias: true; logarithmicDepthBuffer: true; colorManagement: true; preserveDrawingBuffer: true;"
       vr-mode-ui="enabled: false"
       screenshot>
@@ -176,12 +184,14 @@
       <a-nft 
         type="nft" 
         url="./markers/cafe"
+        emitevents="true"
         smooth="true" 
         smoothCount="10" 
         smoothTolerance="0.01" 
         smoothThreshold="5">
         <a-entity
           gltf-model="#coffe-model"
+          touch-gestures
           scale="20 20 20"
           position="0 0 0"
           rotation="-90 0 0">
@@ -189,9 +199,10 @@
       </a-nft>
 
       <!-- Marcador de Sushi -->
-      <a-nft type="nft" url="./markers/sushi" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+      <a-nft type="nft" url="./markers/sushi" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
         <a-entity
           gltf-model="#sushi-model"
+          touch-gestures
           scale="15 15 15"
           position="0 0 0"
           rotation="-90 0 0">
@@ -199,9 +210,10 @@
       </a-nft>
 
       <!-- Marcador de Pizza -->
-      <a-nft type="nft" url="./markers/pizza" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+      <a-nft type="nft" url="./markers/pizza" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
         <a-entity
           gltf-model="#pizza-model"
+          touch-gestures
           scale="12 12 12"
           position="0 0 0"
           rotation="-90 0 0">
@@ -209,14 +221,98 @@
       </a-nft>
 
       <!-- Marcador de Hamburguesa -->
-      <a-nft type="nft" url="./markers/burger" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+      <a-nft type="nft" url="./markers/burger" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
         <a-entity
           gltf-model="#burger-model"
-          scale="0.002 0.002 0.002"
+           touch-gestures
+          scale="0.02 0.02 0.02"
           position="0 0 0"
           rotation="-90 0 0">
         </a-entity>
       </a-nft>
+      
+      <a-marker type="pattern" url="./pattern-caffe.patt" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+        <a-entity
+          gltf-model="#coffe-model"
+          touch-gestures
+          scale="10 10 10"
+          position="0 0 0"
+          rotation="0 0 0">
+        </a-entity>
+      </a-marker>
+      <a-marker type="pattern" url="./pattern-sushi.patt" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+        <a-entity
+          gltf-model="#sushi-model"
+          touch-gestures
+          scale="10 10 10"
+          position="0 0 0"
+          rotation="0 0 0">
+        </a-entity>
+      </a-marker>
+      <a-marker type="pattern" url="./pattern-pizza.patt" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+        <a-entity
+          gltf-model="#pizza-model"
+          touch-gestures
+          scale="8 8 8"
+          position="0 0 0"
+          rotation="0 0 0">
+        </a-entity>
+      </a-marker>
+      <a-marker type="pattern" url="./pattern-hamburguesa.patt" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+        <a-entity
+          gltf-model="#burger-model"
+          touch-gestures
+          scale="0.001 0.001 0.001"
+          position="0 0 0"
+          rotation="0 0 0">
+        </a-entity>
+      </a-marker>
+      <a-marker preset="hiro" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+        <a-entity
+          gltf-model="#coffe-model"
+          touch-gestures
+          scale="10 10 10"
+          position="0 0 0"
+          rotation="0 0 0">
+        </a-entity>
+      </a-marker>
+      
+      <a-marker type="barcode" value="5" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+        <a-entity
+          gltf-model="#coffe-model"
+          touch-gestures
+          scale="20 20 20"
+          position="0 0 0"
+          rotation="0 0 0">
+        </a-entity>
+      </a-marker>
+      <a-marker type="barcode" value="6" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+        <a-entity
+          gltf-model="#sushi-model"
+          touch-gestures
+          scale="15 15 15"
+          position="0 0 0"
+          rotation="0 0 0">
+        </a-entity>
+      </a-marker>
+      <a-marker type="barcode" value="7" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+        <a-entity
+          gltf-model="#pizza-model"
+          touch-gestures
+          scale="12 12 12"
+          position="0 0 0"
+          rotation="0 0 0">
+        </a-entity>
+      </a-marker>
+      <a-marker type="barcode" value="8" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+        <a-entity
+          gltf-model="#burger-model"
+          touch-gestures
+          scale="0.02 0.02 0.02"
+          position="0 0 0"
+          rotation="0 0 0">
+        </a-entity>
+      </a-marker>
       
       <a-entity light="type: ambient; color: #FFF; intensity: 1.2"></a-entity>
       <a-entity light="type: directional; color: #FFF; intensity: 0.6" position="-1 1 1"></a-entity>
@@ -226,6 +322,25 @@
     <script>
       window.addEventListener('camera-init', function () {
         document.querySelector('.arjs-loader').style.display = 'none';
+      });
+      window.addEventListener('arjs-video-loaded', function () {
+        const v = document.querySelector('video');
+        try {
+          const stream = v && v.srcObject;
+          if (stream) {
+            const track = stream.getVideoTracks()[0];
+            const caps = track.getCapabilities ? track.getCapabilities() : {};
+            const maxW = caps.width && caps.width.max ? caps.width.max : 1280;
+            const maxH = caps.height && caps.height.max ? caps.height.max : 720;
+            const idealW = Math.min(1920, maxW);
+            const idealH = Math.min(1080, maxH);
+            track.applyConstraints({
+              width: { ideal: idealW },
+              height: { ideal: idealH },
+              advanced: [{ width: idealW, height: idealH }]
+            }).catch(function(){});
+          }
+        } catch(e){}
       });
       
       setTimeout(() => {
@@ -265,6 +380,76 @@
           link.click();
         } catch (err) {
           console.error("Error al tomar la captura:", err);
+        }
+      });
+      
+      ;(() => {
+        const markers = Array.from(document.querySelectorAll('a-marker, a-nft'));
+        markers.forEach(m => {
+          m.addEventListener('markerFound', () => {
+            console.log('markerFound', m.getAttribute('url') || m.getAttribute('value') || m.getAttribute('type'));
+          });
+          m.addEventListener('markerLost', () => {
+            console.log('markerLost', m.getAttribute('url') || m.getAttribute('value') || m.getAttribute('type'));
+          });
+        });
+      })();
+      
+      // Gestos móviles: pinchar para hacer zoom y arrastrar para rotar
+      AFRAME.registerComponent('touch-gestures', {
+        init: function () {
+          const el = this.el;
+          const scene = el.sceneEl;
+          const target = scene && scene.canvas ? scene.canvas : document.body;
+          let startDist = null;
+          let startScale = null;
+          let lastX = null;
+          
+          function dist(t1, t2) {
+            const dx = t1.clientX - t2.clientX;
+            const dy = t1.clientY - t2.clientY;
+            return Math.hypot(dx, dy);
+          }
+          
+          const onStart = (e) => {
+            if (e.touches.length === 2) {
+              startDist = dist(e.touches[0], e.touches[1]);
+              startScale = el.object3D.scale.clone();
+            } else if (e.touches.length === 1) {
+              lastX = e.touches[0].clientX;
+            }
+          };
+          
+          const onMove = (e) => {
+            if (e.touches.length === 2 && startDist) {
+              const d = dist(e.touches[0], e.touches[1]);
+              const factor = d / startDist;
+              const clamp = (v) => Math.min(5, Math.max(0.2, v));
+              el.object3D.scale.set(
+                clamp(startScale.x * factor),
+                clamp(startScale.y * factor),
+                clamp(startScale.z * factor)
+              );
+              e.preventDefault();
+            } else if (e.touches.length === 1 && lastX !== null) {
+              const x = e.touches[0].clientX;
+              const dx = x - lastX;
+              lastX = x;
+              el.object3D.rotation.y += dx * 0.005;
+              e.preventDefault();
+            }
+          };
+          
+          const onEnd = () => {
+            startDist = null;
+            startScale = null;
+            lastX = null;
+          };
+          
+          target.addEventListener('touchstart', onStart, { passive: false });
+          target.addEventListener('touchmove', onMove, { passive: false });
+          target.addEventListener('touchend', onEnd, { passive: true });
+          target.addEventListener('touchcancel', onEnd, { passive: true });
         }
       });
     </script>

@@ -2,13 +2,14 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <title>Barcodes AR.js 3x3 (Móvil/Imprimir)</title>
+  <title>Barcodes AR.js 3x3 (Móvil / Carta PDF)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <style>
     :root { --size: 90vw; }
     * { box-sizing: border-box; }
     body { font-family: Segoe UI, Tahoma, sans-serif; margin: 16px; color: #222; }
     h1 { font-size: 20px; margin: 0 0 8px; }
+    h2 { font-size: 18px; margin: 24px 0 10px; }
     p { margin: 6px 0 12px; font-size: 14px; }
     .toolbar { display: flex; gap: 8px; margin-bottom: 12px; }
     .btn { padding: 8px 12px; border: 1px solid #bbb; border-radius: 8px; background: #f8f8f8; cursor: pointer; }
@@ -16,6 +17,79 @@
     .item { border: 1px dashed #bbb; padding: 12px; }
     .label { font-size: 13px; margin-bottom: 8px; }
     .marker { width: var(--size); max-width: 520px; aspect-ratio: 1 / 1; object-fit: contain; background: #fff; display: block; margin: 0 auto; }
+
+    .page {
+      width: 100%;
+      min-height: 100vh;
+      padding: 24px 32px;
+      border: 1px solid #ddd;
+      margin: 16px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    .page-header {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .page-header h3 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: 1px;
+    }
+    .page-header span {
+      font-size: 13px;
+      text-transform: uppercase;
+      color: #666;
+    }
+    .page-marker {
+      border: 1px solid #ccc;
+      padding: 12px;
+      margin: 12px 0 18px;
+    }
+    .page-marker img {
+      width: 9cm;
+      height: 9cm;
+      display: block;
+      margin: 0 auto;
+      background: #000;
+    }
+    .menu-list {
+      width: 100%;
+      max-width: 420px;
+      font-size: 14px;
+    }
+    .menu-list ul {
+      padding-left: 0;
+      list-style: none;
+      margin: 0 0 10px;
+    }
+    .menu-list li {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      align-items: center;
+    }
+    .mini-code {
+      margin-left: 8px;
+      width: 1.6cm;
+      height: 1.6cm;
+      background: #000;
+    }
+    .nft-img {
+      width: 9cm;
+      height: 9cm;
+      display: block;
+      margin: 12px auto 0;
+      background: #000;
+    }
+    .menu-list .hint {
+      font-size: 12px;
+      margin-top: 6px;
+      text-align: center;
+    }
+
     @media (max-width: 768px) {
       body { margin: 8px; }
       .grid { grid-template-columns: 1fr; gap: 12px; }
@@ -23,15 +97,17 @@
     }
     @media print {
       body { margin: 0; }
-      .item { border: none; padding: 0; }
-      .label { display: none; }
-      .marker { max-width: none; width: 9cm; height: 9cm; }
+      h1, .toolbar, .grid, p.screen-only { display: none; }
+      .page { border: none; page-break-after: always; margin: 0; padding: 20mm; }
+      .page-marker img { width: 9cm; height: 9cm; }
+      .mini-code { width: 1.8cm; height: 1.8cm; }
+      .nft-img { width: 9cm; height: 9cm; }
     }
   </style>
   </head>
 <body>
   <h1>Barcodes AR.js 3x3</h1>
-  <p>En móvil ajusta el tamaño con los botones. Para imprimir, se fija en 9 cm.</p>
+  <p class="screen-only">En móvil ajusta el tamaño con los botones. Para imprimir barcodes sueltos usa esta sección. Para la carta PDF usa las páginas de abajo.</p>
   <div class="toolbar">
     <button class="btn" data-size="75vw">Pequeño</button>
     <button class="btn" data-size="88vw">Medio</button>
@@ -55,7 +131,195 @@
       <img class="marker" src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/8.png" alt="barcode 8">
     </div>
   </div>
-  <p>Consejos: baja el brillo para evitar reflejos; muestra el marcador completo sin barras.</p>
+  <p class="screen-only">Consejos: baja el brillo para evitar reflejos; muestra el marcador completo sin barras.</p>
+
+  <h2>Diseño para carta (PDF)</h2>
+
+  <div class="page">
+    <div class="page-header">
+      <h3>MENÚ CAFÉ</h3>
+      <span>Bebidas calientes · Barcode 5</span>
+    </div>
+    <div class="page-marker">
+      <img src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/5.png" alt="barcode 5">
+    </div>
+    <div class="menu-list">
+      <ul>
+        <li>
+          <span>Café Americano</span>
+          <span>
+            S/ 8.00
+            <img class="mini-code" src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/5.png" alt="barcode 5">
+          </span>
+        </li>
+        <li>
+          <span>Capuchino</span>
+          <span>
+            S/ 10.00
+            <img class="mini-code" src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/5.png" alt="barcode 5">
+          </span>
+        </li>
+        <li>
+          <span>Café Latte</span>
+          <span>
+            S/ 10.00
+            <img class="mini-code" src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/5.png" alt="barcode 5">
+          </span>
+        </li>
+        <li>
+          <span>Espresso</span>
+          <span>
+            S/ 7.00
+            <img class="mini-code" src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/5.png" alt="barcode 5">
+          </span>
+        </li>
+      </ul>
+      <div class="hint">📱 Escanea el código para ver la taza en 3D.</div>
+    </div>
+  </div>
+
+  <div class="page">
+    <div class="page-header">
+      <h3>MENÚ CAFÉ</h3>
+      <span>Bebidas frías · Barcode 6</span>
+    </div>
+    <div class="page-marker">
+      <img src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/6.png" alt="barcode 6">
+    </div>
+    <div class="menu-list">
+      <ul>
+        <li>
+          <span>Frappé Mocca</span>
+          <span>
+            S/ 12.00
+            <img class="mini-code" src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/6.png" alt="barcode 6">
+          </span>
+        </li>
+        <li>
+          <span>Iced Latte</span>
+          <span>
+            S/ 11.00
+            <img class="mini-code" src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/6.png" alt="barcode 6">
+          </span>
+        </li>
+        <li>
+          <span>Cold Brew</span>
+          <span>
+            S/ 10.00
+            <img class="mini-code" src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/6.png" alt="barcode 6">
+          </span>
+        </li>
+      </ul>
+      <div class="hint">📱 Escanea el código para ver la bebida en 3D.</div>
+    </div>
+  </div>
+
+  <div class="page">
+    <div class="page-header">
+      <h3>MENÚ CAFÉ</h3>
+      <span>Postres · Barcode 7</span>
+    </div>
+    <div class="page-marker">
+      <img src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/7.png" alt="barcode 7">
+    </div>
+    <div class="menu-list">
+      <ul>
+        <li>
+          <span>Cheesecake</span>
+          <span>
+            S/ 14.00
+            <img class="mini-code" src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/7.png" alt="barcode 7">
+          </span>
+        </li>
+        <li>
+          <span>Brownie con helado</span>
+          <span>
+            S/ 13.00
+            <img class="mini-code" src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/7.png" alt="barcode 7">
+          </span>
+        </li>
+        <li>
+          <span>Tarta de manzana</span>
+          <span>
+            S/ 12.00
+            <img class="mini-code" src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/7.png" alt="barcode 7">
+          </span>
+        </li>
+      </ul>
+      <div class="hint">📱 Escanea el código para ver el postre en 3D.</div>
+    </div>
+  </div>
+
+  <div class="page">
+    <div class="page-header">
+      <h3>MENÚ CAFÉ</h3>
+      <span>Piqueos · Barcode 8</span>
+    </div>
+    <div class="page-marker">
+      <img src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/8.png" alt="barcode 8">
+    </div>
+    <div class="menu-list">
+      <ul>
+        <li>
+          <span>Hamburguesa clásica</span>
+          <span>
+            S/ 18.00
+            <img class="mini-code" src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/8.png" alt="barcode 8">
+          </span>
+        </li>
+        <li>
+          <span>Papas rústicas</span>
+          <span>
+            S/ 12.00
+            <img class="mini-code" src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/8.png" alt="barcode 8">
+          </span>
+        </li>
+        <li>
+          <span>Alitas BBQ</span>
+          <span>
+            S/ 16.00
+            <img class="mini-code" src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/8.png" alt="barcode 8">
+          </span>
+        </li>
+      </ul>
+      <div class="hint">📱 Escanea el código para ver la hamburguesa en 3D.</div>
+    </div>
+  </div>
+
+  <h2>Páginas NFT (para impresos independientes)</h2>
+
+  <div class="page">
+    <div class="page-header">
+      <h3>MENÚ CAFÉ</h3>
+      <span>NFT Café</span>
+    </div>
+    <img class="nft-img" src="https://raw.githubusercontent.com/Jhossephy02/realidad-aumentada/main/markers/cafe-menu.png" alt="NFT café">
+  </div>
+
+  <div class="page">
+    <div class="page-header">
+      <h3>MENÚ CAFÉ</h3>
+      <span>NFT Sushi</span>
+    </div>
+    <img class="nft-img" src="https://raw.githubusercontent.com/Jhossephy02/realidad-aumentada/main/markers/sushi-menu.png" alt="NFT sushi">
+  </div>
+
+  <div class="page">
+    <div class="page-header">
+      <h3>MENÚ CAFÉ</h3>
+      <span>NFT Pizza</span>
+    </div>
+    <img class="nft-img" src="https://raw.githubusercontent.com/Jhossephy02/realidad-aumentada/main/markers/pizza-menu.png" alt="NFT pizza">
+  </div>
+
+  <div class="page">
+    <div class="page-header">
+      <h3>MENÚ CAFÉ</h3>
+      <span>NFT Hamburguesa</span>
+    </div>
+    <img class="nft-img" src="https://raw.githubusercontent.com/Jhossephy02/realidad-aumentada/main/markers/burger-menu.png" alt="NFT hamburguesa">
+  </div>
+
   <script>
     document.querySelectorAll('.btn').forEach(b=>{
       b.addEventListener('click',()=>{

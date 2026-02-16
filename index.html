@@ -138,10 +138,48 @@
         0% { opacity: 1; }
         100% { opacity: 0; }
       }
+      .product-panel {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        background: rgba(0, 0, 0, 0.7);
+        color: #ffffff;
+        padding: 12px 16px;
+        border-radius: 12px;
+        max-width: 260px;
+        font-size: 13px;
+        display: none;
+        backdrop-filter: blur(6px);
+      }
+      .product-title {
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+      .product-price {
+        font-weight: 500;
+        margin-bottom: 8px;
+      }
+      .product-section-title {
+        font-size: 12px;
+        opacity: 0.9;
+        margin-bottom: 2px;
+      }
+      .product-ingredients {
+        font-size: 12px;
+        line-height: 1.4;
+      }
     </style>
   </head>
   <body style="margin: 0px; overflow: hidden;">
     <div class="flash" id="flash-effect"></div>
+
+    <div class="product-panel" id="product-panel">
+      <div class="product-title" id="product-title"></div>
+      <div class="product-price" id="product-price"></div>
+      <div class="product-section-title">Ingredientes</div>
+      <div class="product-ingredients" id="product-ingredients"></div>
+    </div>
 
     <div class="ui-container">
       <div class="controls">
@@ -205,7 +243,7 @@
         <a-entity
           gltf-model="#burger-model"
           scale="0.002 0.002 0.002"
-          position="0 0 0"
+          position="0 -0.6 0"
           rotation="-90 0 0">
         </a-entity>
       </a-nft>
@@ -214,7 +252,7 @@
         <a-entity
           gltf-model="#coffe-model"
           scale="7 7 7"
-          position="0 0 0"
+          position="0 -0.6 0"
           rotation="0 0 0">
         </a-entity>
       </a-marker>
@@ -222,7 +260,7 @@
         <a-entity
           gltf-model="#sushi-model"
           scale="6 6 6"
-          position="0 0 0"
+          position="0 -0.6 0"
           rotation="0 0 0">
         </a-entity>
       </a-marker>
@@ -230,7 +268,7 @@
         <a-entity
           gltf-model="#pizza-model"
           scale="4.5 4.5 4.5"
-          position="0 0 0"
+          position="0 -0.6 0"
           rotation="0 0 0">
         </a-entity>
       </a-marker>
@@ -238,7 +276,7 @@
         <a-entity
           gltf-model="#burger-model"
           scale="0.002 0.002 0.002"
-          position="0 0 0"
+          position="0 -0.6 0"
           rotation="0 0 0">
         </a-entity>
       </a-marker>
@@ -246,7 +284,7 @@
         <a-entity
           gltf-model="#coffe-model"
           scale="7 7 7"
-          position="0 0 0"
+          position="0 -0.6 0"
           rotation="0 0 0">
         </a-entity>
       </a-marker>
@@ -255,7 +293,7 @@
         <a-entity
           gltf-model="#coffe-model"
           scale="7 7 7"
-          position="0 0 0"
+          position="0 -0.6 0"
           rotation="-90 0 0">
         </a-entity>
       </a-marker>
@@ -263,7 +301,7 @@
         <a-entity
           gltf-model="#sushi-model"
           scale="6 6 6"
-          position="0 0 0"
+          position="0 -0.6 0"
           rotation="-90 0 0">
         </a-entity>
       </a-marker>
@@ -271,7 +309,7 @@
         <a-entity
           gltf-model="#pizza-model"
           scale="4.5 4.5 4.5"
-          position="0 0 0"
+          position="0 -0.6 0"
           rotation="-90 0 0">
         </a-entity>
       </a-marker>
@@ -279,7 +317,7 @@
         <a-entity
           gltf-model="#burger-model"
           scale="0.002 0.002 0.002"
-          position="0 0 0"
+          position="0 -0.6 0"
           rotation="-90 0 0">
         </a-entity>
       </a-marker>
@@ -290,7 +328,60 @@
     </a-scene>
 
     <script>
-      
+      const productPanel = document.getElementById('product-panel');
+      const productTitle = document.getElementById('product-title');
+      const productPrice = document.getElementById('product-price');
+      const productIngredients = document.getElementById('product-ingredients');
+      const products = {
+        cafe: {
+          title: 'Café Americano',
+          price: 'S/ 8.00',
+          ingredients: 'Café 100% arábica, agua filtrada.'
+        },
+        sushi: {
+          title: 'Sushi mixto',
+          price: 'S/ 18.00',
+          ingredients: 'Arroz sazonado, salmón, palta, alga nori, salsa de soya.'
+        },
+        pizza: {
+          title: 'Pizza clásica',
+          price: 'S/ 16.00',
+          ingredients: 'Masa artesanal, salsa de tomate, queso mozzarella, orégano.'
+        },
+        burger: {
+          title: 'Hamburguesa de la casa',
+          price: 'S/ 18.00',
+          ingredients: 'Carne de res, queso cheddar, lechuga, tomate, salsa especial.'
+        }
+      };
+      function getProductKeyFromMarker(marker) {
+        const url = marker.getAttribute('url') || '';
+        const value = marker.getAttribute('value');
+        const preset = marker.getAttribute('preset');
+        if (url.indexOf('cafe') !== -1 || url.indexOf('caffe') !== -1) return 'cafe';
+        if (url.indexOf('sushi') !== -1) return 'sushi';
+        if (url.indexOf('pizza') !== -1) return 'pizza';
+        if (url.indexOf('burger') !== -1 || url.indexOf('hamburguesa') !== -1) return 'burger';
+        if (value === '5') return 'cafe';
+        if (value === '6') return 'sushi';
+        if (value === '7') return 'pizza';
+        if (value === '8') return 'burger';
+        if (preset === 'hiro') return 'cafe';
+        return null;
+      }
+      function showProduct(key) {
+        if (!productPanel) return;
+        const p = products[key];
+        if (!p) return;
+        productTitle.textContent = p.title;
+        productPrice.textContent = p.price;
+        productIngredients.textContent = p.ingredients;
+        productPanel.style.display = 'block';
+      }
+      function hideProduct() {
+        if (!productPanel) return;
+        productPanel.style.display = 'none';
+      }
 
       // Funcionalidad para tomar captura (Foto)
       document.getElementById('screenshot').addEventListener('click', function() {
@@ -333,9 +424,12 @@
         markers.forEach(m => {
           m.addEventListener('markerFound', () => {
             console.log('markerFound', m.getAttribute('url') || m.getAttribute('value') || m.getAttribute('type'));
+            const key = getProductKeyFromMarker(m);
+            if (key) showProduct(key);
           });
           m.addEventListener('markerLost', () => {
             console.log('markerLost', m.getAttribute('url') || m.getAttribute('value') || m.getAttribute('type'));
+            hideProduct();
           });
         });
       })();

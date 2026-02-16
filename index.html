@@ -142,17 +142,8 @@
   </head>
   <body style="margin: 0px; overflow: hidden;">
     <div class="flash" id="flash-effect"></div>
-    <div class="header-ui">
-      <h1>Menú AR Experience</h1>
-    </div>
-
-    <div class="arjs-loader">
-      <div class="loader-spinner"></div>
-      <div>Iniciando Experiencia AR...</div>
-    </div>
 
     <div class="ui-container">
-      <div class="hint-text">Enfoca un marcador para ver la comida</div>
       <div class="controls">
         <div class="screenshot-btn" id="screenshot"></div>
       </div>
@@ -183,7 +174,7 @@
         smoothThreshold="5">
         <a-entity
           gltf-model="#coffe-model"
-          scale="20 20 20"
+          scale="7 7 7"
           position="0 0 0"
           rotation="-90 0 0">
         </a-entity>
@@ -193,7 +184,7 @@
       <a-nft type="nft" url="./markers/sushi" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
         <a-entity
           gltf-model="#sushi-model"
-          scale="15 15 15"
+          scale="6 6 6"
           position="0 0 0"
           rotation="-90 0 0">
         </a-entity>
@@ -203,7 +194,7 @@
       <a-nft type="nft" url="./markers/pizza" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
         <a-entity
           gltf-model="#pizza-model"
-          scale="12 12 12"
+          scale="4.5 4.5 4.5"
           position="0 0 0"
           rotation="-90 0 0">
         </a-entity>
@@ -213,7 +204,7 @@
       <a-nft type="nft" url="./markers/burger" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
         <a-entity
           gltf-model="#burger-model"
-          scale="0.02 0.02 0.02"
+          scale="0.002 0.002 0.002"
           position="0 0 0"
           rotation="-90 0 0">
         </a-entity>
@@ -222,7 +213,7 @@
       <a-marker type="pattern" url="./pattern-caffe.patt" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
         <a-entity
           gltf-model="#coffe-model"
-          scale="10 10 10"
+          scale="7 7 7"
           position="0 0 0"
           rotation="0 0 0">
         </a-entity>
@@ -230,7 +221,7 @@
       <a-marker type="pattern" url="./pattern-sushi.patt" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
         <a-entity
           gltf-model="#sushi-model"
-          scale="10 10 10"
+          scale="6 6 6"
           position="0 0 0"
           rotation="0 0 0">
         </a-entity>
@@ -238,7 +229,7 @@
       <a-marker type="pattern" url="./pattern-pizza.patt" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
         <a-entity
           gltf-model="#pizza-model"
-          scale="8 8 8"
+          scale="4.5 4.5 4.5"
           position="0 0 0"
           rotation="0 0 0">
         </a-entity>
@@ -246,7 +237,7 @@
       <a-marker type="pattern" url="./pattern-hamburguesa.patt" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
         <a-entity
           gltf-model="#burger-model"
-          scale="0.001 0.001 0.001"
+          scale="0.002 0.002 0.002"
           position="0 0 0"
           rotation="0 0 0">
         </a-entity>
@@ -254,7 +245,7 @@
       <a-marker preset="hiro" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
         <a-entity
           gltf-model="#coffe-model"
-          scale="10 10 10"
+          scale="7 7 7"
           position="0 0 0"
           rotation="0 0 0">
         </a-entity>
@@ -263,7 +254,7 @@
       <a-marker type="barcode" value="5" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
         <a-entity
           gltf-model="#coffe-model"
-          scale="20 20 20"
+          scale="7 7 7"
           position="0 0 0"
           rotation="-90 0 0">
         </a-entity>
@@ -271,7 +262,7 @@
       <a-marker type="barcode" value="6" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
         <a-entity
           gltf-model="#sushi-model"
-          scale="15 15 15"
+          scale="6 6 6"
           position="0 0 0"
           rotation="-90 0 0">
         </a-entity>
@@ -279,7 +270,7 @@
       <a-marker type="barcode" value="7" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
         <a-entity
           gltf-model="#pizza-model"
-          scale="12 12 12"
+          scale="4.5 4.5 4.5"
           position="0 0 0"
           rotation="-90 0 0">
         </a-entity>
@@ -287,7 +278,7 @@
       <a-marker type="barcode" value="8" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
         <a-entity
           gltf-model="#burger-model"
-          scale="0.02 0.02 0.02"
+          scale="0.002 0.002 0.002"
           position="0 0 0"
           rotation="-90 0 0">
         </a-entity>
@@ -299,13 +290,7 @@
     </a-scene>
 
     <script>
-      window.addEventListener('camera-init', function () {
-        document.querySelector('.arjs-loader').style.display = 'none';
-      });
       
-      setTimeout(() => {
-        document.querySelector('.arjs-loader').style.display = 'none';
-      }, 5000);
 
       // Funcionalidad para tomar captura (Foto)
       document.getElementById('screenshot').addEventListener('click', function() {

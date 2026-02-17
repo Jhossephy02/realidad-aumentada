@@ -6,7 +6,126 @@
     <title>WebAR Experience</title>
     <script src="https://cdn.jsdelivr.net/gh/aframevr/aframe@v1.3.0/dist/aframe-master.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
-    
+    <script>
+      if (typeof AFRAME !== 'undefined') {
+        AFRAME.registerComponent('drag-rotate-scale', {
+          schema: {
+            minScale: {default: 0.5},
+            maxScale: {default: 2.5},
+            rotationFactor: {default: 0.4},
+            zoomFactor: {default: 0.015}
+          },
+          init: function () {
+            this.isDragging = false;
+            this.previousPosition = null;
+            this.initialScale = this.el.object3D.scale.x || 1;
+            this.scaleFactor = 1;
+            this.pinchDistance = null;
+            this.onMouseDown = this.handleMouseDown.bind(this);
+            this.onMouseMove = this.handleMouseMove.bind(this);
+            this.onMouseUp = this.handleMouseUp.bind(this);
+            this.onWheel = this.handleWheel.bind(this);
+            this.onTouchStart = this.handleTouchStart.bind(this);
+            this.onTouchMove = this.handleTouchMove.bind(this);
+            this.onTouchEnd = this.handleTouchEnd.bind(this);
+            var canvas = this.el.sceneEl.canvas;
+            if (canvas) {
+              this.addListeners(canvas);
+            } else {
+              this.el.sceneEl.addEventListener('loaded', () => {
+                this.addListeners(this.el.sceneEl.canvas);
+              });
+            }
+          },
+          remove: function () {
+            var canvas = this.el.sceneEl && this.el.sceneEl.canvas;
+            if (canvas) {
+              this.removeListeners(canvas);
+            }
+          },
+          addListeners: function (canvas) {
+            canvas.addEventListener('mousedown', this.onMouseDown);
+            window.addEventListener('mousemove', this.onMouseMove);
+            window.addEventListener('mouseup', this.onMouseUp);
+            canvas.addEventListener('wheel', this.onWheel, {passive: false});
+            canvas.addEventListener('touchstart', this.onTouchStart, {passive: false});
+            canvas.addEventListener('touchmove', this.onTouchMove, {passive: false});
+            canvas.addEventListener('touchend', this.onTouchEnd);
+            canvas.addEventListener('touchcancel', this.onTouchEnd);
+          },
+          removeListeners: function (canvas) {
+            canvas.removeEventListener('mousedown', this.onMouseDown);
+            window.removeEventListener('mousemove', this.onMouseMove);
+            window.removeEventListener('mouseup', this.onMouseUp);
+            canvas.removeEventListener('wheel', this.onWheel);
+            canvas.removeEventListener('touchstart', this.onTouchStart);
+            canvas.removeEventListener('touchmove', this.onTouchMove);
+            canvas.removeEventListener('touchend', this.onTouchEnd);
+            canvas.removeEventListener('touchcancel', this.onTouchEnd);
+          },
+          handleMouseDown: function (evt) {
+            this.isDragging = true;
+            this.previousPosition = {x: evt.clientX, y: evt.clientY};
+          },
+          handleMouseMove: function (evt) {
+            if (!this.isDragging) return;
+            var dx = evt.clientX - this.previousPosition.x;
+            this.previousPosition = {x: evt.clientX, y: evt.clientY};
+            var rotation = this.el.object3D.rotation;
+            rotation.y += dx * this.data.rotationFactor * 0.01;
+          },
+          handleMouseUp: function () {
+            this.isDragging = false;
+          },
+          handleWheel: function (evt) {
+            evt.preventDefault();
+            var delta = evt.deltaY;
+            var factor = this.scaleFactor - delta * this.data.zoomFactor * 0.01;
+            this.setScaleFactor(factor);
+          },
+          handleTouchStart: function (evt) {
+            if (evt.touches.length === 1) {
+              this.isDragging = true;
+              this.previousPosition = {x: evt.touches[0].clientX, y: evt.touches[0].clientY};
+            } else if (evt.touches.length === 2) {
+              this.isDragging = false;
+              this.pinchDistance = this.getTouchDistance(evt.touches[0], evt.touches[1]);
+            }
+          },
+          handleTouchMove: function (evt) {
+            if (evt.touches.length === 1 && this.isDragging) {
+              var touch = evt.touches[0];
+              var dx = touch.clientX - this.previousPosition.x;
+              this.previousPosition = {x: touch.clientX, y: touch.clientY};
+              var rotation = this.el.object3D.rotation;
+              rotation.y += dx * this.data.rotationFactor * 0.01;
+            } else if (evt.touches.length === 2 && this.pinchDistance !== null) {
+              var newDistance = this.getTouchDistance(evt.touches[0], evt.touches[1]);
+              var ratio = newDistance / this.pinchDistance;
+              this.pinchDistance = newDistance;
+              var factor = this.scaleFactor * ratio;
+              this.setScaleFactor(factor);
+            }
+          },
+          handleTouchEnd: function () {
+            this.isDragging = false;
+            this.pinchDistance = null;
+          },
+          getTouchDistance: function (t1, t2) {
+            var dx = t1.clientX - t2.clientX;
+            var dy = t1.clientY - t2.clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+          },
+          setScaleFactor: function (factor) {
+            var min = this.data.minScale;
+            var max = this.data.maxScale;
+            this.scaleFactor = Math.min(max, Math.max(min, factor));
+            var s = this.initialScale * this.scaleFactor;
+            this.el.object3D.scale.set(s, s, s);
+          }
+        });
+      }
+    </script>
     <style>
       :root {
         --primary-color: #ff4757;
@@ -207,118 +326,131 @@
         url="./markers/cafe"
         emitevents="true"
         smooth="true" 
-        smoothCount="10" 
-        smoothTolerance="0.01" 
-        smoothThreshold="5">
+        smoothCount="20" 
+        smoothTolerance="0.002" 
+        smoothThreshold="2">
         <a-entity
           gltf-model="#coffe-model"
-          scale="7 7 7"
+          scale="8.5 8.5 8.5"
           position="0 -1.2 0"
-          rotation="0 0 0">
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-nft>
 
       <!-- Marcador de Sushi -->
-      <a-nft type="nft" url="./markers/sushi" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+      <a-nft type="nft" url="./markers/sushi" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
         <a-entity
           gltf-model="#sushi-model"
           scale="6 6 6"
           position="0 -1.2 0"
-          rotation="0 0 0">
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-nft>
 
       <!-- Marcador de Pizza -->
-      <a-nft type="nft" url="./markers/pizza" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+      <a-nft type="nft" url="./markers/pizza" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
         <a-entity
           gltf-model="#pizza-model"
           scale="4.5 4.5 4.5"
           position="0 -1.2 0"
-          rotation="0 0 0">
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-nft>
 
       <!-- Marcador de Hamburguesa -->
-      <a-nft type="nft" url="./markers/burger" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+      <a-nft type="nft" url="./markers/burger" emitevents="true" smooth="true" smoothCount="25" smoothTolerance="0.002" smoothThreshold="2">
         <a-entity
           gltf-model="#burger-model"
           scale="0.0025 0.0025 0.0025"
           position="0 -1.2 0"
-          rotation="0 0 0">
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-nft>
       
-      <a-marker type="pattern" url="./pattern-caffe.patt" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+      <a-marker type="pattern" url="./pattern-caffe.patt" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
         <a-entity
           gltf-model="#coffe-model"
           scale="7 7 7"
           position="0 -1.2 0"
-          rotation="0 0 0">
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="pattern" url="./pattern-sushi.patt" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+      <a-marker type="pattern" url="./pattern-sushi.patt" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
         <a-entity
           gltf-model="#sushi-model"
           scale="6 6 6"
           position="0 -1.2 0"
-          rotation="0 0 0">
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="pattern" url="./pattern-pizza.patt" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+      <a-marker type="pattern" url="./pattern-pizza.patt" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
         <a-entity
           gltf-model="#pizza-model"
           scale="4.5 4.5 4.5"
           position="0 -1.2 0"
-          rotation="0 0 0">
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="pattern" url="./pattern-hamburguesa.patt" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+      <a-marker type="pattern" url="./pattern-hamburguesa.patt" emitevents="true" smooth="true" smoothCount="25" smoothTolerance="0.002" smoothThreshold="2">
         <a-entity
           gltf-model="#burger-model"
           scale="0.0025 0.0025 0.0025"
           position="0 -1.2 0"
-          rotation="0 0 0">
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker preset="hiro" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+      <a-marker preset="hiro" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
         <a-entity
           gltf-model="#coffe-model"
           scale="7 7 7"
           position="0 -1.2 0"
-          rotation="0 0 0">
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
       
-      <a-marker type="barcode" value="5" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+      <a-marker type="barcode" value="5" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
         <a-entity
           gltf-model="#coffe-model"
           scale="7 7 7"
           position="0 -1.2 0"
-          rotation="0 0 0">
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="barcode" value="6" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+      <a-marker type="barcode" value="6" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
         <a-entity
           gltf-model="#sushi-model"
           scale="6 6 6"
           position="0 -1.2 0"
-          rotation="0 0 0">
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="barcode" value="7" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+      <a-marker type="barcode" value="7" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
         <a-entity
           gltf-model="#pizza-model"
           scale="4.5 4.5 4.5"
           position="0 -1.2 0"
-          rotation="0 0 0">
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="barcode" value="8" emitevents="true" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
+      <a-marker type="barcode" value="8" emitevents="true" smooth="true" smoothCount="25" smoothTolerance="0.002" smoothThreshold="2">
         <a-entity
           gltf-model="#burger-model"
           scale="0.0025 0.0025 0.0025"
           position="0 -1.2 0"
-          rotation="0 0 0">
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
       

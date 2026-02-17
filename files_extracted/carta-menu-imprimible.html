@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carta Imprimible - Menú AR</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 0;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Georgia', serif;
+      background: #fff;
+    }
+    
+    .page {
+      width: 210mm;
+      height: 297mm;
+      padding: 20mm;
+      margin: 0 auto;
+      background: white;
+      position: relative;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      border-bottom: 3px solid #2c3e50;
+      padding-bottom: 20px;
+    }
+    
+    .header h1 {
+      font-size: 42px;
+      color: #2c3e50;
+      margin-bottom: 5px;
+      font-weight: 700;
+      letter-spacing: 2px;
+    }
+    
+    .header p {
+      font-size: 16px;
+      color: #7f8c8d;
+      font-style: italic;
+    }
+    
+    .ar-info {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .ar-info h2 {
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+    
+    .ar-info p {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    
+    .menu-section {
+      margin-bottom: 40px;
+    }
+    
+    .menu-item {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 20px;
+      margin-bottom: 30px;
+      padding-bottom: 25px;
+      border-bottom: 1px dashed #bdc3c7;
+      page-break-inside: avoid;
+    }
+    
+    .menu-item:last-child {
+      border-bottom: none;
+    }
+    
+    .item-image {
+      width: 180px;
+      height: 180px;
+      background: #ecf0f1;
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      border: 3px solid #e0e0e0;
+    }
+    
+    /* Aquí van las imágenes reales */
+    .item-image.cafe {
+      background: linear-gradient(135deg, #d4a574 0%, #8b6f47 100%);
+    }
+    
+    .item-image.sushi {
+      background: linear-gradient(135deg, #fff4e6 0%, #ffe0b2 100%);
+    }
+    
+    .item-image.pizza {
+      background: linear-gradient(135deg, #ffccbc 0%, #ff8a65 100%);
+    }
+    
+    .item-image.burger {
+      background: linear-gradient(135deg, #fff9c4 0%, #ffd54f 100%);
+    }
+    
+    .item-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .ar-icon {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(255, 71, 87, 0.95);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    
+    .item-content {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+    
+    .item-name {
+      font-size: 26px;
+      color: #2c3e50;
+      font-weight: 700;
+    }
+    
+    .item-price {
+      font-size: 28px;
+      color: #e74c3c;
+      font-weight: 700;
+    }
+    
+    .item-description {
+      font-size: 15px;
+      color: #5a6c7d;
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+    
+    .item-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .qr-code-small {
+      width: 60px;
+      height: 60px;
+      background: #000;
+      border-radius: 8px;
+    }
+    
+    .barcode-label {
+      font-size: 13px;
+      color: #7f8c8d;
+      background: #ecf0f1;
+      padding: 5px 12px;
+      border-radius: 5px;
+    }
+    
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 2px solid #ecf0f1;
+      color: #7f8c8d;
+      font-size: 12px;
+    }
+    
+    @media print {
+      .page {
+        margin: 0;
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <h1>🍽️ MENÚ GOURMET</h1>
+      <p>Experiencia Gastronómica en Realidad Aumentada</p>
+    </div>
+    
+    <div class="ar-info">
+      <h2>📱 Activa la Realidad Aumentada</h2>
+      <p>Escanea los códigos QR con tu smartphone para ver cada platillo en 3D</p>
+    </div>
+    
+    <div class="menu-section">
+      <!-- CAFÉ -->
+      <div class="menu-item">
+        <div class="item-image cafe">
+          <img src="../img/cafe.png" alt="Café">
+          <div class="ar-icon">AR 📱</div>
+        </div>
+        <div class="item-content">
+          <div>
+            <div class="item-header">
+              <h3 class="item-name">Café Americano</h3>
+              <div class="item-price">S/ 8.00</div>
+            </div>
+            <p class="item-description">
+              Café 100% arábica de origen peruano, preparado con agua filtrada. 
+              El balance perfecto entre intensidad y suavidad para comenzar tu día.
+            </p>
+          </div>
+          <div class="item-footer">
+            <div class="qr-code-small" style="background: url('https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/5.png') center/contain no-repeat;"></div>
+            <div class="barcode-label">Código AR: 5</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- SUSHI -->
+      <div class="menu-item">
+        <div class="item-image sushi">
+          <img src="../img/sushi.png" alt="Sushi">
+          <div class="ar-icon">AR 📱</div>
+        </div>
+        <div class="item-content">
+          <div>
+            <div class="item-header">
+              <h3 class="item-name">Sushi Mixto</h3>
+              <div class="item-price">S/ 25.00</div>
+            </div>
+            <p class="item-description">
+              Selección de nigiri y maki con salmón fresco, atún, palta y alga nori. 
+              Servido con salsa de soya, wasabi y jengibre encurtido.
+            </p>
+          </div>
+          <div class="item-footer">
+            <div class="qr-code-small" style="background: url('https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/6.png') center/contain no-repeat;"></div>
+            <div class="barcode-label">Código AR: 6</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- PIZZA -->
+      <div class="menu-item">
+        <div class="item-image pizza">
+          <img src="../img/pizza.png" alt="Pizza">
+          <div class="ar-icon">AR 📱</div>
+        </div>
+        <div class="item-content">
+          <div>
+            <div class="item-header">
+              <h3 class="item-name">Pizza Clásica</h3>
+              <div class="item-price">S/ 18.00</div>
+            </div>
+            <p class="item-description">
+              Masa artesanal fermentada 24 horas, salsa de tomate casera, 
+              mozzarella di bufala y orégano fresco. Horneada en horno de piedra.
+            </p>
+          </div>
+          <div class="item-footer">
+            <div class="qr-code-small" style="background: url('https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/7.png') center/contain no-repeat;"></div>
+            <div class="barcode-label">Código AR: 7</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- HAMBURGUESA -->
+      <div class="menu-item">
+        <div class="item-image burger">
+          <img src="../img/hamburguesa.png" alt="Hamburguesa">
+          <div class="ar-icon">AR 📱</div>
+        </div>
+        <div class="item-content">
+          <div>
+            <div class="item-header">
+              <h3 class="item-name">Hamburguesa de la Casa</h3>
+              <div class="item-price">S/ 20.00</div>
+            </div>
+            <p class="item-description">
+              Carne angus 180g, queso cheddar artesanal, lechuga hidropónica, 
+              tomate orgánico y nuestra salsa secreta. Pan brioche tostado.
+            </p>
+          </div>
+          <div class="item-footer">
+            <div class="qr-code-small" style="background: url('https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/8.png') center/contain no-repeat;"></div>
+            <div class="barcode-label">Código AR: 8</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="footer">
+      <p>Todos nuestros platillos están disponibles para visualizar en Realidad Aumentada</p>
+      <p style="margin-top: 5px;">Escanea el código QR con tu smartphone para una experiencia inmersiva</p>
+    </div>
+  </div>
+</body>
+</html>

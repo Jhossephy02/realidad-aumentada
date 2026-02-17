@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Menú Visual - Realidad Aumentada</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .header {
+      text-align: center;
+      color: white;
+      margin-bottom: 40px;
+    }
+    
+    .header h1 {
+      font-size: 48px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .header p {
+      font-size: 18px;
+      opacity: 0.9;
+    }
+    
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      margin-bottom: 40px;
+    }
+    
+    .menu-card {
+      background: white;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      transition: transform 0.3s, box-shadow 0.3s;
+      cursor: pointer;
+    }
+    
+    .menu-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+    
+    .menu-card-image {
+      width: 100%;
+      height: 250px;
+      background-color: #f5f5f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .menu-card-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .ar-badge {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: rgba(255, 71, 87, 0.9);
+      color: white;
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .ar-badge::before {
+      content: '📱';
+      font-size: 14px;
+    }
+    
+    .menu-card-content {
+      padding: 25px;
+    }
+    
+    .menu-card-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #2d3748;
+      margin-bottom: 10px;
+    }
+    
+    .menu-card-description {
+      font-size: 14px;
+      color: #718096;
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+    
+    .menu-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #e2e8f0;
+    }
+    
+    .price {
+      font-size: 28px;
+      font-weight: 700;
+      color: #ff4757;
+    }
+    
+    .barcode {
+      font-size: 12px;
+      color: #a0aec0;
+      background: #f7fafc;
+      padding: 5px 10px;
+      border-radius: 5px;
+    }
+    
+    .qr-section {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    
+    .qr-section h2 {
+      font-size: 28px;
+      color: #2d3748;
+      margin-bottom: 15px;
+    }
+    
+    .qr-section p {
+      color: #718096;
+      margin-bottom: 20px;
+    }
+    
+    .qr-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 20px;
+      margin-top: 30px;
+    }
+    
+    .qr-item {
+      text-align: center;
+    }
+    
+    .qr-code {
+      width: 120px;
+      height: 120px;
+      background: #000;
+      margin: 0 auto 10px;
+      border-radius: 10px;
+    }
+    
+    .qr-label {
+      font-size: 14px;
+      color: #2d3748;
+      font-weight: 600;
+    }
+
+    @media print {
+      body {
+        background: white;
+      }
+      .menu-card {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🍽️ Menú Interactivo AR</h1>
+      <p>Escanea los códigos QR para ver los platillos en Realidad Aumentada</p>
+    </div>
+
+    <div class="menu-grid">
+      <!-- Café -->
+      <div class="menu-card">
+        <div class="menu-card-image">
+          <img src="../img/cafe.png" alt="Café Americano">
+          <div class="ar-badge">Ver en AR</div>
+        </div>
+        <div class="menu-card-content">
+          <h3 class="menu-card-title">☕ Café Americano</h3>
+          <p class="menu-card-description">Café 100% arábica, agua filtrada. Bebida perfecta para comenzar tu día.</p>
+          <div class="menu-card-footer">
+            <div class="price">S/ 8.00</div>
+            <div class="barcode">Código: 5</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sushi -->
+      <div class="menu-card">
+        <div class="menu-card-image">
+          <img src="../img/sushi.png" alt="Sushi Mixto">
+          <div class="ar-badge">Ver en AR</div>
+        </div>
+        <div class="menu-card-content">
+          <h3 class="menu-card-title">🍣 Sushi Mixto</h3>
+          <p class="menu-card-description">Arroz sazonado, salmón fresco, palta, alga nori y salsa de soya.</p>
+          <div class="menu-card-footer">
+            <div class="price">S/ 25.00</div>
+            <div class="barcode">Código: 6</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pizza -->
+      <div class="menu-card">
+        <div class="menu-card-image">
+          <img src="../img/pizza.png" alt="Pizza Clásica">
+          <div class="ar-badge">Ver en AR</div>
+        </div>
+        <div class="menu-card-content">
+          <h3 class="menu-card-title">🍕 Pizza Clásica</h3>
+          <p class="menu-card-description">Masa artesanal, salsa de tomate, queso mozzarella premium y orégano.</p>
+          <div class="menu-card-footer">
+            <div class="price">S/ 18.00</div>
+            <div class="barcode">Código: 7</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hamburguesa -->
+      <div class="menu-card">
+        <div class="menu-card-image">
+          <img src="../img/hamburguesa.png" alt="Hamburguesa de la Casa">
+          <div class="ar-badge">Ver en AR</div>
+        </div>
+        <div class="menu-card-content">
+          <h3 class="menu-card-title">🍔 Hamburguesa de la Casa</h3>
+          <p class="menu-card-description">Carne de res angus, queso cheddar, lechuga fresca, tomate y salsa especial.</p>
+          <div class="menu-card-footer">
+            <div class="price">S/ 20.00</div>
+            <div class="barcode">Código: 8</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="qr-section">
+      <h2>📱 Códigos QR para Realidad Aumentada</h2>
+      <p>Escanea estos códigos con tu móvil para ver los platillos en 3D</p>
+      <div class="qr-grid">
+        <div class="qr-item">
+          <div class="qr-code" style="background: url('https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/5.png') center/contain no-repeat;"></div>
+          <div class="qr-label">Café (Código 5)</div>
+        </div>
+        <div class="qr-item">
+          <div class="qr-code" style="background: url('https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/6.png') center/contain no-repeat;"></div>
+          <div class="qr-label">Sushi (Código 6)</div>
+        </div>
+        <div class="qr-item">
+          <div class="qr-code" style="background: url('https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/7.png') center/contain no-repeat;"></div>
+          <div class="qr-label">Pizza (Código 7)</div>
+        </div>
+        <div class="qr-item">
+          <div class="qr-code" style="background: url('https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/8.png') center/contain no-repeat;"></div>
+          <div class="qr-label">Hamburguesa (Código 8)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

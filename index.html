@@ -137,7 +137,7 @@
           cafe: { url: './models/cafe/coffee_cup.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
           sushi: { url: './models/sushi/sushi.glb', scale: '4.5 4.5 4.5', position: '0 -1.2 0', rotation: '0 0 0' },
           pizza: { url: './models/pizza/pizza.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          hamburguesa: { url: './models/hamburguesa/classic_burger.glb', scale: '0.12 0.12 0.12', position: '0 -1.2 0', rotation: '0 0 0' },
+          hamburguesa: { url: './models/hamburguesa/classic_burger.glb', scale: '0.08 0.08 0.08', position: '0 -1.2 0', rotation: '0 0 0' },
           latte: { url: './models/cafe/cafe_latte_with_art.glb', scale: '4.5 4.5 4.5', position: '0 -1.2 0', rotation: '0 0 0' },
           chocolate_caliente: { url: './models/cafe/hot_chocolate.glb', scale: '4.5 4.5 4.5', position: '0 -1.2 0', rotation: '0 0 0' },
           croissant: { url: './models/cafe/croissant.glb', scale: '3 3 3', position: '0 -1.2 0', rotation: '0 0 0' },
@@ -147,7 +147,7 @@
           papas_fritas: { url: './models/hamburguesa/fries_with_ketchup.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
           hotdog: { url: './models/hamburguesa/hot_dog__hotdog.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
           nuggets: { url: './models/hamburguesa/nuggets_mc.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          classic_burger: { url: './models/hamburguesa/classic_burger.glb', scale: '0.16 0.16 0.16', position: '0 -1.2 0', rotation: '0 0 0' },
+          classic_burger: { url: './models/hamburguesa/classic_burger.glb', scale: '0.1 0.1 0.1', position: '0 -1.2 0', rotation: '0 0 0' },
           blt_sandwich: { url: './models/hamburguesa/blt_sandwich.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
           sandwich_queso: { url: './models/hamburguesa/ham__cheese_sandwich.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
           rebanada_pizza: { url: './models/pizza/day_292_pizza_slice.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
@@ -157,11 +157,11 @@
           pattern_cafe: { url: './models/cafe/coffee_cup.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
           pattern_sushi: { url: './models/sushi/sushi.glb', scale: '4.5 4.5 4.5', position: '0 -1.2 0', rotation: '0 0 0' },
           pattern_pizza: { url: './models/pizza/pizza.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          pattern_hamburguesa: { url: './models/hamburguesa/classic_burger.glb', scale: '0.12 0.12 0.12', position: '0 -1.2 0', rotation: '0 0 0' },
+          pattern_hamburguesa: { url: './models/hamburguesa/classic_burger.glb', scale: '0.08 0.08 0.08', position: '0 -1.2 0', rotation: '0 0 0' },
           barcode5: { url: './models/cafe/coffee_cup.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
           barcode6: { url: './models/sushi/sushi.glb', scale: '4.5 4.5 4.5', position: '0 -1.2 0', rotation: '0 0 0' },
           barcode7: { url: './models/pizza/pizza.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          barcode8: { url: './models/hamburguesa/classic_burger.glb', scale: '0.16 0.16 0.16', position: '0 -1.2 0', rotation: '0 0 0' }
+          barcode8: { url: './models/hamburguesa/classic_burger.glb', scale: '0.1 0.1 0.1', position: '0 -1.2 0', rotation: '0 0 0' }
         };
 
         // Platos configurados desde el panel administrativo se guardan en localStorage
@@ -610,7 +610,7 @@
       <a-nft type="nft" url="./markers/burger" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: hamburguesa">
         <a-entity
           gltf-model="#burger-model"
-          scale="0.12 0.12 0.12"
+          scale="0.08 0.08 0.08"
           position="0 -1.2 0"
           rotation="0 0 0"
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
@@ -710,7 +710,7 @@
       <a-nft type="nft" url="./markers/classic_burger/classic_burger" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: classic_burger" data-lite="extra">
         <a-entity
           gltf-model="#burger-classic-model"
-          scale="0.16 0.16 0.16"
+          scale="0.1 0.1 0.1"
           position="0 -1.2 0"
           rotation="0 0 0"
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
@@ -807,7 +807,7 @@
       <a-marker type="pattern" url="./pattern-hamburguesa.patt" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: pattern_hamburguesa" data-lite="extra">
         <a-entity
           gltf-model="#burger-model"
-          scale="0.12 0.12 0.12"
+          scale="0.08 0.08 0.08"
           position="0 -1.2 0"
           rotation="0 0 0"
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">

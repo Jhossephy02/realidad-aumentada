@@ -134,10 +134,10 @@
         // Cada clave representa el identificador lógico del plato (dishId)
         // y se vincula a un asset 3D precargado y una configuración básica de transformación.
         var DISH_MODEL_REGISTRY = {
-          cafe: { url: './models/cafe/coffee_cup.glb', scale: '5 5 5', position: '0 -1.2 0', rotation: '0 0 0' },
+          cafe: { url: './models/cafe/coffee_cup.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
           sushi: { url: './models/sushi/sushi.glb', scale: '4.5 4.5 4.5', position: '0 -1.2 0', rotation: '0 0 0' },
           pizza: { url: './models/pizza/pizza.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          hamburguesa: { url: './models/hamburguesa/classic_burger.glb', scale: '0.4 0.4 0.4', position: '0 -1.2 0', rotation: '0 0 0' },
+          hamburguesa: { url: './models/hamburguesa/classic_burger.glb', scale: '0.2 0.2 0.2', position: '0 -1.2 0', rotation: '0 0 0' },
           latte: { url: './models/cafe/cafe_latte_with_art.glb', scale: '4.5 4.5 4.5', position: '0 -1.2 0', rotation: '0 0 0' },
           chocolate_caliente: { url: './models/cafe/hot_chocolate.glb', scale: '4.5 4.5 4.5', position: '0 -1.2 0', rotation: '0 0 0' },
           croissant: { url: './models/cafe/croissant.glb', scale: '3 3 3', position: '0 -1.2 0', rotation: '0 0 0' },
@@ -147,21 +147,21 @@
           papas_fritas: { url: './models/hamburguesa/fries_with_ketchup.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
           hotdog: { url: './models/hamburguesa/hot_dog__hotdog.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
           nuggets: { url: './models/hamburguesa/nuggets_mc.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          classic_burger: { url: './models/hamburguesa/classic_burger.glb', scale: '0.4 0.4 0.4', position: '0 -1.2 0', rotation: '0 0 0' },
+          classic_burger: { url: './models/hamburguesa/classic_burger.glb', scale: '0.25 0.25 0.25', position: '0 -1.2 0', rotation: '0 0 0' },
           blt_sandwich: { url: './models/hamburguesa/blt_sandwich.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
           sandwich_queso: { url: './models/hamburguesa/ham__cheese_sandwich.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
           rebanada_pizza: { url: './models/pizza/day_292_pizza_slice.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
           sushi_roll: { url: './models/sushi/sushi_rolls.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
           sushi_salmon: { url: './models/sushi/salmon_nigiri.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
           ramen: { url: './models/sushi/shrimp_ramen_bowl.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          pattern_cafe: { url: './models/cafe/coffee_cup.glb', scale: '5 5 5', position: '0 -1.2 0', rotation: '0 0 0' },
+          pattern_cafe: { url: './models/cafe/coffee_cup.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
           pattern_sushi: { url: './models/sushi/sushi.glb', scale: '4.5 4.5 4.5', position: '0 -1.2 0', rotation: '0 0 0' },
           pattern_pizza: { url: './models/pizza/pizza.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          pattern_hamburguesa: { url: './models/hamburguesa/classic_burger.glb', scale: '0.4 0.4 0.4', position: '0 -1.2 0', rotation: '0 0 0' },
-          barcode5: { url: './models/cafe/coffee_cup.glb', scale: '5 5 5', position: '0 -1.2 0', rotation: '0 0 0' },
+          pattern_hamburguesa: { url: './models/hamburguesa/classic_burger.glb', scale: '0.2 0.2 0.2', position: '0 -1.2 0', rotation: '0 0 0' },
+          barcode5: { url: './models/cafe/coffee_cup.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
           barcode6: { url: './models/sushi/sushi.glb', scale: '4.5 4.5 4.5', position: '0 -1.2 0', rotation: '0 0 0' },
           barcode7: { url: './models/pizza/pizza.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          barcode8: { url: './models/hamburguesa/classic_burger.glb', scale: '0.4 0.4 0.4', position: '0 -1.2 0', rotation: '0 0 0' }
+          barcode8: { url: './models/hamburguesa/classic_burger.glb', scale: '0.25 0.25 0.25', position: '0 -1.2 0', rotation: '0 0 0' }
         };
 
         // Platos configurados desde el panel administrativo se guardan en localStorage
@@ -576,8 +576,8 @@
         smoothThreshold="2"
         marker-model="dishId: cafe">
         <a-entity
-          gltf-model="#coffe-model"
-          scale="8.5 8.5 8.5"
+          gltf-model="#coffee-cup-model"
+          scale="3.5 3.5 3.5"
           position="0 -1.2 0"
           rotation="0 0 0"
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
@@ -610,7 +610,7 @@
       <a-nft type="nft" url="./markers/burger" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: hamburguesa">
         <a-entity
           gltf-model="#burger-model"
-          scale="0.4 0.4 0.4"
+          scale="0.2 0.2 0.2"
           position="0 -1.2 0"
           rotation="0 0 0"
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
@@ -807,7 +807,7 @@
       <a-marker type="pattern" url="./pattern-hamburguesa.patt" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: pattern_hamburguesa" data-lite="extra">
         <a-entity
           gltf-model="#burger-model"
-          scale="0.4 0.4 0.4"
+          scale="0.2 0.2 0.2"
           position="0 -1.2 0"
           rotation="0 0 0"
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
@@ -979,7 +979,7 @@
       <a-marker type="barcode" value="8" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: barcode8">
         <a-entity
           gltf-model="#burger-model"
-          scale="0.4 0.4 0.4"
+          scale="0.25 0.25 0.25"
           position="0 -1.2 0"
           rotation="0 0 0"
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">

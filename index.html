@@ -137,7 +137,7 @@
           cafe: { assetId: '#coffee-cup-model', scale: '5 5 5', position: '0 -1.2 0', rotation: '0 0 0' },
           sushi: { assetId: '#sushi-model', scale: '4.5 4.5 4.5', position: '0 -1.2 0', rotation: '0 0 0' },
           pizza: { assetId: '#pizza-model', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          hamburguesa: { assetId: '#burger-model', scale: '0.001 0.001 0.001', position: '0 -1.2 0', rotation: '0 0 0' },
+          hamburguesa: { assetId: '#burger-model', scale: '0.4 0.4 0.4', position: '0 -1.2 0', rotation: '0 0 0' },
           latte: { assetId: '#latte-model', scale: '4.5 4.5 4.5', position: '0 -1.2 0', rotation: '0 0 0' },
           chocolate_caliente: { assetId: '#hot-chocolate-model', scale: '4.5 4.5 4.5', position: '0 -1.2 0', rotation: '0 0 0' },
           croissant: { assetId: '#croissant-model', scale: '3 3 3', position: '0 -1.2 0', rotation: '0 0 0' },
@@ -147,7 +147,7 @@
           papas_fritas: { assetId: '#fries-model', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
           hotdog: { assetId: '#hotdog-model', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
           nuggets: { assetId: '#nuggets-model', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          classic_burger: { assetId: '#burger-classic-model', scale: '0.001 0.001 0.001', position: '0 -1.2 0', rotation: '0 0 0' },
+          classic_burger: { assetId: '#burger-classic-model', scale: '0.4 0.4 0.4', position: '0 -1.2 0', rotation: '0 0 0' },
           blt_sandwich: { assetId: '#sandwich-blt-model', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
           sandwich_queso: { assetId: '#sandwich-ham-cheese-model', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
           rebanada_pizza: { assetId: '#pizza-slice-model', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
@@ -157,11 +157,11 @@
           pattern_cafe: { assetId: '#coffee-cup-model', scale: '5 5 5', position: '0 -1.2 0', rotation: '0 0 0' },
           pattern_sushi: { assetId: '#sushi-model', scale: '4.5 4.5 4.5', position: '0 -1.2 0', rotation: '0 0 0' },
           pattern_pizza: { assetId: '#pizza-model', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          pattern_hamburguesa: { assetId: '#burger-model', scale: '0.001 0.001 0.001', position: '0 -1.2 0', rotation: '0 0 0' },
+          pattern_hamburguesa: { assetId: '#burger-model', scale: '0.4 0.4 0.4', position: '0 -1.2 0', rotation: '0 0 0' },
           barcode5: { assetId: '#coffee-cup-model', scale: '5 5 5', position: '0 -1.2 0', rotation: '0 0 0' },
           barcode6: { assetId: '#sushi-model', scale: '4.5 4.5 4.5', position: '0 -1.2 0', rotation: '0 0 0' },
           barcode7: { assetId: '#pizza-model', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          barcode8: { assetId: '#burger-model', scale: '0.001 0.001 0.001', position: '0 -1.2 0', rotation: '0 0 0' }
+          barcode8: { assetId: '#burger-model', scale: '0.4 0.4 0.4', position: '0 -1.2 0', rotation: '0 0 0' }
         };
 
         // Platos configurados desde el panel administrativo se guardan en localStorage
@@ -610,7 +610,7 @@
       <a-nft type="nft" url="./markers/burger" emitevents="true" smooth="true" smoothCount="25" smoothTolerance="0.002" smoothThreshold="2" marker-model="dishId: hamburguesa">
         <a-entity
           gltf-model="#burger-model"
-          scale="0.001 0.001 0.001"
+          scale="0.4 0.4 0.4"
           position="0 -1.2 0"
           rotation="0 0 0"
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
@@ -710,7 +710,7 @@
       <a-nft type="nft" url="./markers/classic_burger/classic_burger" emitevents="true" smooth="true" smoothCount="25" smoothTolerance="0.002" smoothThreshold="2" marker-model="dishId: classic_burger" data-lite="extra">
         <a-entity
           gltf-model="#burger-classic-model"
-          scale="0.003 0.003 0.003"
+          scale="0.4 0.4 0.4"
           position="0 -1.2 0"
           rotation="0 0 0"
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
@@ -807,7 +807,7 @@
       <a-marker type="pattern" url="./pattern-hamburguesa.patt" emitevents="true" smooth="true" smoothCount="25" smoothTolerance="0.002" smoothThreshold="2" marker-model="dishId: pattern_hamburguesa" data-lite="extra">
         <a-entity
           gltf-model="#burger-model"
-          scale="0.001 0.001 0.001"
+          scale="0.4 0.4 0.4"
           position="0 -1.2 0"
           rotation="0 0 0"
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
@@ -979,7 +979,7 @@
       <a-marker type="barcode" value="8" emitevents="true" smooth="true" smoothCount="25" smoothTolerance="0.002" smoothThreshold="2" marker-model="dishId: barcode8">
         <a-entity
           gltf-model="#burger-model"
-          scale="0.001 0.001 0.001"
+          scale="0.4 0.4 0.4"
           position="0 -1.2 0"
           rotation="0 0 0"
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">

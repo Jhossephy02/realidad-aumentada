@@ -4,9 +4,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>WebAR Experience</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/gh/aframevr/aframe@v1.3.0/dist/aframe-master.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
     <script>
+      // Componente reutilizable para rotar y escalar modelos 3D con mouse y gestos táctiles.
+      // Se aplica a todas las entidades que tengan el atributo `drag-rotate-scale`.
       if (typeof AFRAME !== 'undefined') {
         AFRAME.registerComponent('drag-rotate-scale', {
           schema: {
@@ -124,6 +129,114 @@
             this.el.object3D.scale.set(s, s, s);
           }
         });
+
+        // Registro central de platos y modelos asociados para WebAR por imagen.
+        // Cada clave representa el identificador lógico del plato (dishId)
+        // y se vincula a un asset 3D precargado y una configuración básica de transformación.
+        var DISH_MODEL_REGISTRY = {
+          cafe: { assetId: '#coffee-cup-model', scale: '8.5 8.5 8.5', position: '0 -1.2 0', rotation: '0 0 0' },
+          sushi: { assetId: '#sushi-model', scale: '6 6 6', position: '0 -1.2 0', rotation: '0 0 0' },
+          pizza: { assetId: '#pizza-model', scale: '4.5 4.5 4.5', position: '0 -1.2 0', rotation: '0 0 0' },
+          hamburguesa: { assetId: '#burger-model', scale: '0.0025 0.0025 0.0025', position: '0 -1.2 0', rotation: '0 0 0' },
+          latte: { assetId: '#latte-model', scale: '6.5 6.5 6.5', position: '0 -1.2 0', rotation: '0 0 0' },
+          chocolate_caliente: { assetId: '#hot-chocolate-model', scale: '6 6 6', position: '0 -1.2 0', rotation: '0 0 0' },
+          croissant: { assetId: '#croissant-model', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
+          dona: { assetId: '#donut-model', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
+          muffin: { assetId: '#muffin-model', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
+          cupcake: { assetId: '#cupcake-model', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
+          papas_fritas: { assetId: '#fries-model', scale: '4 4 4', position: '0 -1.2 0', rotation: '0 0 0' },
+          hotdog: { assetId: '#hotdog-model', scale: '4 4 4', position: '0 -1.2 0', rotation: '0 0 0' },
+          nuggets: { assetId: '#nuggets-model', scale: '4 4 4', position: '0 -1.2 0', rotation: '0 0 0' },
+          classic_burger: { assetId: '#burger-classic-model', scale: '0.003 0.003 0.003', position: '0 -1.2 0', rotation: '0 0 0' },
+          blt_sandwich: { assetId: '#sandwich-blt-model', scale: '4 4 4', position: '0 -1.2 0', rotation: '0 0 0' },
+          sandwich_queso: { assetId: '#sandwich-ham-cheese-model', scale: '4 4 4', position: '0 -1.2 0', rotation: '0 0 0' },
+          rebanada_pizza: { assetId: '#pizza-slice-model', scale: '4 4 4', position: '0 -1.2 0', rotation: '0 0 0' },
+          sushi_roll: { assetId: '#sushi-rolls-model', scale: '4 4 4', position: '0 -1.2 0', rotation: '0 0 0' },
+          sushi_salmon: { assetId: '#nigiri-model', scale: '4 4 4', position: '0 -1.2 0', rotation: '0 0 0' },
+          ramen: { assetId: '#ramen-model', scale: '4 4 4', position: '0 -1.2 0', rotation: '0 0 0' },
+          pattern_cafe: { assetId: '#coffee-cup-model', scale: '7 7 7', position: '0 -1.2 0', rotation: '0 0 0' },
+          pattern_sushi: { assetId: '#sushi-model', scale: '6 6 6', position: '0 -1.2 0', rotation: '0 0 0' },
+          pattern_pizza: { assetId: '#pizza-model', scale: '4.5 4.5 4.5', position: '0 -1.2 0', rotation: '0 0 0' },
+          pattern_hamburguesa: { assetId: '#burger-model', scale: '0.0025 0.0025 0.0025', position: '0 -1.2 0', rotation: '0 0 0' },
+          barcode5: { assetId: '#coffee-cup-model', scale: '7 7 7', position: '0 -1.2 0', rotation: '0 0 0' },
+          barcode6: { assetId: '#sushi-model', scale: '6 6 6', position: '0 -1.2 0', rotation: '0 0 0' },
+          barcode7: { assetId: '#pizza-model', scale: '4.5 4.5 4.5', position: '0 -1.2 0', rotation: '0 0 0' },
+          barcode8: { assetId: '#burger-model', scale: '0.0025 0.0025 0.0025', position: '0 -1.2 0', rotation: '0 0 0' }
+        };
+
+        // Platos configurados desde el panel administrativo se guardan en localStorage
+        // bajo esta clave. Si existe una coincidencia, se prioriza sobre el registro estático.
+        var STORAGE_KEY_PLATOS = 'adminPlatosAR';
+
+        // Devuelve la configuración de modelo 3D para un plato concreto.
+        // 1) Intenta resolver desde platos guardados por el administrador.
+        // 2) Si no hay coincidencia, usa el registro estático DISH_MODEL_REGISTRY.
+        function resolveModelConfig(dishId) {
+          if (!dishId) return null;
+          var platos = null;
+          try {
+            var raw = localStorage.getItem(STORAGE_KEY_PLATOS);
+            if (raw) {
+              var parsed = JSON.parse(raw);
+              if (Array.isArray(parsed)) {
+                platos = parsed;
+              }
+            }
+          } catch (e) {}
+          if (platos) {
+            var found = platos.find(function(p) {
+              return String(p.marcador || '').toLowerCase() === String(dishId).toLowerCase();
+            });
+            if (found && found.modelo) {
+              return {
+                url: found.modelo,
+                scale: '4 4 4',
+                position: '0 -1.2 0',
+                rotation: '0 0 0'
+              };
+            }
+          }
+          return DISH_MODEL_REGISTRY[dishId] || null;
+        }
+
+        // Componente que se coloca en cada marcador (a-nft / a-marker) y
+        // decide qué modelo 3D cargar cuando el marcador es detectado.
+        AFRAME.registerComponent('marker-model', {
+          schema: {
+            dishId: {type: 'string'}
+          },
+          init: function () {
+            this.modelEntity = this.el.querySelector('[marker-model-host]') || this.el.querySelector('a-entity');
+            this.onMarkerFound = this.handleMarkerFound.bind(this);
+            this.el.addEventListener('markerFound', this.onMarkerFound);
+          },
+          remove: function () {
+            this.el.removeEventListener('markerFound', this.onMarkerFound);
+          },
+          handleMarkerFound: function () {
+            var dishId = this.data.dishId;
+            var cfg = resolveModelConfig(dishId);
+            if (!cfg) {
+              console.warn('No se encontró modelo para marcador', dishId);
+              return;
+            }
+            var host = this.modelEntity || this.el;
+            if (cfg.assetId) {
+              host.setAttribute('gltf-model', cfg.assetId);
+            } else if (cfg.url) {
+              host.setAttribute('gltf-model', cfg.url);
+            }
+            if (cfg.scale) {
+              host.setAttribute('scale', cfg.scale);
+            }
+            if (cfg.position) {
+              host.setAttribute('position', cfg.position);
+            }
+            if (cfg.rotation) {
+              host.setAttribute('rotation', cfg.rotation);
+            }
+          }
+        });
       }
     </script>
     <style>
@@ -133,7 +246,7 @@
         --accent-color: #ffffff;
       }
       body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-family: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         user-select: none;
       }
       .arjs-loader {
@@ -149,6 +262,7 @@
         justify-content: center;
         align-items: center;
         color: white;
+        transition: opacity 0.4s ease;
       }
       .loader-spinner {
         width: 50px;
@@ -175,19 +289,18 @@
         pointer-events: none;
       }
       .hint-text {
-        background: rgba(0, 0, 0, 0.6);
+        background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.9));
         color: white;
-        padding: 8px 16px;
-        border-radius: 20px;
-        font-size: 14px;
-        margin-bottom: 20px;
-        backdrop-filter: blur(5px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        animation: fadeInOut 3s infinite;
-      }
-      @keyframes fadeInOut {
-        0%, 100% { opacity: 0.7; }
-        50% { opacity: 1; }
+        padding: 10px 18px;
+        border-radius: 999px;
+        font-size: 13px;
+        margin-bottom: 18px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(148, 163, 184, 0.7);
+        box-shadow: 0 14px 40px rgba(15, 23, 42, 0.8);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
       }
       .controls {
         display: flex;
@@ -226,18 +339,19 @@
       }
       .header-ui {
         position: absolute;
-        top: 20px;
-        left: 20px;
+        top: 16px;
+        left: 16px;
         z-index: 1000;
         color: white;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-      }
-      .header-ui h1 {
-        margin: 0;
-        font-size: 20px;
-        letter-spacing: 2px;
-        font-weight: 300;
-        text-transform: uppercase;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.92));
+        border: 1px solid rgba(148, 163, 184, 0.8);
+        font-size: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
       }
       .flash {
         position: absolute;
@@ -268,8 +382,18 @@
         border-radius: 12px;
         max-width: 260px;
         font-size: 13px;
-        display: none;
         backdrop-filter: blur(6px);
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: opacity 0.25s ease, transform 0.25s ease;
+      }
+      .product-panel.hidden {
+        display: none;
+      }
+      .product-panel.visible {
+        display: block;
+        opacity: 1;
+        transform: translateY(0);
       }
       .product-title {
         font-weight: 600;
@@ -318,7 +442,16 @@
     <video id="bg-video" class="bg-video" autoplay muted playsinline></video>
     <div class="flash" id="flash-effect"></div>
 
-    <div class="product-panel" id="product-panel">
+    <div class="header-ui">
+      <span>Menú AR</span>
+    </div>
+
+    <div class="arjs-loader" id="global-loader">
+      <div class="loader-spinner"></div>
+      <div>Detectando cámara y preparando la experiencia de menú en Realidad Aumentada...</div>
+    </div>
+
+    <div class="product-panel hidden" id="product-panel">
       <div class="product-title" id="product-title"></div>
       <div class="product-price" id="product-price"></div>
       <div class="product-section-title">Ingredientes</div>
@@ -326,17 +459,23 @@
     </div>
 
     <div class="ui-container">
+      <div class="hint-text">
+        <span>📷</span>
+        <span>Apunta a la imagen del menú o tarjeta con código para ver el plato.</span>
+      </div>
       <div class="controls">
         <div class="screenshot-btn" id="screenshot"></div>
       </div>
     </div>
 
+    <!-- Escena principal de WebAR por imagen (AR.js + A-Frame).
+         Optimizada para móviles: resolución de cámara moderada y sin pantalla de carga de A-Frame. -->
     <a-scene
       vr-mode-ui="enabled: false"
       embedded
       loading-screen="enabled: false"
       renderer="antialias: true; logarithmicDepthBuffer: true; colorManagement: true; alpha: true; preserveDrawingBuffer: true;"
-      arjs="sourceType: webcam; sourceWidth: 1280; sourceHeight: 720; displayWidth: 1280; displayHeight: 720; trackingMethod: best; detectionMode: mono_and_matrix; matrixCodeType: 3x3; debugUIEnabled: false;"
+      arjs="sourceType: webcam; sourceWidth: 640; sourceHeight: 480; displayWidth: 640; displayHeight: 480; trackingMethod: best; detectionMode: mono_and_matrix; matrixCodeType: 3x3; debugUIEnabled: false;"
       screenshot
       style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;">
       
@@ -373,7 +512,8 @@
         smooth="true" 
         smoothCount="20" 
         smoothTolerance="0.002" 
-        smoothThreshold="2">
+        smoothThreshold="2"
+        marker-model="dishId: cafe">
         <a-entity
           gltf-model="#coffe-model"
           scale="8.5 8.5 8.5"
@@ -384,7 +524,7 @@
       </a-nft>
 
       <!-- Marcador de Sushi -->
-      <a-nft type="nft" url="./markers/sushi" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+      <a-nft type="nft" url="./markers/sushi" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2" marker-model="dishId: sushi">
         <a-entity
           gltf-model="#sushi-model"
           scale="6 6 6"
@@ -395,7 +535,7 @@
       </a-nft>
 
       <!-- Marcador de Pizza -->
-      <a-nft type="nft" url="./markers/pizza" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+      <a-nft type="nft" url="./markers/pizza" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2" marker-model="dishId: pizza">
         <a-entity
           gltf-model="#pizza-model"
           scale="4.5 4.5 4.5"
@@ -406,7 +546,7 @@
       </a-nft>
 
       <!-- Marcador de Hamburguesa -->
-      <a-nft type="nft" url="./markers/burger" emitevents="true" smooth="true" smoothCount="25" smoothTolerance="0.002" smoothThreshold="2">
+      <a-nft type="nft" url="./markers/burger" emitevents="true" smooth="true" smoothCount="25" smoothTolerance="0.002" smoothThreshold="2" marker-model="dishId: hamburguesa">
         <a-entity
           gltf-model="#burger-model"
           scale="0.0025 0.0025 0.0025"
@@ -416,7 +556,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./zip´s/cafe/latte" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+      <a-nft type="nft" url="./zip´s/cafe/latte" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2" marker-model="dishId: latte">
         <a-entity
           gltf-model="#latte-model"
           scale="6.5 6.5 6.5"
@@ -426,7 +566,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./zip´s/cafe/chocolate_caliente" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+      <a-nft type="nft" url="./zip´s/cafe/chocolate_caliente" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2" marker-model="dishId: chocolate_caliente">
         <a-entity
           gltf-model="#hot-chocolate-model"
           scale="6 6 6"
@@ -436,7 +576,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./zip´s/cafe/croissant" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+      <a-nft type="nft" url="./zip´s/cafe/croissant" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2" marker-model="dishId: croissant">
         <a-entity
           gltf-model="#croissant-model"
           scale="3.5 3.5 3.5"
@@ -446,7 +586,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./zip´s/cafe/dona" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+      <a-nft type="nft" url="./zip´s/cafe/dona" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2" marker-model="dishId: dona">
         <a-entity
           gltf-model="#donut-model"
           scale="3.5 3.5 3.5"
@@ -456,7 +596,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./zip´s/cafe/muffin" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+      <a-nft type="nft" url="./zip´s/cafe/muffin" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2" marker-model="dishId: muffin">
         <a-entity
           gltf-model="#muffin-model"
           scale="3.5 3.5 3.5"
@@ -466,7 +606,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./zip´s/cafe/cupcake" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+      <a-nft type="nft" url="./zip´s/cafe/cupcake" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2" marker-model="dishId: cupcake">
         <a-entity
           gltf-model="#cupcake-model"
           scale="3.5 3.5 3.5"
@@ -476,7 +616,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./zip´s/hamburguesa/papas_fritas" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+      <a-nft type="nft" url="./zip´s/hamburguesa/papas_fritas" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2" marker-model="dishId: papas_fritas">
         <a-entity
           gltf-model="#fries-model"
           scale="4 4 4"
@@ -486,7 +626,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./zip´s/hamburguesa/hotdog" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+      <a-nft type="nft" url="./zip´s/hamburguesa/hotdog" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2" marker-model="dishId: hotdog">
         <a-entity
           gltf-model="#hotdog-model"
           scale="4 4 4"
@@ -496,7 +636,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./zip´s/hamburguesa/nuggets" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+      <a-nft type="nft" url="./zip´s/hamburguesa/nuggets" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2" marker-model="dishId: nuggets">
         <a-entity
           gltf-model="#nuggets-model"
           scale="4 4 4"
@@ -506,7 +646,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./zip´s/hamburguesa/Classic Burger" emitevents="true" smooth="true" smoothCount="25" smoothTolerance="0.002" smoothThreshold="2">
+      <a-nft type="nft" url="./zip´s/hamburguesa/Classic Burger" emitevents="true" smooth="true" smoothCount="25" smoothTolerance="0.002" smoothThreshold="2" marker-model="dishId: classic_burger">
         <a-entity
           gltf-model="#burger-classic-model"
           scale="0.003 0.003 0.003"
@@ -516,7 +656,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./zip´s/hamburguesa/blt_sandwich" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+      <a-nft type="nft" url="./zip´s/hamburguesa/blt_sandwich" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2" marker-model="dishId: blt_sandwich">
         <a-entity
           gltf-model="#sandwich-blt-model"
           scale="4 4 4"
@@ -526,7 +666,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./zip´s/hamburguesa/sandwich_queso" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+      <a-nft type="nft" url="./zip´s/hamburguesa/sandwich_queso" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2" marker-model="dishId: sandwich_queso">
         <a-entity
           gltf-model="#sandwich-ham-cheese-model"
           scale="4 4 4"
@@ -536,7 +676,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./zip´s/pizza/rebanada_pizza" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+      <a-nft type="nft" url="./zip´s/pizza/rebanada_pizza" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2" marker-model="dishId: rebanada_pizza">
         <a-entity
           gltf-model="#pizza-slice-model"
           scale="4 4 4"
@@ -546,7 +686,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./zip´s/sushi/sushi_roll" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+      <a-nft type="nft" url="./zip´s/sushi/sushi_roll" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2" marker-model="dishId: sushi_roll">
         <a-entity
           gltf-model="#sushi-rolls-model"
           scale="4 4 4"
@@ -556,7 +696,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./zip´s/sushi/sushi_salmon" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+      <a-nft type="nft" url="./zip´s/sushi/sushi_salmon" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2" marker-model="dishId: sushi_salmon">
         <a-entity
           gltf-model="#nigiri-model"
           scale="4 4 4"
@@ -566,7 +706,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./zip´s/sushi/ramen" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+      <a-nft type="nft" url="./zip´s/sushi/ramen" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2" marker-model="dishId: ramen">
         <a-entity
           gltf-model="#ramen-model"
           scale="4 4 4"
@@ -576,7 +716,7 @@
         </a-entity>
       </a-nft>
       
-      <a-marker type="pattern" url="./pattern-caffe.patt" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+      <a-marker type="pattern" url="./pattern-caffe.patt" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2" marker-model="dishId: pattern_cafe">
         <a-entity
           gltf-model="#coffe-model"
           scale="7 7 7"
@@ -585,7 +725,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="pattern" url="./pattern-sushi.patt" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+      <a-marker type="pattern" url="./pattern-sushi.patt" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2" marker-model="dishId: pattern_sushi">
         <a-entity
           gltf-model="#sushi-model"
           scale="6 6 6"
@@ -594,7 +734,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="pattern" url="./pattern-pizza.patt" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+      <a-marker type="pattern" url="./pattern-pizza.patt" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2" marker-model="dishId: pattern_pizza">
         <a-entity
           gltf-model="#pizza-model"
           scale="4.5 4.5 4.5"
@@ -603,7 +743,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="pattern" url="./pattern-hamburguesa.patt" emitevents="true" smooth="true" smoothCount="25" smoothTolerance="0.002" smoothThreshold="2">
+      <a-marker type="pattern" url="./pattern-hamburguesa.patt" emitevents="true" smooth="true" smoothCount="25" smoothTolerance="0.002" smoothThreshold="2" marker-model="dishId: pattern_hamburguesa">
         <a-entity
           gltf-model="#burger-model"
           scale="0.0025 0.0025 0.0025"
@@ -748,7 +888,7 @@
         </a-entity>
       </a-marker>
       
-      <a-marker type="barcode" value="5" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+      <a-marker type="barcode" value="5" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2" marker-model="dishId: barcode5">
         <a-entity
           gltf-model="#coffe-model"
           scale="7 7 7"
@@ -757,7 +897,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="barcode" value="6" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+      <a-marker type="barcode" value="6" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2" marker-model="dishId: barcode6">
         <a-entity
           gltf-model="#sushi-model"
           scale="6 6 6"
@@ -766,7 +906,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="barcode" value="7" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+      <a-marker type="barcode" value="7" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2" marker-model="dishId: barcode7">
         <a-entity
           gltf-model="#pizza-model"
           scale="4.5 4.5 4.5"
@@ -775,7 +915,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="barcode" value="8" emitevents="true" smooth="true" smoothCount="25" smoothTolerance="0.002" smoothThreshold="2">
+      <a-marker type="barcode" value="8" emitevents="true" smooth="true" smoothCount="25" smoothTolerance="0.002" smoothThreshold="2" marker-model="dishId: barcode8">
         <a-entity
           gltf-model="#burger-model"
           scale="0.0025 0.0025 0.0025"
@@ -791,12 +931,16 @@
     </a-scene>
 
     <script>
+      // Panel de información del plato asociado al marcador actualmente visible.
       const productPanel = document.getElementById('product-panel');
       const productTitle = document.getElementById('product-title');
       const productPrice = document.getElementById('product-price');
       const productIngredients = document.getElementById('product-ingredients');
+      const globalLoader = document.getElementById('global-loader');
       
       // PRECIOS CORREGIDOS según las imágenes
+      // Mapa base de platos para la demo del restaurante.
+      // Cada entrada se asocia a un marcador mediante getProductKeyFromMarker.
       const products = {
         cafe: {
           title: 'Café Americano',
@@ -900,6 +1044,7 @@
         }
       };
 
+      // Relación opcional entre ids de modelos GLB y sus imágenes de referencia 2D.
       const modelImages = {
         'coffe-model': 'img/cafe/cafe.png',
         'coffee-cup-model': 'img/cafe/taza_cafe.png',
@@ -927,6 +1072,8 @@
       
       const adminStorageKey = 'adminPlatosAR';
       
+      // Integra dinámicamente en la escena los platos que se hayan creado
+      // desde el panel administrativo (menu-visual.html) utilizando localStorage.
       (function integrateAdminDishes() {
         let raw;
         try {
@@ -985,8 +1132,14 @@
           nft.setAttribute('smoothThreshold', '2');
           nft.setAttribute('data-product-key', productsKey);
           const entity = document.createElement('a-entity');
-          entity.setAttribute('gltf-model', '#' + modelId);
-          entity.setAttribute('scale', '4 4 4');
+          const baseModelId = '#' + modelId;
+          let scale = '4 4 4';
+          if (folder === 'cafe') scale = '6 6 6';
+          else if (folder === 'pizza') scale = '4.5 4.5 4.5';
+          else if (folder === 'sushi') scale = '4 4 4';
+          else if (folder === 'hamburguesa') scale = '0.003 0.003 0.003';
+          entity.setAttribute('gltf-model', baseModelId);
+          entity.setAttribute('scale', scale);
           entity.setAttribute('position', '0 -1.2 0');
           entity.setAttribute('rotation', '0 0 0');
           entity.setAttribute('drag-rotate-scale', 'minScale: 0.5; maxScale: 2; rotationFactor: 0.5');
@@ -995,6 +1148,8 @@
         });
       })();
       
+      // A partir del marcador detectado (NFT, patrón .patt o código de barras),
+      // intenta deducir qué clave de producto mostrar en el panel lateral.
       function getProductKeyFromMarker(marker) {
         const custom = marker.getAttribute('data-product-key');
         if (custom) return custom;
@@ -1029,6 +1184,22 @@
         return null;
       }
       
+      function hideGlobalLoader() {
+        if (!globalLoader) return;
+        globalLoader.style.opacity = '0';
+        globalLoader.style.pointerEvents = 'none';
+        setTimeout(function () {
+          if (globalLoader && globalLoader.style) {
+            globalLoader.style.display = 'none';
+          }
+        }, 400);
+      }
+
+      const sceneEl = document.querySelector('a-scene');
+      if (sceneEl && globalLoader) {
+        sceneEl.addEventListener('loaded', hideGlobalLoader);
+      }
+
       function showProduct(key) {
         if (!productPanel) return;
         const p = products[key];
@@ -1036,12 +1207,14 @@
         productTitle.textContent = p.title;
         productPrice.textContent = p.price;
         productIngredients.textContent = p.ingredients;
-        productPanel.style.display = 'block';
+        productPanel.classList.remove('hidden');
+        productPanel.classList.add('visible');
       }
       
       function hideProduct() {
         if (!productPanel) return;
-        productPanel.style.display = 'none';
+        productPanel.classList.remove('visible');
+        productPanel.classList.add('hidden');
       }
 
       // Funcionalidad para tomar captura (Foto)
@@ -1101,6 +1274,7 @@
             console.log('markerFound', m.getAttribute('url') || m.getAttribute('value') || m.getAttribute('type'));
             visibleMarkers.add(m);
             setActiveMarker(m);
+            hideGlobalLoader();
           });
 
           m.addEventListener('markerLost', () => {

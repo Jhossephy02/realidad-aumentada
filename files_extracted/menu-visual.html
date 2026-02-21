@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Menú Visual - Realidad Aumentada</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-3L6C9V0O1iNwM4L3e3L6wG2GAcV4rG8aC3K7G6H6X3R0T+1d8c9Z8e7wG5M4M0b0z2X0S2t3+2z+7p6x9C3s0g==" crossorigin="anonymous" referrerpolicy="no-referrer">
   <style>
     * {
       margin: 0;
@@ -12,10 +16,11 @@
     }
     
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1e293b 0%, #020617 55%, #000000 100%);
       min-height: 100vh;
       padding: 20px;
+      color: #e2e8f0;
     }
     
     .container {
@@ -26,46 +31,79 @@
     .header {
       text-align: center;
       color: white;
-      margin-bottom: 40px;
+      margin-bottom: 32px;
+    }
+    
+    .header-inner {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 24px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 64, 175, 0.9));
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(14px);
     }
     
     .header h1 {
-      font-size: 48px;
+      font-size: 34px;
       font-weight: 700;
-      margin-bottom: 10px;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+      margin: 0;
+      letter-spacing: 0.04em;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .header h1 i {
+      font-size: 26px;
+      color: #f97316;
     }
     
     .header p {
-      font-size: 18px;
+      font-size: 15px;
       opacity: 0.9;
     }
     
     .menu-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 30px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 26px;
       margin-bottom: 40px;
     }
     
     .menu-card {
-      background: white;
-      border-radius: 20px;
+      background: radial-gradient(circle at top left, rgba(248, 250, 252, 0.98), rgba(226, 232, 240, 0.96));
+      border-radius: 22px;
       overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      transition: transform 0.3s, box-shadow 0.3s;
+      box-shadow: 0 16px 45px rgba(15, 23, 42, 0.55);
+      transition: transform 0.32s ease, box-shadow 0.32s ease, border-color 0.32s ease;
       cursor: pointer;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      opacity: 0;
+      transform: translateY(18px);
+      animation: cardFadeUp 0.6s ease forwards;
+    }
+    
+    .menu-card:nth-child(2n) {
+      animation-delay: 0.06s;
+    }
+    
+    .menu-card:nth-child(3n) {
+      animation-delay: 0.12s;
     }
     
     .menu-card:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      transform: translateY(-6px) scale(1.01);
+      box-shadow: 0 22px 60px rgba(15, 23, 42, 0.7);
+      border-color: rgba(59, 130, 246, 0.8);
     }
     
     .menu-card-image {
       width: 100%;
-      height: 250px;
-      background-color: #f5f5f5;
+      height: 220px;
+      background: radial-gradient(circle at top, #e5e7eb 0%, #cbd5e1 45%, #94a3b8 100%);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -74,90 +112,111 @@
     }
     
     .menu-card-image img {
-      width: 100%;
-      height: 100%;
+      width: 105%;
+      height: 105%;
       object-fit: cover;
+      transform: scale(1.02);
+      transition: transform 0.5s ease;
+    }
+    
+    .menu-card:hover .menu-card-image img {
+      transform: scale(1.06);
     }
     
     .ar-badge {
       position: absolute;
-      top: 15px;
-      right: 15px;
-      background: rgba(255, 71, 87, 0.9);
+      top: 14px;
+      right: 14px;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.96), rgba(59, 130, 246, 0.96));
       color: white;
-      padding: 8px 15px;
-      border-radius: 20px;
-      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 11px;
       font-weight: 600;
-      backdrop-filter: blur(10px);
-      display: flex;
+      backdrop-filter: blur(12px);
+      display: inline-flex;
       align-items: center;
-      gap: 5px;
+      gap: 6px;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.6);
     }
     
-    .ar-badge::before {
-      content: '📱';
-      font-size: 14px;
+    .ar-badge i {
+      font-size: 12px;
     }
     
     .menu-card-content {
-      padding: 25px;
+      padding: 22px 22px 20px;
     }
     
     .menu-card-title {
-      font-size: 24px;
-      font-weight: 700;
-      color: #2d3748;
-      margin-bottom: 10px;
+      font-size: 20px;
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 8px;
     }
     
     .menu-card-description {
-      font-size: 14px;
-      color: #718096;
+      font-size: 13px;
+      color: #475569;
       line-height: 1.6;
-      margin-bottom: 15px;
+      margin-bottom: 12px;
     }
     
     .menu-card-footer {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 20px;
-      padding-top: 20px;
-      border-top: 1px solid #e2e8f0;
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(148, 163, 184, 0.5);
+      gap: 10px;
+      flex-wrap: wrap;
     }
     
     .price {
-      font-size: 28px;
+      font-size: 22px;
       font-weight: 700;
-      color: #ff4757;
+      color: #e11d48;
     }
     
     .barcode {
-      font-size: 12px;
-      color: #a0aec0;
-      background: #f7fafc;
+      font-size: 11px;
+      color: #64748b;
+      background: #eef2ff;
       padding: 5px 10px;
-      border-radius: 5px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
     
     .qr-section {
-      background: white;
-      border-radius: 20px;
-      padding: 30px;
+      background: radial-gradient(circle at top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.96));
+      border-radius: 24px;
+      padding: 26px 24px 28px;
       text-align: center;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      color: #e2e8f0;
     }
     
     .qr-section h2 {
-      font-size: 28px;
-      color: #2d3748;
-      margin-bottom: 15px;
+      font-size: 24px;
+      color: #e5e7eb;
+      margin-bottom: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .qr-section h2 i {
+      color: #38bdf8;
     }
     
     .qr-section p {
-      color: #718096;
-      margin-bottom: 20px;
+      color: #94a3b8;
+      margin-bottom: 16px;
+      font-size: 14px;
     }
     
     .qr-grid {
@@ -174,15 +233,17 @@
     .qr-code {
       width: 120px;
       height: 120px;
-      background: #000;
+      background: #020617;
       margin: 0 auto 10px;
-      border-radius: 10px;
+      border-radius: 18px;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.7);
     }
     
     .qr-label {
-      font-size: 14px;
-      color: #2d3748;
-      font-weight: 600;
+      font-size: 13px;
+      color: #e5e7eb;
+      font-weight: 500;
     }
 
     .menu-section {
@@ -190,16 +251,62 @@
     }
 
     .menu-section-title {
-      font-size: 28px;
-      font-weight: 700;
-      color: #ffffff;
-      margin: 10px 0 20px;
-      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+      font-size: 20px;
+      font-weight: 600;
+      color: #e5e7eb;
+      margin: 8px 0 18px;
+      text-shadow: 0 2px 6px rgba(15, 23, 42, 0.6);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .section-actions {
+      display: flex;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .section-pill {
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      color: #e2e8f0;
+      border: 1px solid rgba(148, 163, 184, 0.8);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .view-360-btn {
+      margin-left: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #ecfdf5;
+      font-size: 11px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 8px 20px rgba(22, 163, 74, 0.5);
+      transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+    }
+    
+    .view-360-btn i {
+      font-size: 11px;
+    }
+    
+    .view-360-btn:active {
+      transform: translateY(1px) scale(0.98);
+      box-shadow: 0 3px 10px rgba(22, 163, 74, 0.5);
+      filter: brightness(0.96);
     }
 
     .admin-toolbar {
       margin-top: 20px;
-      display: flex;
+      display: none;
       justify-content: center;
     }
 
@@ -321,6 +428,35 @@
       color: #a0aec0;
     }
 
+    @keyframes cardFadeUp {
+      0% {
+        opacity: 0;
+        transform: translateY(18px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 16px;
+      }
+      .header h1 {
+        font-size: 26px;
+      }
+      .header p {
+        font-size: 13px;
+      }
+      .menu-card {
+        border-radius: 18px;
+      }
+      .menu-card-image {
+        height: 190px;
+      }
+    }
+
     @media print {
       body {
         background: white;
@@ -343,7 +479,12 @@
     </div>
 
     <div class="menu-section">
-      <h2 class="menu-section-title">Sección Café</h2>
+      <h2 class="menu-section-title">
+        Sección Café
+        <span class="section-actions">
+          <span class="section-pill">Modelos AR con QR</span>
+        </span>
+      </h2>
       <div class="menu-grid">
         <!-- Café -->
         <div class="menu-card">
@@ -357,6 +498,7 @@
             <div class="menu-card-footer">
               <div class="price">S/ 8.00</div>
               <div class="barcode">Código: 5</div>
+                  <button class="view-360-btn" data-model="models/cafe/coffe2.glb" data-title="Café Americano" data-type="cafe">Ver en mi mesa</button>
             </div>
           </div>
         </div>
@@ -376,6 +518,7 @@
             <div class="menu-card-footer">
               <div class="price">Desde S/ 10.00</div>
               <div class="barcode">Marcador: Hiro</div>
+                  <button class="view-360-btn" data-model="models/cafe/cafe_latte_with_art.glb" data-title="Especialidades de Café" data-type="cafe">Ver en mi mesa</button>
             </div>
           </div>
         </div>
@@ -383,7 +526,12 @@
     </div>
 
     <div class="menu-section">
-      <h2 class="menu-section-title">Sección Sushi</h2>
+      <h2 class="menu-section-title">
+        Sección Sushi
+        <span class="section-actions">
+          <span class="section-pill">Modelos AR con QR</span>
+        </span>
+      </h2>
       <div class="menu-grid">
         <!-- Sushi -->
         <div class="menu-card">
@@ -397,6 +545,7 @@
             <div class="menu-card-footer">
               <div class="price">S/ 25.00</div>
               <div class="barcode">Código: 6</div>
+                  <button class="view-360-btn" data-model="models/sushi/sushi.glb" data-title="Sushi Mixto" data-type="sushi">Ver en mi mesa</button>
             </div>
           </div>
         </div>
@@ -416,6 +565,7 @@
             <div class="menu-card-footer">
               <div class="price">Desde S/ 28.00</div>
               <div class="barcode">Marcador: Hiro</div>
+                  <button class="view-360-btn" data-model="models/sushi/shrimp_ramen_bowl.glb" data-title="Sushi y Ramen" data-type="sushi">Ver en mi mesa</button>
             </div>
           </div>
         </div>
@@ -423,7 +573,12 @@
     </div>
 
     <div class="menu-section">
-      <h2 class="menu-section-title">Sección Pizza</h2>
+      <h2 class="menu-section-title">
+        Sección Pizza
+        <span class="section-actions">
+          <span class="section-pill">Modelos AR con QR</span>
+        </span>
+      </h2>
       <div class="menu-grid">
         <!-- Pizza -->
         <div class="menu-card">
@@ -437,6 +592,7 @@
             <div class="menu-card-footer">
               <div class="price">S/ 18.00</div>
               <div class="barcode">Código: 7</div>
+                  <button class="view-360-btn" data-model="models/pizza/pizza.glb" data-title="Pizza Clásica" data-type="pizza">Ver en mi mesa</button>
             </div>
           </div>
         </div>
@@ -456,6 +612,7 @@
             <div class="menu-card-footer">
               <div class="price">Desde S/ 12.00</div>
               <div class="barcode">Marcador: Hiro</div>
+                  <button class="view-360-btn" data-model="models/pizza/day_292_pizza_slice.glb" data-title="Pizza Especial" data-type="pizza">Ver en mi mesa</button>
             </div>
           </div>
         </div>
@@ -463,7 +620,12 @@
     </div>
 
     <div class="menu-section">
-      <h2 class="menu-section-title">Sección Hamburguesas</h2>
+      <h2 class="menu-section-title">
+        Sección Hamburguesas
+        <span class="section-actions">
+          <span class="section-pill">Modelos AR con QR</span>
+        </span>
+      </h2>
       <div class="menu-grid">
         <!-- Hamburguesa -->
         <div class="menu-card">
@@ -477,6 +639,7 @@
             <div class="menu-card-footer">
               <div class="price">S/ 20.00</div>
               <div class="barcode">Código: 8</div>
+                  <button class="view-360-btn" data-model="models/hamburguesa/classic_burger.glb" data-title="Hamburguesa de la Casa" data-type="hamburguesa">Ver en mi mesa</button>
             </div>
           </div>
         </div>
@@ -496,6 +659,7 @@
             <div class="menu-card-footer">
               <div class="price">Desde S/ 18.00</div>
               <div class="barcode">Marcador: Hiro</div>
+                  <button class="view-360-btn" data-model="models/hamburguesa/hamburgersa-combo.glb" data-title="Combos de Hamburguesa" data-type="hamburguesa">Ver en mi mesa</button>
             </div>
           </div>
         </div>
@@ -514,6 +678,7 @@
           <div class="menu-card-footer">
             <div class="price">S/ 12.00</div>
             <div class="barcode">NFT: latte</div>
+            <button class="view-360-btn" data-model="models/cafe/cafe_latte_with_art.glb" data-title="Latte Arte" data-type="cafe">Ver en mi mesa</button>
           </div>
         </div>
       </div>
@@ -529,6 +694,7 @@
           <div class="menu-card-footer">
             <div class="price">S/ 11.00</div>
             <div class="barcode">NFT: chocolate</div>
+            <button class="view-360-btn" data-model="models/cafe/hot_chocolate.glb" data-title="Chocolate Caliente" data-type="cafe">Ver en mi mesa</button>
           </div>
         </div>
       </div>
@@ -544,6 +710,7 @@
           <div class="menu-card-footer">
             <div class="price">S/ 7.00</div>
             <div class="barcode">NFT: croissant</div>
+            <button class="view-360-btn" data-model="models/cafe/croissant.glb" data-title="Croissant Mantequilla" data-type="cafe">Ver en mi mesa</button>
           </div>
         </div>
       </div>
@@ -559,6 +726,7 @@
           <div class="menu-card-footer">
             <div class="price">S/ 6.50</div>
             <div class="barcode">NFT: donut</div>
+            <button class="view-360-btn" data-model="models/cafe/donut.glb" data-title="Donut Glaseada" data-type="cafe">Ver en mi mesa</button>
           </div>
         </div>
       </div>
@@ -574,6 +742,7 @@
           <div class="menu-card-footer">
             <div class="price">S/ 7.50</div>
             <div class="barcode">NFT: muffin</div>
+            <button class="view-360-btn" data-model="models/cafe/chocolate_muffin.glb" data-title="Muffin de Chocolate" data-type="cafe">Ver en mi mesa</button>
           </div>
         </div>
       </div>
@@ -589,6 +758,7 @@
           <div class="menu-card-footer">
             <div class="price">S/ 8.00</div>
             <div class="barcode">NFT: cupcake</div>
+            <button class="view-360-btn" data-model="models/cafe/fnaf_1_cupcake.glb" data-title="Cupcake Temático" data-type="cafe">Ver en mi mesa</button>
           </div>
         </div>
       </div>
@@ -604,6 +774,7 @@
           <div class="menu-card-footer">
             <div class="price">S/ 10.00</div>
             <div class="barcode">NFT: fries</div>
+            <button class="view-360-btn" data-model="models/hamburguesa/fries_with_ketchup.glb" data-title="Papas Fritas" data-type="hamburguesa">Ver en mi mesa</button>
           </div>
         </div>
       </div>
@@ -619,6 +790,7 @@
           <div class="menu-card-footer">
             <div class="price">S/ 9.00</div>
             <div class="barcode">NFT: hotdog</div>
+            <button class="view-360-btn" data-model="models/hamburguesa/hot_dog__hotdog.glb" data-title="Hot Dog" data-type="hamburguesa">Ver en mi mesa</button>
           </div>
         </div>
       </div>
@@ -634,6 +806,7 @@
           <div class="menu-card-footer">
             <div class="price">S/ 11.00</div>
             <div class="barcode">NFT: nuggets</div>
+            <button class="view-360-btn" data-model="models/hamburguesa/nuggets_mc.glb" data-title="Nuggets de Pollo" data-type="hamburguesa">Ver en mi mesa</button>
           </div>
         </div>
       </div>
@@ -649,6 +822,7 @@
           <div class="menu-card-footer">
             <div class="price">S/ 22.00</div>
             <div class="barcode">NFT: classic_burger</div>
+            <button class="view-360-btn" data-model="models/hamburguesa/classic_burger.glb" data-title="Hamburguesa Clásica" data-type="hamburguesa">Ver en mi mesa</button>
           </div>
         </div>
       </div>
@@ -664,6 +838,7 @@
           <div class="menu-card-footer">
             <div class="price">S/ 18.00</div>
             <div class="barcode">NFT: blt_sandwich</div>
+            <button class="view-360-btn" data-model="models/hamburguesa/blt_sandwich.glb" data-title="Sandwich BLT" data-type="hamburguesa">Ver en mi mesa</button>
           </div>
         </div>
       </div>
@@ -679,6 +854,7 @@
           <div class="menu-card-footer">
             <div class="price">S/ 16.00</div>
             <div class="barcode">NFT: ham_cheese</div>
+            <button class="view-360-btn" data-model="models/hamburguesa/ham__cheese_sandwich.glb" data-title="Sandwich de Queso" data-type="hamburguesa">Ver en mi mesa</button>
           </div>
         </div>
       </div>
@@ -694,6 +870,7 @@
           <div class="menu-card-footer">
             <div class="price">S/ 20.00</div>
             <div class="barcode">NFT: sushi_rolls</div>
+            <button class="view-360-btn" data-model="models/sushi/sushi_rolls.glb" data-title="Sushi Rolls" data-type="sushi">Ver en mi mesa</button>
           </div>
         </div>
       </div>
@@ -709,6 +886,7 @@
           <div class="menu-card-footer">
             <div class="price">S/ 18.00</div>
             <div class="barcode">NFT: nigiri</div>
+            <button class="view-360-btn" data-model="models/sushi/salmon_nigiri.glb" data-title="Nigiri de Salmón" data-type="sushi">Ver en mi mesa</button>
           </div>
         </div>
       </div>
@@ -724,6 +902,7 @@
           <div class="menu-card-footer">
             <div class="price">S/ 24.00</div>
             <div class="barcode">NFT: ramen</div>
+            <button class="view-360-btn" data-model="models/sushi/shrimp_ramen_bowl.glb" data-title="Ramen de Camarones" data-type="sushi">Ver en mi mesa</button>
           </div>
         </div>
       </div>
@@ -797,6 +976,11 @@
     </div>
   </div>
   <script>
+    // Capa de catálogo web + panel administrativo.
+    // Aquí no se ejecuta AR directamente; en su lugar se:
+    //  - muestran los platos con sus precios e imágenes,
+    //  - permite crear nuevos platos desde el panel admin,
+    //  - redirige a surface-viewer.html para ver el modelo en AR sobre una mesa.
     (function() {
       var adminPassword = 'admin2024';
       var toggle = document.getElementById('admin-toggle');
@@ -805,7 +989,11 @@
       var list = document.getElementById('admin-list');
       var menuGrid = document.getElementById('nft-menu-grid');
       var storageKey = 'adminPlatosAR';
+      var isAdminUnlocked = false;
+      var longPressTimer = null;
+      var secretZone = document.querySelector('.header');
 
+      // Lee el listado de platos creado desde el panel administrativo.
       function loadPlatos() {
         try {
           var raw = localStorage.getItem(storageKey);
@@ -818,12 +1006,15 @@
         }
       }
 
+      // Persistencia de platos definidos por el administrador.
       function savePlatos(platos) {
         try {
           localStorage.setItem(storageKey, JSON.stringify(platos));
         } catch (e) {}
       }
 
+      // Inserta en el catálogo visual una tarjeta basada en un plato creado por el admin.
+      // Cada tarjeta incluye un botón "Ver en mi mesa" que abre surface-viewer.html.
       function createCard(plato) {
         if (!menuGrid) return;
         var card = document.createElement('div');
@@ -854,8 +1045,15 @@
         var barcode = document.createElement('div');
         barcode.className = 'barcode';
         barcode.textContent = 'NFT: ' + plato.marcador;
+        var viewBtn = document.createElement('button');
+        viewBtn.className = 'view-360-btn';
+        viewBtn.textContent = 'Ver en mi mesa';
+        viewBtn.setAttribute('data-model', plato.modelo || '');
+        viewBtn.setAttribute('data-title', plato.nombre || '');
+        viewBtn.setAttribute('data-type', plato.tipo || '');
         footer.appendChild(price);
         footer.appendChild(barcode);
+        footer.appendChild(viewBtn);
         content.appendChild(title);
         content.appendChild(desc);
         content.appendChild(footer);
@@ -864,6 +1062,7 @@
         menuGrid.appendChild(card);
       }
 
+      // Lista de resumen en el panel admin con los platos configurados.
       function renderList(platos) {
         if (!list) return;
         list.innerHTML = '';
@@ -886,6 +1085,55 @@
         });
       }
 
+      // Muestra el botón de acceso admin una vez verificada la contraseña.
+      function showAdminToggle() {
+        if (toggle && toggle.parentNode) {
+          toggle.parentNode.style.display = 'flex';
+        }
+      }
+
+      // Abre el panel administrativo principal.
+      function openAdminPanel() {
+        if (!panel) return;
+        panel.style.display = 'block';
+      }
+
+      // Mecanismo de autenticación simple para el panel admin.
+      // Se puede invocar por:
+      //  - combinación de teclas Ctrl+Shift+A,
+      //  - pulsación prolongada sobre el encabezado,
+      //  - parámetro de URL ?admin=true.
+      function requestAdminAccess() {
+        if (isAdminUnlocked) {
+          showAdminToggle();
+          openAdminPanel();
+          return;
+        }
+        var pass = prompt('Contraseña de administrador');
+        if (pass === adminPassword) {
+          isAdminUnlocked = true;
+          showAdminToggle();
+          openAdminPanel();
+        } else if (pass !== null) {
+          alert('Contraseña incorrecta');
+        }
+      }
+
+      function startLongPress() {
+        if (longPressTimer) return;
+        longPressTimer = setTimeout(function() {
+          longPressTimer = null;
+          requestAdminAccess();
+        }, 2000);
+      }
+
+      function cancelLongPress() {
+        if (!longPressTimer) return;
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+      }
+
+      // Inicializa el catálogo con platos existentes en localStorage.
       function bootstrap() {
         var platos = loadPlatos();
         platos.forEach(createCard);
@@ -894,15 +1142,16 @@
 
       if (toggle && panel) {
         toggle.addEventListener('click', function() {
-          var pass = prompt('Contraseña de administrador');
-          if (pass === adminPassword) {
-            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
-          } else if (pass !== null) {
-            alert('Contraseña incorrecta');
+          if (!isAdminUnlocked) {
+            requestAdminAccess();
+            return;
           }
+          panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
         });
       }
 
+      // Gestión del envío del formulario de creación de platos.
+      // Se construyen rutas relativas coherentes con la estructura del proyecto.
       if (form) {
         form.addEventListener('submit', function(e) {
           e.preventDefault();
@@ -941,6 +1190,37 @@
       }
 
       bootstrap();
+
+      if (secretZone) {
+        secretZone.addEventListener('pointerdown', startLongPress);
+        secretZone.addEventListener('pointerup', cancelLongPress);
+        secretZone.addEventListener('pointerleave', cancelLongPress);
+        secretZone.addEventListener('pointercancel', cancelLongPress);
+      }
+
+      document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
+          requestAdminAccess();
+        }
+      });
+
+      var params = new URLSearchParams(location.search);
+      if (params.get('admin') === 'true') {
+        requestAdminAccess();
+      }
+
+      // Navegación hacia el visor AR por superficie.
+      // Los botones ".view-360-btn" abren surface-viewer.html con el modelo seleccionado.
+      document.addEventListener('click', function(e) {
+        var target = e.target;
+        if (!target || !target.classList || !target.classList.contains('view-360-btn')) return;
+        var model = target.getAttribute('data-model') || '';
+        var title = target.getAttribute('data-title') || '';
+        var type = target.getAttribute('data-type') || '';
+        if (!model) return;
+        var url = '../surface-viewer.html?model=' + encodeURIComponent(model) + '&title=' + encodeURIComponent(title) + '&type=' + encodeURIComponent(type);
+        window.location.href = url;
+      });
     })();
   </script>
 </body>

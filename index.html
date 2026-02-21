@@ -530,13 +530,13 @@
     </div>
 
     <!-- Escena principal de WebAR por imagen (AR.js + A-Frame).
-         Ajustada para mayor fluidez en móviles: resolución de cámara reducida y sin antialias. -->
+         Optimizada para móviles manteniendo buena calidad de cámara. -->
     <a-scene
       vr-mode-ui="enabled: false"
       embedded
       loading-screen="enabled: false"
-      renderer="antialias: false; colorManagement: true; alpha: true; precision: lowp;"
-      arjs="sourceType: webcam; sourceWidth: 320; sourceHeight: 240; displayWidth: 640; displayHeight: 480; trackingMethod: mono_and_matrix; detectionMode: mono_and_matrix; matrixCodeType: 3x3; debugUIEnabled: false;"
+      renderer="antialias: false; colorManagement: true; alpha: true; precision: mediump;"
+      arjs="sourceType: webcam; sourceWidth: 480; sourceHeight: 360; displayWidth: 640; displayHeight: 480; trackingMethod: best; detectionMode: mono_and_matrix; matrixCodeType: 3x3; debugUIEnabled: false;"
       screenshot
       style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;">
       

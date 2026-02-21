@@ -530,13 +530,13 @@
     </div>
 
     <!-- Escena principal de WebAR por imagen (AR.js + A-Frame).
-         Optimizada para móviles: resolución de cámara moderada y sin pantalla de carga de A-Frame. -->
+         Ajustada para mayor fluidez en móviles: resolución de cámara reducida y sin antialias. -->
     <a-scene
       vr-mode-ui="enabled: false"
       embedded
       loading-screen="enabled: false"
-      renderer="antialias: false; colorManagement: true; alpha: true; precision: mediump;"
-      arjs="sourceType: webcam; sourceWidth: 480; sourceHeight: 360; displayWidth: 640; displayHeight: 480; trackingMethod: best; detectionMode: mono_and_matrix; matrixCodeType: 3x3; debugUIEnabled: false;"
+      renderer="antialias: false; colorManagement: true; alpha: true; precision: lowp;"
+      arjs="sourceType: webcam; sourceWidth: 320; sourceHeight: 240; displayWidth: 640; displayHeight: 480; trackingMethod: mono_and_matrix; detectionMode: mono_and_matrix; matrixCodeType: 3x3; debugUIEnabled: false;"
       screenshot
       style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;">
       
@@ -571,8 +571,8 @@
         url="./markers/cafe"
         emitevents="true"
         smooth="true" 
-        smoothCount="8" 
-        smoothTolerance="0.01" 
+        smoothCount="4" 
+        smoothTolerance="0.02" 
         smoothThreshold="2"
         marker-model="dishId: cafe">
         <a-entity
@@ -585,7 +585,7 @@
       </a-nft>
 
       <!-- Marcador de Sushi -->
-      <a-nft type="nft" url="./markers/sushi" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: sushi">
+      <a-nft type="nft" url="./markers/sushi" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: sushi">
         <a-entity
           gltf-model="#sushi-model"
           scale="6 6 6"
@@ -596,7 +596,7 @@
       </a-nft>
 
       <!-- Marcador de Pizza -->
-      <a-nft type="nft" url="./markers/pizza" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: pizza">
+      <a-nft type="nft" url="./markers/pizza" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: pizza">
         <a-entity
           gltf-model="#pizza-model"
           scale="4.5 4.5 4.5"
@@ -607,7 +607,7 @@
       </a-nft>
 
       <!-- Marcador de Hamburguesa -->
-      <a-nft type="nft" url="./markers/burger" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: hamburguesa">
+      <a-nft type="nft" url="./markers/burger" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: hamburguesa">
         <a-entity
           gltf-model="#burger-model"
           scale="0.08 0.08 0.08"
@@ -617,7 +617,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./markers/latte/latte" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: latte" data-lite="extra">
+      <a-nft type="nft" url="./markers/latte/latte" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: latte" data-lite="extra">
         <a-entity
           gltf-model="#latte-model"
           scale="6.5 6.5 6.5"
@@ -627,7 +627,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./markers/chocolate_caliente/chocolate_caliente" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: chocolate_caliente" data-lite="extra">
+      <a-nft type="nft" url="./markers/chocolate_caliente/chocolate_caliente" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: chocolate_caliente" data-lite="extra">
         <a-entity
           gltf-model="#hot-chocolate-model"
           scale="6 6 6"
@@ -637,7 +637,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./markers/croissant/croissant" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: croissant" data-lite="extra">
+      <a-nft type="nft" url="./markers/croissant/croissant" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: croissant" data-lite="extra">
         <a-entity
           gltf-model="#croissant-model"
           scale="3.5 3.5 3.5"
@@ -647,7 +647,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./markers/dona/dona" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: dona" data-lite="extra">
+      <a-nft type="nft" url="./markers/dona/dona" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: dona" data-lite="extra">
         <a-entity
           gltf-model="#donut-model"
           scale="3.5 3.5 3.5"
@@ -657,7 +657,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./markers/muffin/muffin" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: muffin" data-lite="extra">
+      <a-nft type="nft" url="./markers/muffin/muffin" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: muffin" data-lite="extra">
         <a-entity
           gltf-model="#muffin-model"
           scale="3.5 3.5 3.5"
@@ -667,7 +667,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./markers/cupcake/cupcake" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: cupcake" data-lite="extra">
+      <a-nft type="nft" url="./markers/cupcake/cupcake" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: cupcake" data-lite="extra">
         <a-entity
           gltf-model="#cupcake-model"
           scale="3.5 3.5 3.5"
@@ -677,7 +677,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./markers/papas_fritas/papas_fritas" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: papas_fritas" data-lite="extra">
+      <a-nft type="nft" url="./markers/papas_fritas/papas_fritas" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: papas_fritas" data-lite="extra">
         <a-entity
           gltf-model="#fries-model"
           scale="4 4 4"
@@ -687,7 +687,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./markers/hotdog/hotdog" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: hotdog" data-lite="extra">
+      <a-nft type="nft" url="./markers/hotdog/hotdog" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: hotdog" data-lite="extra">
         <a-entity
           gltf-model="#hotdog-model"
           scale="4 4 4"
@@ -697,7 +697,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./markers/nuggets/nuggets" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: nuggets" data-lite="extra">
+      <a-nft type="nft" url="./markers/nuggets/nuggets" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: nuggets" data-lite="extra">
         <a-entity
           gltf-model="#nuggets-model"
           scale="4 4 4"
@@ -707,7 +707,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./markers/classic_burger/classic_burger" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: classic_burger" data-lite="extra">
+      <a-nft type="nft" url="./markers/classic_burger/classic_burger" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: classic_burger" data-lite="extra">
         <a-entity
           gltf-model="#burger-classic-model"
           scale="0.1 0.1 0.1"
@@ -717,7 +717,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./markers/blt_sandwich/blt_sandwich" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: blt_sandwich" data-lite="extra">
+      <a-nft type="nft" url="./markers/blt_sandwich/blt_sandwich" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: blt_sandwich" data-lite="extra">
         <a-entity
           gltf-model="#sandwich-blt-model"
           scale="4 4 4"
@@ -727,7 +727,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./markers/sandwich_queso/sandwich_queso" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: sandwich_queso" data-lite="extra">
+      <a-nft type="nft" url="./markers/sandwich_queso/sandwich_queso" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: sandwich_queso" data-lite="extra">
         <a-entity
           gltf-model="#sandwich-ham-cheese-model"
           scale="4 4 4"
@@ -737,7 +737,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./markers/rebanada_pizza/rebanada_pizza" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: rebanada_pizza" data-lite="extra">
+      <a-nft type="nft" url="./markers/rebanada_pizza/rebanada_pizza" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: rebanada_pizza" data-lite="extra">
         <a-entity
           gltf-model="#pizza-slice-model"
           scale="4 4 4"
@@ -747,7 +747,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./markers/sushi_roll/sushi_roll" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: sushi_roll" data-lite="extra">
+      <a-nft type="nft" url="./markers/sushi_roll/sushi_roll" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: sushi_roll" data-lite="extra">
         <a-entity
           gltf-model="#sushi-rolls-model"
           scale="4 4 4"
@@ -757,7 +757,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./markers/sushi_salmon/sushi_salmon" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: sushi_salmon" data-lite="extra">
+      <a-nft type="nft" url="./markers/sushi_salmon/sushi_salmon" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: sushi_salmon" data-lite="extra">
         <a-entity
           gltf-model="#nigiri-model"
           scale="4 4 4"
@@ -767,7 +767,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./markers/ramen/ramen" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: ramen" data-lite="extra">
+      <a-nft type="nft" url="./markers/ramen/ramen" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: ramen" data-lite="extra">
         <a-entity
           gltf-model="#ramen-model"
           scale="4 4 4"
@@ -777,7 +777,7 @@
         </a-entity>
       </a-nft>
       
-      <a-marker type="pattern" url="./pattern-caffe.patt" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: pattern_cafe" data-lite="extra">
+      <a-marker type="pattern" url="./pattern-caffe.patt" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: pattern_cafe" data-lite="extra">
         <a-entity
           gltf-model="#coffe-model"
           scale="7 7 7"
@@ -786,7 +786,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="pattern" url="./pattern-sushi.patt" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: pattern_sushi" data-lite="extra">
+      <a-marker type="pattern" url="./pattern-sushi.patt" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: pattern_sushi" data-lite="extra">
         <a-entity
           gltf-model="#sushi-model"
           scale="6 6 6"
@@ -795,7 +795,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="pattern" url="./pattern-pizza.patt" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: pattern_pizza" data-lite="extra">
+      <a-marker type="pattern" url="./pattern-pizza.patt" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: pattern_pizza" data-lite="extra">
         <a-entity
           gltf-model="#pizza-model"
           scale="4.5 4.5 4.5"
@@ -804,7 +804,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="pattern" url="./pattern-hamburguesa.patt" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: pattern_hamburguesa" data-lite="extra">
+      <a-marker type="pattern" url="./pattern-hamburguesa.patt" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: pattern_hamburguesa" data-lite="extra">
         <a-entity
           gltf-model="#burger-model"
           scale="0.08 0.08 0.08"
@@ -813,7 +813,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker preset="hiro" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" data-lite="extra">
+      <a-marker preset="hiro" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" data-lite="extra">
         <a-entity
           gltf-model="#coffe-model"
           scale="7 7 7"
@@ -950,7 +950,7 @@
       </a-marker>
 
       <!-- Marcadores barcode para todos los platos -->
-      <a-marker type="barcode" value="0" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: latte">
+      <a-marker type="barcode" value="0" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: latte" data-lite="extra">
         <a-entity
           gltf-model="#latte-model"
           scale="4.5 4.5 4.5"
@@ -959,7 +959,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="barcode" value="1" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: chocolate_caliente">
+      <a-marker type="barcode" value="1" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: chocolate_caliente" data-lite="extra">
         <a-entity
           gltf-model="#hot-chocolate-model"
           scale="4.5 4.5 4.5"
@@ -968,7 +968,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="barcode" value="2" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: croissant">
+      <a-marker type="barcode" value="2" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: croissant" data-lite="extra">
         <a-entity
           gltf-model="#croissant-model"
           scale="4 4 4"
@@ -977,7 +977,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="barcode" value="3" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: dona">
+      <a-marker type="barcode" value="3" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: dona" data-lite="extra">
         <a-entity
           gltf-model="#donut-model"
           scale="4 4 4"
@@ -986,7 +986,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="barcode" value="4" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: muffin">
+      <a-marker type="barcode" value="4" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: muffin" data-lite="extra">
         <a-entity
           gltf-model="#muffin-model"
           scale="4 4 4"
@@ -995,7 +995,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="barcode" value="5" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: cafe">
+      <a-marker type="barcode" value="5" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: cafe">
         <a-entity
           gltf-model="#coffee-cup-model"
           scale="4.5 4.5 4.5"
@@ -1004,7 +1004,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="barcode" value="6" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: sushi">
+      <a-marker type="barcode" value="6" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: sushi">
         <a-entity
           gltf-model="#sushi-model"
           scale="6 6 6"
@@ -1013,7 +1013,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="barcode" value="7" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: pizza">
+      <a-marker type="barcode" value="7" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: pizza">
         <a-entity
           gltf-model="#pizza-model"
           scale="4.5 4.5 4.5"
@@ -1022,7 +1022,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="barcode" value="8" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: hamburguesa">
+      <a-marker type="barcode" value="8" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: hamburguesa">
         <a-entity
           gltf-model="#burger-model"
           scale="0.08 0.08 0.08"
@@ -1031,7 +1031,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="barcode" value="9" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: cupcake">
+      <a-marker type="barcode" value="9" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: cupcake" data-lite="extra">
         <a-entity
           gltf-model="#cupcake-model"
           scale="4 4 4"
@@ -1040,7 +1040,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="barcode" value="10" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: papas_fritas">
+      <a-marker type="barcode" value="10" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: papas_fritas" data-lite="extra">
         <a-entity
           gltf-model="#fries-model"
           scale="4 4 4"
@@ -1049,7 +1049,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="barcode" value="11" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: hotdog">
+      <a-marker type="barcode" value="11" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: hotdog" data-lite="extra">
         <a-entity
           gltf-model="#hotdog-model"
           scale="4 4 4"
@@ -1058,7 +1058,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="barcode" value="12" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: nuggets">
+      <a-marker type="barcode" value="12" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: nuggets" data-lite="extra">
         <a-entity
           gltf-model="#nuggets-model"
           scale="4 4 4"
@@ -1067,7 +1067,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="barcode" value="13" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: classic_burger">
+      <a-marker type="barcode" value="13" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: classic_burger" data-lite="extra">
         <a-entity
           gltf-model="#burger-classic-model"
           scale="0.1 0.1 0.1"
@@ -1076,7 +1076,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="barcode" value="14" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: blt_sandwich">
+      <a-marker type="barcode" value="14" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: blt_sandwich" data-lite="extra">
         <a-entity
           gltf-model="#sandwich-blt-model"
           scale="4 4 4"
@@ -1085,7 +1085,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="barcode" value="15" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: sandwich_queso">
+      <a-marker type="barcode" value="15" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: sandwich_queso" data-lite="extra">
         <a-entity
           gltf-model="#sandwich-ham-cheese-model"
           scale="4 4 4"
@@ -1094,7 +1094,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="barcode" value="16" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: rebanada_pizza">
+      <a-marker type="barcode" value="16" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: rebanada_pizza" data-lite="extra">
         <a-entity
           gltf-model="#pizza-slice-model"
           scale="4 4 4"
@@ -1103,7 +1103,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="barcode" value="17" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: sushi_roll">
+      <a-marker type="barcode" value="17" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: sushi_roll" data-lite="extra">
         <a-entity
           gltf-model="#sushi-rolls-model"
           scale="4 4 4"
@@ -1112,7 +1112,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="barcode" value="18" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: sushi_salmon">
+      <a-marker type="barcode" value="18" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: sushi_salmon" data-lite="extra">
         <a-entity
           gltf-model="#nigiri-model"
           scale="4 4 4"
@@ -1121,7 +1121,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="barcode" value="19" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: ramen">
+      <a-marker type="barcode" value="19" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: ramen" data-lite="extra">
         <a-entity
           gltf-model="#ramen-model"
           scale="4 4 4"
@@ -1146,11 +1146,8 @@
 
       function isLiteMode() {
         var modeParam = getQueryParam('mode');
-        if (modeParam === 'full') return false;
         if (modeParam === 'lite') return true;
-        var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
-        var lowMemory = typeof navigator.deviceMemory === 'number' && navigator.deviceMemory <= 4;
-        return isMobile && lowMemory;
+        return false;
       }
 
       function loadPlatosJson() {
@@ -1177,8 +1174,8 @@
           marker.setAttribute('url', plato.nftPath);
           marker.setAttribute('emitevents', 'true');
           marker.setAttribute('smooth', 'true');
-          marker.setAttribute('smoothCount', '8');
-          marker.setAttribute('smoothTolerance', '0.01');
+          marker.setAttribute('smoothCount', '4');
+          marker.setAttribute('smoothTolerance', '0.02');
           marker.setAttribute('smoothThreshold', '2');
           marker.setAttribute('marker-model', 'dishId: ' + plato.id);
           var entity = document.createElement('a-entity');

@@ -208,10 +208,22 @@
           init: function () {
             this.modelEntity = this.el.querySelector('[marker-model-host]') || this.el.querySelector('a-entity');
             this.onMarkerFound = this.handleMarkerFound.bind(this);
+            this.onModelLoaded = this.handleModelLoaded.bind(this);
+            this.onModelError = this.handleModelError.bind(this);
             this.el.addEventListener('markerFound', this.onMarkerFound);
           },
           remove: function () {
             this.el.removeEventListener('markerFound', this.onMarkerFound);
+            if (this.modelEntity) {
+              this.modelEntity.removeEventListener('model-loaded', this.onModelLoaded);
+              this.modelEntity.removeEventListener('model-error', this.onModelError);
+            }
+          },
+          handleModelLoaded: function () {
+            hideModelLoader();
+          },
+          handleModelError: function () {
+            hideModelLoader();
           },
           handleMarkerFound: function () {
             var dishId = this.data.dishId;
@@ -221,10 +233,15 @@
               return;
             }
             var host = this.modelEntity || this.el;
+            showModelLoader();
             if (cfg.assetId) {
               host.setAttribute('gltf-model', cfg.assetId);
             } else if (cfg.url) {
               host.setAttribute('gltf-model', cfg.url);
+            }
+            if (this.modelEntity) {
+              this.modelEntity.addEventListener('model-loaded', this.onModelLoaded, { once: true });
+              this.modelEntity.addEventListener('model-error', this.onModelError, { once: true });
             }
             if (cfg.scale) {
               host.setAttribute('scale', cfg.scale);
@@ -272,6 +289,40 @@
         border-radius: 50%;
         animation: spin 1s linear infinite;
         margin-bottom: 20px;
+      }
+      #model-loader {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+        z-index: 1500;
+        opacity: 0;
+        transition: opacity 0.25s ease;
+      }
+      #model-loader.visible {
+        opacity: 1;
+      }
+      #model-loader-inner {
+        pointer-events: auto;
+        padding: 10px 16px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.9);
+        border: 1px solid rgba(148, 163, 184, 0.8);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: #e5e7eb;
+      }
+      #model-loader-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        border: 2px solid rgba(248, 250, 252, 0.2);
+        border-top-color: #f97316;
+        animation: spin 0.8s linear infinite;
       }
       @keyframes spin {
         0% { transform: rotate(0deg); }
@@ -442,6 +493,13 @@
     <video id="bg-video" class="bg-video" autoplay muted playsinline></video>
     <div class="flash" id="flash-effect"></div>
 
+    <div id="model-loader">
+      <div id="model-loader-inner">
+        <div id="model-loader-dot"></div>
+        <span>Cargando modelo 3D del plato...</span>
+      </div>
+    </div>
+
     <div class="header-ui">
       <span>Menú AR</span>
     </div>
@@ -461,7 +519,7 @@
     <div class="ui-container">
       <div class="hint-text">
         <span>📷</span>
-        <span>Apunta a la imagen del menú o tarjeta con código para ver el plato.</span>
+        <span>Apunta al código QR de la mesa o a la imagen del menú para ver el plato.</span>
       </div>
       <div class="controls">
         <div class="screenshot-btn" id="screenshot"></div>
@@ -937,6 +995,7 @@
       const productPrice = document.getElementById('product-price');
       const productIngredients = document.getElementById('product-ingredients');
       const globalLoader = document.getElementById('global-loader');
+      const modelLoader = document.getElementById('model-loader');
       
       // PRECIOS CORREGIDOS según las imágenes
       // Mapa base de platos para la demo del restaurante.
@@ -1071,6 +1130,16 @@
       };
       
       const adminStorageKey = 'adminPlatosAR';
+      
+      function showModelLoader() {
+        if (!modelLoader) return;
+        modelLoader.classList.add('visible');
+      }
+      
+      function hideModelLoader() {
+        if (!modelLoader) return;
+        modelLoader.classList.remove('visible');
+      }
       
       // Integra dinámicamente en la escena los platos que se hayan creado
       // desde el panel administrativo (menu-visual.html) utilizando localStorage.

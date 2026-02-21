@@ -26,7 +26,7 @@
       height: 297mm;
       padding: 20mm;
       margin: 0 auto;
-      background: white;
+      background: #faf7f2;
       position: relative;
     }
     
@@ -71,15 +71,24 @@
     }
     
     .menu-section {
-      margin-bottom: 40px;
+      margin-bottom: 30px;
+    }
+    
+    .section-title {
+      font-size: 20px;
+      letter-spacing: 1px;
+      color: #2c3e50;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #e0d2c1;
+      padding-bottom: 5px;
     }
     
     .menu-item {
       display: grid;
-      grid-template-columns: 180px 1fr;
-      gap: 20px;
-      margin-bottom: 30px;
-      padding-bottom: 25px;
+      grid-template-columns: 150px 1fr;
+      gap: 16px;
+      margin-bottom: 22px;
+      padding: 15px 0;
       border-bottom: 1px dashed #bdc3c7;
       page-break-inside: avoid;
     }
@@ -89,16 +98,16 @@
     }
     
     .item-image {
-      width: 180px;
-      height: 180px;
+      width: 150px;
+      height: 150px;
       background: #ecf0f1;
-      border-radius: 15px;
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
       position: relative;
       overflow: hidden;
-      border: 3px solid #e0e0e0;
+      border: 2px solid #e0e0e0;
     }
     
     /* Aquí van las imágenes reales */
@@ -156,16 +165,16 @@
     }
     
     .item-price {
-      font-size: 28px;
+      font-size: 24px;
       color: #e74c3c;
       font-weight: 700;
     }
     
     .item-description {
-      font-size: 15px;
+      font-size: 14px;
       color: #5a6c7d;
-      line-height: 1.6;
-      margin-bottom: 15px;
+      line-height: 1.5;
+      margin-bottom: 10px;
     }
     
     .item-footer {
@@ -175,18 +184,18 @@
     }
     
     .qr-code-small {
-      width: 60px;
-      height: 60px;
+      width: 50px;
+      height: 50px;
       background: #000;
-      border-radius: 8px;
+      border-radius: 6px;
     }
     
     .barcode-label {
-      font-size: 13px;
+      font-size: 12px;
       color: #7f8c8d;
       background: #ecf0f1;
-      padding: 5px 12px;
-      border-radius: 5px;
+      padding: 4px 10px;
+      border-radius: 4px;
     }
     
     .footer {
@@ -219,10 +228,11 @@
     </div>
     
     <div class="menu-section">
+      <h2 class="section-title">Cafetería AR</h2>
       <!-- CAFÉ -->
       <div class="menu-item">
         <div class="item-image cafe">
-          <img src="../img/cafe.png" alt="Café">
+          <img src="../img/taza_cafe.png" alt="Café">
           <div class="ar-icon">AR 📱</div>
         </div>
         <div class="item-content">
@@ -246,7 +256,7 @@
       <!-- SUSHI -->
       <div class="menu-item">
         <div class="item-image sushi">
-          <img src="../img/sushi.png" alt="Sushi">
+          <img src="../img/sushi/sushi.png" alt="Sushi">
           <div class="ar-icon">AR 📱</div>
         </div>
         <div class="item-content">
@@ -270,7 +280,7 @@
       <!-- PIZZA -->
       <div class="menu-item">
         <div class="item-image pizza">
-          <img src="../img/pizza.png" alt="Pizza">
+          <img src="../img/pizza/pizza.png" alt="Pizza">
           <div class="ar-icon">AR 📱</div>
         </div>
         <div class="item-content">
@@ -294,7 +304,7 @@
       <!-- HAMBURGUESA -->
       <div class="menu-item">
         <div class="item-image burger">
-          <img src="../img/hamburguesa.png" alt="Hamburguesa">
+          <img src="../img/hamburguesa/hamburguesa.png" alt="Hamburguesa">
           <div class="ar-icon">AR 📱</div>
         </div>
         <div class="item-content">
@@ -311,6 +321,421 @@
           <div class="item-footer">
             <div class="qr-code-small" style="background: url('https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/8.png') center/contain no-repeat;"></div>
             <div class="barcode-label">Código AR: 8</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="menu-section">
+      <h2 class="section-title">Especialidades y Combos AR</h2>
+      <!-- Especialidades de Café -->
+      <div class="menu-item">
+        <div class="item-image cafe">
+          <img src="../img/cafe/latte.png" alt="Especialidades de Café">
+          <div class="ar-icon">Hiro 📱</div>
+        </div>
+        <div class="item-content">
+          <div>
+            <div class="item-header">
+              <h3 class="item-name">Especialidades de Café</h3>
+              <div class="item-price">Desde S/ 10.00</div>
+            </div>
+            <p class="item-description">
+              Latte arte, chocolate caliente y variedades de café servidos con croissant,
+              donut glaseada, muffin de chocolate y cupcake temático.
+            </p>
+          </div>
+          <div class="item-footer">
+            <div class="barcode-label">Disponible en AR con marcador Hiro</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Combos de Hamburguesa -->
+      <div class="menu-item">
+        <div class="item-image burger">
+          <img src="../img/hamburguesa/papas_fritas.png" alt="Combos de Hamburguesa">
+          <div class="ar-icon">Hiro 📱</div>
+        </div>
+        <div class="item-content">
+          <div>
+            <div class="item-header">
+              <h3 class="item-name">Combos de Hamburguesa</h3>
+              <div class="item-price">S/ 28.00</div>
+            </div>
+            <p class="item-description">
+              Hamburguesa clásica con papas fritas con ketchup, nuggets crocantes y bebida.
+              Ideal para ver en AR junto a otros platos rápidos.
+            </p>
+          </div>
+          <div class="item-footer">
+            <div class="barcode-label">Disponible en AR con marcador Hiro</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sushi y Ramen -->
+      <div class="menu-item">
+        <div class="item-image sushi">
+          <img src="../img/sushi/ramen.png" alt="Sushi y Ramen">
+          <div class="ar-icon">Hiro 📱</div>
+        </div>
+        <div class="item-content">
+          <div>
+            <div class="item-header">
+              <h3 class="item-name">Sushi y Ramen</h3>
+              <div class="item-price">S/ 32.00</div>
+            </div>
+            <p class="item-description">
+              Bandeja de sushi rolls variados con nigiri de salmón y bowl de ramen
+              con camarones, ideal para experiencias AR inmersivas.
+            </p>
+          </div>
+          <div class="item-footer">
+            <div class="barcode-label">Disponible en AR con marcador Hiro</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pizza Especial -->
+      <div class="menu-item">
+        <div class="item-image pizza">
+          <img src="../img/pizza/rebanada_pizza.png" alt="Pizza Especial">
+          <div class="ar-icon">Hiro 📱</div>
+        </div>
+        <div class="item-content">
+          <div>
+            <div class="item-header">
+              <h3 class="item-name">Pizza Especial</h3>
+              <div class="item-price">Desde S/ 12.00</div>
+            </div>
+            <p class="item-description">
+              Rebanadas individuales y presentación en caja para compartir. 
+              Se visualiza en AR con el resto de platos sobre el marcador Hiro.
+            </p>
+          </div>
+          <div class="item-footer">
+            <div class="barcode-label">Disponible en AR con marcador Hiro</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="menu-section">
+      <h2 class="section-title">Nuevos NFTs individuales</h2>
+
+      <div class="menu-item">
+        <div class="item-image cafe">
+          <img src="../img/cafe/latte.png" alt="Latte Arte">
+          <div class="ar-icon">NFT 📱</div>
+        </div>
+        <div class="item-content">
+          <div>
+            <div class="item-header">
+              <h3 class="item-name">Latte Arte</h3>
+              <div class="item-price">S/ 12.00</div>
+            </div>
+            <p class="item-description">
+              Taza de latte con arte en la espuma pensada como NFT individual de cafetería.
+            </p>
+          </div>
+          <div class="item-footer">
+            <div class="barcode-label">NFT: latte</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-item">
+        <div class="item-image cafe">
+          <img src="../img/cafe/chocolate_caliente.png" alt="Chocolate Caliente">
+          <div class="ar-icon">NFT 📱</div>
+        </div>
+        <div class="item-content">
+          <div>
+            <div class="item-header">
+              <h3 class="item-name">Chocolate Caliente</h3>
+              <div class="item-price">S/ 11.00</div>
+            </div>
+            <p class="item-description">
+              Chocolate espeso con espuma y toppings, ideal para mostrar su textura en AR.
+            </p>
+          </div>
+          <div class="item-footer">
+            <div class="barcode-label">NFT: chocolate</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-item">
+        <div class="item-image cafe">
+          <img src="../img/cafe/croissant.png" alt="Croissant">
+          <div class="ar-icon">NFT 📱</div>
+        </div>
+        <div class="item-content">
+          <div>
+            <div class="item-header">
+              <h3 class="item-name">Croissant Mantequilla</h3>
+              <div class="item-price">S/ 7.00</div>
+            </div>
+            <p class="item-description">
+              Croissant hojaldrado y dorado para resaltar el modelado 3D en realidad aumentada.
+            </p>
+          </div>
+          <div class="item-footer">
+            <div class="barcode-label">NFT: croissant</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-item">
+        <div class="item-image cafe">
+          <img src="../img/cafe/dona.png" alt="Donut Glaseada">
+          <div class="ar-icon">NFT 📱</div>
+        </div>
+        <div class="item-content">
+          <div>
+            <div class="item-header">
+              <h3 class="item-name">Donut Glaseada</h3>
+              <div class="item-price">S/ 6.50</div>
+            </div>
+            <p class="item-description">
+              Donut con glaseado brillante y detalles de color pensada para NFT dulce.
+            </p>
+          </div>
+          <div class="item-footer">
+            <div class="barcode-label">NFT: donut</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-item">
+        <div class="item-image cafe">
+          <img src="../img/cafe/muffin.png" alt="Muffin de Chocolate">
+          <div class="ar-icon">NFT 📱</div>
+        </div>
+        <div class="item-content">
+          <div>
+            <div class="item-header">
+              <h3 class="item-name">Muffin de Chocolate</h3>
+              <div class="item-price">S/ 7.50</div>
+            </div>
+            <p class="item-description">
+              Muffin esponjoso con chips de chocolate como NFT de repostería.
+            </p>
+          </div>
+          <div class="item-footer">
+            <div class="barcode-label">NFT: muffin</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-item">
+        <div class="item-image cafe">
+          <img src="../img/cafe/cupcake.png" alt="Cupcake Temático">
+          <div class="ar-icon">NFT 📱</div>
+        </div>
+        <div class="item-content">
+          <div>
+            <div class="item-header">
+              <h3 class="item-name">Cupcake Temático</h3>
+              <div class="item-price">S/ 8.00</div>
+            </div>
+            <p class="item-description">
+              Cupcake decorado para propuestas creativas de NFT enfocados en postres.
+            </p>
+          </div>
+          <div class="item-footer">
+            <div class="barcode-label">NFT: cupcake</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-item">
+        <div class="item-image burger">
+          <img src="../img/hamburguesa/papas_fritas.png" alt="Papas Fritas">
+          <div class="ar-icon">NFT 📱</div>
+        </div>
+        <div class="item-content">
+          <div>
+            <div class="item-header">
+              <h3 class="item-name">Papas Fritas</h3>
+              <div class="item-price">S/ 10.00</div>
+            </div>
+            <p class="item-description">
+              Porción de papas fritas con salsa como NFT de acompañamiento.
+            </p>
+          </div>
+          <div class="item-footer">
+            <div class="barcode-label">NFT: fries</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-item">
+        <div class="item-image burger">
+          <img src="../img/hamburguesa/hotdog.png" alt="Hot Dog">
+          <div class="ar-icon">NFT 📱</div>
+        </div>
+        <div class="item-content">
+          <div>
+            <div class="item-header">
+              <h3 class="item-name">Hot Dog</h3>
+              <div class="item-price">S/ 9.00</div>
+            </div>
+            <p class="item-description">
+              Hot dog con toppings para visualización de comida rápida en AR.
+            </p>
+          </div>
+          <div class="item-footer">
+            <div class="barcode-label">NFT: hotdog</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-item">
+        <div class="item-image burger">
+          <img src="../img/hamburguesa/nuggets.png" alt="Nuggets">
+          <div class="ar-icon">NFT 📱</div>
+        </div>
+        <div class="item-content">
+          <div>
+            <div class="item-header">
+              <h3 class="item-name">Nuggets de Pollo</h3>
+              <div class="item-price">S/ 11.00</div>
+            </div>
+            <p class="item-description">
+              Nuggets crocantes con salsa para NFT de menú infantil o combo.
+            </p>
+          </div>
+          <div class="item-footer">
+            <div class="barcode-label">NFT: nuggets</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-item">
+        <div class="item-image burger">
+          <img src="../img/hamburguesa/classic_burger.png" alt="Hamburguesa Clásica">
+          <div class="ar-icon">NFT 📱</div>
+        </div>
+        <div class="item-content">
+          <div>
+            <div class="item-header">
+              <h3 class="item-name">Hamburguesa Clásica</h3>
+              <div class="item-price">S/ 22.00</div>
+            </div>
+            <p class="item-description">
+              Hamburguesa clásica modelada en 3D como NFT central de comida rápida.
+            </p>
+          </div>
+          <div class="item-footer">
+            <div class="barcode-label">NFT: classic_burger</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-item">
+        <div class="item-image burger">
+          <img src="../img/hamburguesa/blt_sandwich.png" alt="Sandwich BLT">
+          <div class="ar-icon">NFT 📱</div>
+        </div>
+        <div class="item-content">
+          <div>
+            <div class="item-header">
+              <h3 class="item-name">Sandwich BLT</h3>
+              <div class="item-price">S/ 18.00</div>
+            </div>
+            <p class="item-description">
+              Sandwich con tocino, lechuga y tomate pensado como NFT individual.
+            </p>
+          </div>
+          <div class="item-footer">
+            <div class="barcode-label">NFT: blt_sandwich</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-item">
+        <div class="item-image burger">
+          <img src="../img/hamburguesa/sandwich_queso.png" alt="Sandwich de Queso">
+          <div class="ar-icon">NFT 📱</div>
+        </div>
+        <div class="item-content">
+          <div>
+            <div class="item-header">
+              <h3 class="item-name">Sandwich de Queso</h3>
+              <div class="item-price">S/ 16.00</div>
+            </div>
+            <p class="item-description">
+              Sandwich de queso y jamón como NFT para vitrinas digitales.
+            </p>
+          </div>
+          <div class="item-footer">
+            <div class="barcode-label">NFT: ham_cheese</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-item">
+        <div class="item-image sushi">
+          <img src="../img/sushi/sushi_roll.png" alt="Sushi Rolls">
+          <div class="ar-icon">NFT 📱</div>
+        </div>
+        <div class="item-content">
+          <div>
+            <div class="item-header">
+              <h3 class="item-name">Sushi Rolls</h3>
+              <div class="item-price">S/ 20.00</div>
+            </div>
+            <p class="item-description">
+              Rolls individuales para mostrar el detalle del modelo en AR.
+            </p>
+          </div>
+          <div class="item-footer">
+            <div class="barcode-label">NFT: sushi_rolls</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-item">
+        <div class="item-image sushi">
+          <img src="../img/sushi/sushi_salmon.png" alt="Sushi Salmón">
+          <div class="ar-icon">NFT 📱</div>
+        </div>
+        <div class="item-content">
+          <div>
+            <div class="item-header">
+              <h3 class="item-name">Nigiri de Salmón</h3>
+              <div class="item-price">S/ 18.00</div>
+            </div>
+            <p class="item-description">
+              Nigiri de salmón destacado como NFT gastronómico de alta definición.
+            </p>
+          </div>
+          <div class="item-footer">
+            <div class="barcode-label">NFT: nigiri</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-item">
+        <div class="item-image sushi">
+          <img src="../img/sushi/ramen.png" alt="Ramen">
+          <div class="ar-icon">NFT 📱</div>
+        </div>
+        <div class="item-content">
+          <div>
+            <div class="item-header">
+              <h3 class="item-name">Ramen de Camarones</h3>
+              <div class="item-price">S/ 24.00</div>
+            </div>
+            <p class="item-description">
+              Bowl de ramen con camarones y toppings como NFT individual de comida asiática.
+            </p>
+          </div>
+          <div class="item-footer">
+            <div class="barcode-label">NFT: ramen</div>
           </div>
         </div>
       </div>

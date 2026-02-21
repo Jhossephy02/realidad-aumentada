@@ -185,6 +185,142 @@
       font-weight: 600;
     }
 
+    .menu-section {
+      margin-bottom: 40px;
+    }
+
+    .menu-section-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #ffffff;
+      margin: 10px 0 20px;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    }
+
+    .admin-toolbar {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .admin-button {
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: none;
+      background: rgba(0, 0, 0, 0.2);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .admin-button:hover {
+      background: rgba(0, 0, 0, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .admin-panel {
+      margin-top: 40px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 16px;
+      padding: 20px 24px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+      display: none;
+    }
+
+    .admin-panel-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #2d3748;
+      margin-bottom: 12px;
+    }
+
+    .admin-panel-subtitle {
+      font-size: 13px;
+      color: #718096;
+      margin-bottom: 18px;
+    }
+
+    .admin-form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px 24px;
+      margin-bottom: 16px;
+    }
+
+    .admin-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 13px;
+    }
+
+    .admin-label {
+      color: #4a5568;
+      font-weight: 600;
+    }
+
+    .admin-input,
+    .admin-select {
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e0;
+      font-size: 13px;
+    }
+
+    .admin-actions {
+      margin-top: 8px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .admin-save-btn {
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: none;
+      background: #38a169;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .admin-save-btn:hover {
+      background: #2f855a;
+      transform: translateY(-1px);
+    }
+
+    .admin-list {
+      margin-top: 12px;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 12px;
+      font-size: 13px;
+      color: #4a5568;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .admin-list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px dashed #edf2f7;
+    }
+
+    .admin-list-main {
+      font-weight: 600;
+    }
+
+    .admin-list-meta {
+      font-size: 12px;
+      color: #a0aec0;
+    }
+
     @media print {
       body {
         background: white;
@@ -201,69 +337,393 @@
     <div class="header">
       <h1>🍽️ Menú Interactivo AR</h1>
       <p>Escanea los códigos QR para ver los platillos en Realidad Aumentada</p>
+      <div class="admin-toolbar">
+        <button type="button" class="admin-button" id="admin-toggle">Acceso administrador</button>
+      </div>
     </div>
 
-    <div class="menu-grid">
-      <!-- Café -->
+    <div class="menu-section">
+      <h2 class="menu-section-title">Sección Café</h2>
+      <div class="menu-grid">
+        <!-- Café -->
+        <div class="menu-card">
+          <div class="menu-card-image">
+            <img src="../img/taza_cafe.png" alt="Café Americano">
+            <div class="ar-badge">Ver en AR</div>
+          </div>
+          <div class="menu-card-content">
+            <h3 class="menu-card-title">☕ Café Americano</h3>
+            <p class="menu-card-description">Café 100% arábica, agua filtrada. Bebida perfecta para comenzar tu día.</p>
+            <div class="menu-card-footer">
+              <div class="price">S/ 8.00</div>
+              <div class="barcode">Código: 5</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Especialidades de Café -->
+        <div class="menu-card">
+          <div class="menu-card-image">
+            <img src="../img/cafe/latte.png" alt="Especialidades de Café">
+            <div class="ar-badge">Marcador Hiro</div>
+          </div>
+          <div class="menu-card-content">
+            <h3 class="menu-card-title">☕ Especialidades de Café</h3>
+            <p class="menu-card-description">
+              Selección de latte arte, chocolate caliente y café de especialidad,
+              acompañados de croissant, donut, muffin y cupcake.
+            </p>
+            <div class="menu-card-footer">
+              <div class="price">Desde S/ 10.00</div>
+              <div class="barcode">Marcador: Hiro</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="menu-section">
+      <h2 class="menu-section-title">Sección Sushi</h2>
+      <div class="menu-grid">
+        <!-- Sushi -->
+        <div class="menu-card">
+          <div class="menu-card-image">
+            <img src="../img/sushi.png" alt="Sushi Mixto">
+            <div class="ar-badge">Ver en AR</div>
+          </div>
+          <div class="menu-card-content">
+            <h3 class="menu-card-title">� Sushi Mixto</h3>
+            <p class="menu-card-description">Arroz sazonado, salmón fresco, palta, alga nori y salsa de soya.</p>
+            <div class="menu-card-footer">
+              <div class="price">S/ 25.00</div>
+              <div class="barcode">Código: 6</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sushi y Ramen -->
+        <div class="menu-card">
+          <div class="menu-card-image">
+            <img src="../img/sushi/ramen.png" alt="Sushi y Ramen">
+            <div class="ar-badge">Marcador Hiro</div>
+          </div>
+          <div class="menu-card-content">
+            <h3 class="menu-card-title">� Sushi y Ramen</h3>
+            <p class="menu-card-description">
+              Rolls de sushi variados, nigiri de salmón y bowl de ramen con camarones.
+              Ideal para experiencias AR más completas.
+            </p>
+            <div class="menu-card-footer">
+              <div class="price">Desde S/ 28.00</div>
+              <div class="barcode">Marcador: Hiro</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="menu-section">
+      <h2 class="menu-section-title">Sección Pizza</h2>
+      <div class="menu-grid">
+        <!-- Pizza -->
+        <div class="menu-card">
+          <div class="menu-card-image">
+            <img src="../img/pizza/pizza.png" alt="Pizza Clásica">
+            <div class="ar-badge">Ver en AR</div>
+          </div>
+          <div class="menu-card-content">
+            <h3 class="menu-card-title">🍕 Pizza Clásica</h3>
+            <p class="menu-card-description">Masa artesanal, salsa de tomate, queso mozzarella premium y orégano.</p>
+            <div class="menu-card-footer">
+              <div class="price">S/ 18.00</div>
+              <div class="barcode">Código: 7</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pizza Especial -->
+        <div class="menu-card">
+          <div class="menu-card-image">
+            <img src="../img/rebanada_pizza.png" alt="Pizza Especial">
+            <div class="ar-badge">Marcador Hiro</div>
+          </div>
+          <div class="menu-card-content">
+            <h3 class="menu-card-title">� Pizza Especial</h3>
+            <p class="menu-card-description">
+              Rebanadas de pizza listas para compartir y presentación en caja,
+              perfectas para mostrar en AR junto a otros platos.
+            </p>
+            <div class="menu-card-footer">
+              <div class="price">Desde S/ 12.00</div>
+              <div class="barcode">Marcador: Hiro</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="menu-section">
+      <h2 class="menu-section-title">Sección Hamburguesas</h2>
+      <div class="menu-grid">
+        <!-- Hamburguesa -->
+        <div class="menu-card">
+          <div class="menu-card-image">
+            <img src="../img/hamburguesa/hamburguesa.png" alt="Hamburguesa de la Casa">
+            <div class="ar-badge">Ver en AR</div>
+          </div>
+          <div class="menu-card-content">
+            <h3 class="menu-card-title">� Hamburguesa de la Casa</h3>
+            <p class="menu-card-description">Carne de res angus, queso cheddar, lechuga fresca, tomate y salsa especial.</p>
+            <div class="menu-card-footer">
+              <div class="price">S/ 20.00</div>
+              <div class="barcode">Código: 8</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Combos de Hamburguesa -->
+        <div class="menu-card">
+          <div class="menu-card-image">
+            <img src="../img/hamburguesa/papas_fritas.png" alt="Combos de Hamburguesa">
+            <div class="ar-badge">Marcador Hiro</div>
+          </div>
+          <div class="menu-card-content">
+            <h3 class="menu-card-title">� Combos de Hamburguesa</h3>
+            <p class="menu-card-description">
+              Papas fritas con ketchup, nuggets, hot dog y combos con hamburguesa clásica,
+              bebida y acompañamientos.
+            </p>
+            <div class="menu-card-footer">
+              <div class="price">Desde S/ 18.00</div>
+              <div class="barcode">Marcador: Hiro</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="menu-grid" id="nft-menu-grid">
       <div class="menu-card">
         <div class="menu-card-image">
-          <img src="../img/cafe.png" alt="Café Americano">
-          <div class="ar-badge">Ver en AR</div>
+          <img src="../img/latte.png" alt="Latte Arte">
+          <div class="ar-badge">NFT Latte</div>
         </div>
         <div class="menu-card-content">
-          <h3 class="menu-card-title">☕ Café Americano</h3>
-          <p class="menu-card-description">Café 100% arábica, agua filtrada. Bebida perfecta para comenzar tu día.</p>
+          <h3 class="menu-card-title">☕ Latte Arte</h3>
+          <p class="menu-card-description">Latte con arte en la espuma, ideal para destacar en AR.</p>
+          <div class="menu-card-footer">
+            <div class="price">S/ 12.00</div>
+            <div class="barcode">NFT: latte</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-image">
+          <img src="../img/chocolate_caliente.png" alt="Chocolate Caliente">
+          <div class="ar-badge">NFT Chocolate</div>
+        </div>
+        <div class="menu-card-content">
+          <h3 class="menu-card-title">🍫 Chocolate Caliente</h3>
+          <p class="menu-card-description">Chocolate espeso con espuma y toppings, perfecto para AR.</p>
+          <div class="menu-card-footer">
+            <div class="price">S/ 11.00</div>
+            <div class="barcode">NFT: chocolate</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-image">
+          <img src="../img/croissant.png" alt="Croissant">
+          <div class="ar-badge">NFT Croissant</div>
+        </div>
+        <div class="menu-card-content">
+          <h3 class="menu-card-title">🥐 Croissant Mantequilla</h3>
+          <p class="menu-card-description">Croissant hojaldrado, dorado y crujiente para complementar tu café.</p>
+          <div class="menu-card-footer">
+            <div class="price">S/ 7.00</div>
+            <div class="barcode">NFT: croissant</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-image">
+          <img src="../img/dona.png" alt="Donut Glaseada">
+          <div class="ar-badge">NFT Donut</div>
+        </div>
+        <div class="menu-card-content">
+          <h3 class="menu-card-title">🍩 Donut Glaseada</h3>
+          <p class="menu-card-description">Donut suave con glaseado brillante y detalles coloridos.</p>
+          <div class="menu-card-footer">
+            <div class="price">S/ 6.50</div>
+            <div class="barcode">NFT: donut</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-image">
+          <img src="../img/muffin.png" alt="Muffin de Chocolate">
+          <div class="ar-badge">NFT Muffin</div>
+        </div>
+        <div class="menu-card-content">
+          <h3 class="menu-card-title">🧁 Muffin de Chocolate</h3>
+          <p class="menu-card-description">Muffin esponjoso con chips de chocolate, perfecto en AR.</p>
+          <div class="menu-card-footer">
+            <div class="price">S/ 7.50</div>
+            <div class="barcode">NFT: muffin</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-image">
+          <img src="../img/cupcake.png" alt="Cupcake Temático">
+          <div class="ar-badge">NFT Cupcake</div>
+        </div>
+        <div class="menu-card-content">
+          <h3 class="menu-card-title">🧁 Cupcake Temático</h3>
+          <p class="menu-card-description">Cupcake decorado para experiencias AR más llamativas.</p>
           <div class="menu-card-footer">
             <div class="price">S/ 8.00</div>
-            <div class="barcode">Código: 5</div>
+            <div class="barcode">NFT: cupcake</div>
           </div>
         </div>
       </div>
 
-      <!-- Sushi -->
       <div class="menu-card">
         <div class="menu-card-image">
-          <img src="../img/sushi.png" alt="Sushi Mixto">
-          <div class="ar-badge">Ver en AR</div>
+          <img src="../img/papas_fritas.png" alt="Papas Fritas">
+          <div class="ar-badge">NFT Papas</div>
         </div>
         <div class="menu-card-content">
-          <h3 class="menu-card-title">🍣 Sushi Mixto</h3>
-          <p class="menu-card-description">Arroz sazonado, salmón fresco, palta, alga nori y salsa de soya.</p>
+          <h3 class="menu-card-title">🍟 Papas Fritas</h3>
+          <p class="menu-card-description">Papas fritas con ketchup, pensadas para un NFT de comida rápida.</p>
           <div class="menu-card-footer">
-            <div class="price">S/ 25.00</div>
-            <div class="barcode">Código: 6</div>
+            <div class="price">S/ 10.00</div>
+            <div class="barcode">NFT: fries</div>
           </div>
         </div>
       </div>
 
-      <!-- Pizza -->
       <div class="menu-card">
         <div class="menu-card-image">
-          <img src="../img/pizza.png" alt="Pizza Clásica">
-          <div class="ar-badge">Ver en AR</div>
+          <img src="../img/hotdog.png" alt="Hot Dog">
+          <div class="ar-badge">NFT Hot Dog</div>
         </div>
         <div class="menu-card-content">
-          <h3 class="menu-card-title">🍕 Pizza Clásica</h3>
-          <p class="menu-card-description">Masa artesanal, salsa de tomate, queso mozzarella premium y orégano.</p>
+          <h3 class="menu-card-title">🌭 Hot Dog</h3>
+          <p class="menu-card-description">Hot dog con salsa y toppings listo para verse en AR.</p>
+          <div class="menu-card-footer">
+            <div class="price">S/ 9.00</div>
+            <div class="barcode">NFT: hotdog</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-image">
+          <img src="../img/nuggets.png" alt="Nuggets">
+          <div class="ar-badge">NFT Nuggets</div>
+        </div>
+        <div class="menu-card-content">
+          <h3 class="menu-card-title">🍗 Nuggets de Pollo</h3>
+          <p class="menu-card-description">Nuggets crujientes con salsa para una demostración AR.</p>
+          <div class="menu-card-footer">
+            <div class="price">S/ 11.00</div>
+            <div class="barcode">NFT: nuggets</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-image">
+          <img src="../img/classic_burger.png" alt="Hamburguesa Clásica">
+          <div class="ar-badge">NFT Burger</div>
+        </div>
+        <div class="menu-card-content">
+          <h3 class="menu-card-title">🍔 Hamburguesa Clásica</h3>
+          <p class="menu-card-description">Hamburguesa clásica modelada en 3D para NFT de vitrina.</p>
+          <div class="menu-card-footer">
+            <div class="price">S/ 22.00</div>
+            <div class="barcode">NFT: classic_burger</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-image">
+          <img src="../img/blt_sandwich.png" alt="Sandwich BLT">
+          <div class="ar-badge">NFT BLT</div>
+        </div>
+        <div class="menu-card-content">
+          <h3 class="menu-card-title">🥪 Sandwich BLT</h3>
+          <p class="menu-card-description">Sandwich con tocino, lechuga y tomate para mostrar en AR.</p>
           <div class="menu-card-footer">
             <div class="price">S/ 18.00</div>
-            <div class="barcode">Código: 7</div>
+            <div class="barcode">NFT: blt_sandwich</div>
           </div>
         </div>
       </div>
 
-      <!-- Hamburguesa -->
       <div class="menu-card">
         <div class="menu-card-image">
-          <img src="../img/hamburguesa.png" alt="Hamburguesa de la Casa">
-          <div class="ar-badge">Ver en AR</div>
+          <img src="../img/sandwich_queso.png" alt="Sandwich de Queso">
+          <div class="ar-badge">NFT Sandwich</div>
         </div>
         <div class="menu-card-content">
-          <h3 class="menu-card-title">🍔 Hamburguesa de la Casa</h3>
-          <p class="menu-card-description">Carne de res angus, queso cheddar, lechuga fresca, tomate y salsa especial.</p>
+          <h3 class="menu-card-title">🥪 Sandwich de Queso</h3>
+          <p class="menu-card-description">Sandwich de queso y jamón para demostración AR individual.</p>
+          <div class="menu-card-footer">
+            <div class="price">S/ 16.00</div>
+            <div class="barcode">NFT: ham_cheese</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-image">
+          <img src="../img/sushi_roll.png" alt="Sushi Rolls">
+          <div class="ar-badge">NFT Sushi Rolls</div>
+        </div>
+        <div class="menu-card-content">
+          <h3 class="menu-card-title">🍣 Sushi Rolls</h3>
+          <p class="menu-card-description">Rolls individuales para mostrar el detalle del modelo en AR.</p>
           <div class="menu-card-footer">
             <div class="price">S/ 20.00</div>
-            <div class="barcode">Código: 8</div>
+            <div class="barcode">NFT: sushi_rolls</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-image">
+          <img src="../img/sushi_salmon.png" alt="Sushi Salmón">
+          <div class="ar-badge">NFT Nigiri</div>
+        </div>
+        <div class="menu-card-content">
+          <h3 class="menu-card-title">🍣 Nigiri de Salmón</h3>
+          <p class="menu-card-description">Nigiri de salmón para un NFT de detalle gastronómico.</p>
+          <div class="menu-card-footer">
+            <div class="price">S/ 18.00</div>
+            <div class="barcode">NFT: nigiri</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-image">
+          <img src="../img/ramen.png" alt="Ramen">
+          <div class="ar-badge">NFT Ramen</div>
+        </div>
+        <div class="menu-card-content">
+          <h3 class="menu-card-title">🍜 Ramen de Camarones</h3>
+          <p class="menu-card-description">Ramen con camarones y toppings, pensado para NFT individual.</p>
+          <div class="menu-card-footer">
+            <div class="price">S/ 24.00</div>
+            <div class="barcode">NFT: ramen</div>
           </div>
         </div>
       </div>
@@ -291,6 +751,197 @@
         </div>
       </div>
     </div>
+
+    <div class="admin-panel" id="admin-panel">
+      <div class="admin-panel-title">Panel de administración de platos</div>
+      <div class="admin-panel-subtitle">Solo para administradores. Aquí registras nuevos platos con su imagen, modelo y marcador NFT.</div>
+      <form class="admin-form" id="admin-form">
+        <div class="admin-field">
+          <label class="admin-label" for="admin-type">Tipo de comida</label>
+          <select class="admin-select" id="admin-type" required>
+            <option value="cafe">Cafetería</option>
+            <option value="hamburguesa">Hamburguesa / Fast food</option>
+            <option value="pizza">Pizza</option>
+            <option value="sushi">Sushi / Ramen</option>
+          </select>
+        </div>
+        <div class="admin-field">
+          <label class="admin-label" for="admin-name">Nombre del plato</label>
+          <input class="admin-input" id="admin-name" type="text" required>
+        </div>
+        <div class="admin-field">
+          <label class="admin-label" for="admin-price">Precio (S/)</label>
+          <input class="admin-input" id="admin-price" type="number" step="0.1" min="0" required>
+        </div>
+        <div class="admin-field">
+          <label class="admin-label" for="admin-description">Descripción corta</label>
+          <input class="admin-input" id="admin-description" type="text" required>
+        </div>
+        <div class="admin-field">
+          <label class="admin-label" for="admin-image-file">Imagen (archivo local)</label>
+          <input class="admin-input" id="admin-image-file" type="file" accept="image/*" required>
+        </div>
+        <div class="admin-field">
+          <label class="admin-label" for="admin-model-file">Modelo 3D (.glb desde local)</label>
+          <input class="admin-input" id="admin-model-file" type="file" accept=".glb" required>
+        </div>
+        <div class="admin-field">
+          <label class="admin-label" for="admin-marker-files">Archivos NFT (.fset/.fset3/.iset locales)</label>
+          <input class="admin-input" id="admin-marker-files" type="file" accept=".fset,.fset3,.iset" multiple required>
+        </div>
+        <div class="admin-actions">
+          <button type="submit" class="admin-save-btn">Guardar plato</button>
+        </div>
+      </form>
+      <div class="admin-list" id="admin-list"></div>
+    </div>
   </div>
+  <script>
+    (function() {
+      var adminPassword = 'admin2024';
+      var toggle = document.getElementById('admin-toggle');
+      var panel = document.getElementById('admin-panel');
+      var form = document.getElementById('admin-form');
+      var list = document.getElementById('admin-list');
+      var menuGrid = document.getElementById('nft-menu-grid');
+      var storageKey = 'adminPlatosAR';
+
+      function loadPlatos() {
+        try {
+          var raw = localStorage.getItem(storageKey);
+          if (!raw) return [];
+          var parsed = JSON.parse(raw);
+          if (!Array.isArray(parsed)) return [];
+          return parsed;
+        } catch (e) {
+          return [];
+        }
+      }
+
+      function savePlatos(platos) {
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(platos));
+        } catch (e) {}
+      }
+
+      function createCard(plato) {
+        if (!menuGrid) return;
+        var card = document.createElement('div');
+        card.className = 'menu-card';
+        var imageWrapper = document.createElement('div');
+        imageWrapper.className = 'menu-card-image';
+        var img = document.createElement('img');
+        img.src = '../' + String(plato.imagen || '').replace(/^\.?\//, '');
+        img.alt = plato.nombre;
+        var badge = document.createElement('div');
+        badge.className = 'ar-badge';
+        badge.textContent = 'NFT ' + plato.marcador.toUpperCase();
+        imageWrapper.appendChild(img);
+        imageWrapper.appendChild(badge);
+        var content = document.createElement('div');
+        content.className = 'menu-card-content';
+        var title = document.createElement('h3');
+        title.className = 'menu-card-title';
+        title.textContent = plato.nombre;
+        var desc = document.createElement('p');
+        desc.className = 'menu-card-description';
+        desc.textContent = plato.descripcion;
+        var footer = document.createElement('div');
+        footer.className = 'menu-card-footer';
+        var price = document.createElement('div');
+        price.className = 'price';
+        price.textContent = 'S/ ' + plato.precio;
+        var barcode = document.createElement('div');
+        barcode.className = 'barcode';
+        barcode.textContent = 'NFT: ' + plato.marcador;
+        footer.appendChild(price);
+        footer.appendChild(barcode);
+        content.appendChild(title);
+        content.appendChild(desc);
+        content.appendChild(footer);
+        card.appendChild(imageWrapper);
+        card.appendChild(content);
+        menuGrid.appendChild(card);
+      }
+
+      function renderList(platos) {
+        if (!list) return;
+        list.innerHTML = '';
+        if (!platos.length) {
+          list.textContent = 'Aún no hay platos creados desde este panel.';
+          return;
+        }
+        platos.forEach(function(p) {
+          var row = document.createElement('div');
+          row.className = 'admin-list-item';
+          var main = document.createElement('div');
+          main.className = 'admin-list-main';
+          main.textContent = p.nombre + ' · S/ ' + p.precio;
+          var meta = document.createElement('div');
+          meta.className = 'admin-list-meta';
+          meta.textContent = p.tipo + ' · ' + p.imagen + ' · ' + p.modelo + ' · ' + p.marcador;
+          row.appendChild(main);
+          row.appendChild(meta);
+          list.appendChild(row);
+        });
+      }
+
+      function bootstrap() {
+        var platos = loadPlatos();
+        platos.forEach(createCard);
+        renderList(platos);
+      }
+
+      if (toggle && panel) {
+        toggle.addEventListener('click', function() {
+          var pass = prompt('Contraseña de administrador');
+          if (pass === adminPassword) {
+            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+          } else if (pass !== null) {
+            alert('Contraseña incorrecta');
+          }
+        });
+      }
+
+      if (form) {
+        form.addEventListener('submit', function(e) {
+          e.preventDefault();
+          var tipo = document.getElementById('admin-type').value || '';
+          var nombre = document.getElementById('admin-name').value || '';
+          var precio = document.getElementById('admin-price').value || '';
+          var descripcion = document.getElementById('admin-description').value || '';
+          var imageInput = document.getElementById('admin-image-file');
+          var modelInput = document.getElementById('admin-model-file');
+          var markerInput = document.getElementById('admin-marker-files');
+          var imageFile = imageInput && imageInput.files ? imageInput.files[0] : null;
+          var modelFile = modelInput && modelInput.files ? modelInput.files[0] : null;
+          var markerFiles = markerInput && markerInput.files ? Array.from(markerInput.files) : [];
+          if (!tipo || !nombre || !precio || !descripcion || !imageFile || !modelFile || !markerFiles.length) return;
+          var baseName = markerFiles[0].name.split('.')[0];
+          var imagen = 'img/' + tipo + '/' + imageFile.name;
+          var modelo = 'models/' + tipo + '/' + modelFile.name;
+          var marcador = baseName;
+          var platos = loadPlatos();
+          var plato = {
+            id: Date.now(),
+            tipo: tipo,
+            nombre: nombre,
+            precio: precio,
+            descripcion: descripcion,
+            imagen: imagen,
+            modelo: modelo,
+            marcador: marcador
+          };
+          platos.push(plato);
+          savePlatos(platos);
+          createCard(plato);
+          renderList(platos);
+          form.reset();
+        });
+      }
+
+      bootstrap();
+    })();
+  </script>
 </body>
 </html>

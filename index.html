@@ -288,9 +288,34 @@
         font-size: 12px;
         line-height: 1.4;
       }
+      .camera-error {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: #000;
+        color: #fff;
+        padding: 10px 16px;
+        z-index: 3000;
+        font-size: 14px;
+      }
+      .bg-video {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        object-fit: cover;
+        z-index: 0;
+        background: #000;
+      }
+      .a-canvas {
+        background-color: transparent !important;
+      }
     </style>
   </head>
   <body style="margin: 0px; overflow: hidden;">
+    <video id="bg-video" class="bg-video" autoplay muted playsinline></video>
     <div class="flash" id="flash-effect"></div>
 
     <div class="product-panel" id="product-panel">
@@ -307,17 +332,37 @@
     </div>
 
     <a-scene
-      embedded
-      arjs="sourceType: webcam; debugUIEnabled: false; trackingMethod: best; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
-      renderer="antialias: true; logarithmicDepthBuffer: true; colorManagement: true; preserveDrawingBuffer: true;"
       vr-mode-ui="enabled: false"
-      screenshot>
+      embedded
+      loading-screen="enabled: false"
+      renderer="antialias: true; logarithmicDepthBuffer: true; colorManagement: true; alpha: true; preserveDrawingBuffer: true;"
+      arjs="sourceType: webcam; sourceWidth: 1280; sourceHeight: 720; displayWidth: 1280; displayHeight: 720; trackingMethod: best; detectionMode: mono_and_matrix; matrixCodeType: 3x3; debugUIEnabled: false;"
+      screenshot
+      style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;">
       
       <a-assets>
-        <a-asset-item id="coffe-model" src="./coffe2.glb"></a-asset-item>
-        <a-asset-item id="sushi-model" src="./sushi.glb"></a-asset-item>
-        <a-asset-item id="pizza-model" src="./pizza.glb"></a-asset-item>
-        <a-asset-item id="burger-model" src="./hamburger.glb"></a-asset-item>
+        <a-asset-item id="coffe-model" src="./models/cafe/coffe2.glb"></a-asset-item>
+        <a-asset-item id="sushi-model" src="./models/sushi/sushi.glb"></a-asset-item>
+        <a-asset-item id="pizza-model" src="./models/pizza/pizza.glb"></a-asset-item>
+        <a-asset-item id="burger-model" src="./models/hamburguesa/classic_burger.glb"></a-asset-item>
+        <a-asset-item id="coffee-cup-model" src="./models/cafe/coffee_cup.glb"></a-asset-item>
+        <a-asset-item id="latte-model" src="./models/cafe/cafe_latte_with_art.glb"></a-asset-item>
+        <a-asset-item id="hot-chocolate-model" src="./models/cafe/hot_chocolate.glb"></a-asset-item>
+        <a-asset-item id="croissant-model" src="./models/cafe/croissant.glb"></a-asset-item>
+        <a-asset-item id="donut-model" src="./models/cafe/donut.glb"></a-asset-item>
+        <a-asset-item id="muffin-model" src="./models/cafe/chocolate_muffin.glb"></a-asset-item>
+        <a-asset-item id="cupcake-model" src="./models/cafe/fnaf_1_cupcake.glb"></a-asset-item>
+        <a-asset-item id="fries-model" src="./models/hamburguesa/fries_with_ketchup.glb"></a-asset-item>
+        <a-asset-item id="hotdog-model" src="./models/hamburguesa/hot_dog__hotdog.glb"></a-asset-item>
+        <a-asset-item id="nuggets-model" src="./models/hamburguesa/nuggets_mc.glb"></a-asset-item>
+        <a-asset-item id="sandwich-blt-model" src="./models/hamburguesa/blt_sandwich.glb"></a-asset-item>
+        <a-asset-item id="sandwich-ham-cheese-model" src="./models/hamburguesa/ham__cheese_sandwich.glb"></a-asset-item>
+        <a-asset-item id="burger-classic-model" src="./models/hamburguesa/classic_burger.glb"></a-asset-item>
+        <a-asset-item id="burger-combo-model" src="./models/hamburguesa/hamburgersa-combo.glb"></a-asset-item>
+        <a-asset-item id="pizza-slice-model" src="./models/pizza/day_292_pizza_slice.glb"></a-asset-item>
+        <a-asset-item id="sushi-rolls-model" src="./models/sushi/sushi_rolls.glb"></a-asset-item>
+        <a-asset-item id="nigiri-model" src="./models/sushi/salmon_nigiri.glb"></a-asset-item>
+        <a-asset-item id="ramen-model" src="./models/sushi/shrimp_ramen_bowl.glb"></a-asset-item>
       </a-assets>
 
       <!-- Marcador de Café 2 (Carta Yu-Gi-Oh) -->
@@ -370,6 +415,166 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-nft>
+
+      <a-nft type="nft" url="./zip´s/cafe/latte" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+        <a-entity
+          gltf-model="#latte-model"
+          scale="6.5 6.5 6.5"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-nft>
+
+      <a-nft type="nft" url="./zip´s/cafe/chocolate_caliente" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+        <a-entity
+          gltf-model="#hot-chocolate-model"
+          scale="6 6 6"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-nft>
+
+      <a-nft type="nft" url="./zip´s/cafe/croissant" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+        <a-entity
+          gltf-model="#croissant-model"
+          scale="3.5 3.5 3.5"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-nft>
+
+      <a-nft type="nft" url="./zip´s/cafe/dona" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+        <a-entity
+          gltf-model="#donut-model"
+          scale="3.5 3.5 3.5"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-nft>
+
+      <a-nft type="nft" url="./zip´s/cafe/muffin" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+        <a-entity
+          gltf-model="#muffin-model"
+          scale="3.5 3.5 3.5"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-nft>
+
+      <a-nft type="nft" url="./zip´s/cafe/cupcake" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+        <a-entity
+          gltf-model="#cupcake-model"
+          scale="3.5 3.5 3.5"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-nft>
+
+      <a-nft type="nft" url="./zip´s/hamburguesa/papas_fritas" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+        <a-entity
+          gltf-model="#fries-model"
+          scale="4 4 4"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-nft>
+
+      <a-nft type="nft" url="./zip´s/hamburguesa/hotdog" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+        <a-entity
+          gltf-model="#hotdog-model"
+          scale="4 4 4"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-nft>
+
+      <a-nft type="nft" url="./zip´s/hamburguesa/nuggets" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+        <a-entity
+          gltf-model="#nuggets-model"
+          scale="4 4 4"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-nft>
+
+      <a-nft type="nft" url="./zip´s/hamburguesa/Classic Burger" emitevents="true" smooth="true" smoothCount="25" smoothTolerance="0.002" smoothThreshold="2">
+        <a-entity
+          gltf-model="#burger-classic-model"
+          scale="0.003 0.003 0.003"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-nft>
+
+      <a-nft type="nft" url="./zip´s/hamburguesa/blt_sandwich" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+        <a-entity
+          gltf-model="#sandwich-blt-model"
+          scale="4 4 4"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-nft>
+
+      <a-nft type="nft" url="./zip´s/hamburguesa/sandwich_queso" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+        <a-entity
+          gltf-model="#sandwich-ham-cheese-model"
+          scale="4 4 4"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-nft>
+
+      <a-nft type="nft" url="./zip´s/pizza/rebanada_pizza" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+        <a-entity
+          gltf-model="#pizza-slice-model"
+          scale="4 4 4"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-nft>
+
+      <a-nft type="nft" url="./zip´s/sushi/sushi_roll" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+        <a-entity
+          gltf-model="#sushi-rolls-model"
+          scale="4 4 4"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-nft>
+
+      <a-nft type="nft" url="./zip´s/sushi/sushi_salmon" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+        <a-entity
+          gltf-model="#nigiri-model"
+          scale="4 4 4"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-nft>
+
+      <a-nft type="nft" url="./zip´s/sushi/ramen" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
+        <a-entity
+          gltf-model="#ramen-model"
+          scale="4 4 4"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-nft>
       
       <a-marker type="pattern" url="./pattern-caffe.patt" emitevents="true" smooth="true" smoothCount="20" smoothTolerance="0.002" smoothThreshold="2">
         <a-entity
@@ -412,6 +617,132 @@
           gltf-model="#coffe-model"
           scale="7 7 7"
           position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+        <a-entity
+          gltf-model="#coffee-cup-model"
+          scale="6.5 6.5 6.5"
+          position="-1 -1.2 0"
+          rotation="0 20 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+        <a-entity
+          gltf-model="#latte-model"
+          scale="6.5 6.5 6.5"
+          position="1 -1.2 0"
+          rotation="0 -20 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+        <a-entity
+          gltf-model="#hot-chocolate-model"
+          scale="6 6 6"
+          position="0 -1.2 -1"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+        <a-entity
+          gltf-model="#croissant-model"
+          scale="3.5 3.5 3.5"
+          position="-1.2 -1.2 -1"
+          rotation="0 15 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+        <a-entity
+          gltf-model="#donut-model"
+          scale="3.5 3.5 3.5"
+          position="1.2 -1.2 -1"
+          rotation="0 -15 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+        <a-entity
+          gltf-model="#muffin-model"
+          scale="3.5 3.5 3.5"
+          position="-0.7 -1.2 1"
+          rotation="0 10 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+        <a-entity
+          gltf-model="#cupcake-model"
+          scale="3.5 3.5 3.5"
+          position="0.7 -1.2 1"
+          rotation="0 -10 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+        <a-entity
+          gltf-model="#fries-model"
+          scale="4 4 4"
+          position="-2 -1.2 0"
+          rotation="0 15 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+        <a-entity
+          gltf-model="#hotdog-model"
+          scale="4 4 4"
+          position="2 -1.2 0"
+          rotation="0 -15 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+        <a-entity
+          gltf-model="#nuggets-model"
+          scale="4 4 4"
+          position="-2 -1.2 -1.4"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+        <a-entity
+          gltf-model="#sandwich-blt-model"
+          scale="4 4 4"
+          position="2 -1.2 -1.4"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+        <a-entity
+          gltf-model="#sandwich-ham-cheese-model"
+          scale="4 4 4"
+          position="0 -1.2 2"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+        <a-entity
+          gltf-model="#burger-classic-model"
+          scale="0.003 0.003 0.003"
+          position="-2.5 -1.2 1.5"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+        <a-entity
+          gltf-model="#burger-combo-model"
+          scale="0.004 0.004 0.004"
+          position="2.5 -1.2 1.5"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+        <a-entity
+          gltf-model="#pizza-slice-model"
+          scale="4 4 4"
+          position="-3 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+        <a-entity
+          gltf-model="#sushi-rolls-model"
+          scale="4 4 4"
+          position="3 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+        <a-entity
+          gltf-model="#nigiri-model"
+          scale="4 4 4"
+          position="-3 -1.2 -1.5"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+        <a-entity
+          gltf-model="#ramen-model"
+          scale="4 4 4"
+          position="3 -1.2 -1.5"
           rotation="0 0 0"
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
@@ -486,16 +817,209 @@
           title: 'Hamburguesa de la casa',
           price: 'S/ 20.00',
           ingredients: 'Carne de res, queso cheddar, lechuga, tomate, salsa especial.'
+        },
+        latte: {
+          title: 'Latte Arte',
+          price: 'S/ 12.00',
+          ingredients: 'Taza de latte con arte en la espuma como NFT de cafetería.'
+        },
+        chocolate: {
+          title: 'Chocolate Caliente',
+          price: 'S/ 11.00',
+          ingredients: 'Chocolate espeso con espuma y toppings ideal para ver en AR.'
+        },
+        croissant: {
+          title: 'Croissant Mantequilla',
+          price: 'S/ 7.00',
+          ingredients: 'Croissant hojaldrado y dorado para resaltar el modelado 3D.'
+        },
+        donut: {
+          title: 'Donut Glaseada',
+          price: 'S/ 6.50',
+          ingredients: 'Donut con glaseado brillante y detalles de color para NFT dulce.'
+        },
+        muffin: {
+          title: 'Muffin de Chocolate',
+          price: 'S/ 7.50',
+          ingredients: 'Muffin esponjoso con chips de chocolate como NFT de repostería.'
+        },
+        cupcake: {
+          title: 'Cupcake Temático',
+          price: 'S/ 8.00',
+          ingredients: 'Cupcake decorado para propuestas creativas de postres en AR.'
+        },
+        fries: {
+          title: 'Papas Fritas',
+          price: 'S/ 10.00',
+          ingredients: 'Papas fritas con salsa como NFT de acompañamiento.'
+        },
+        hotdog: {
+          title: 'Hot Dog',
+          price: 'S/ 9.00',
+          ingredients: 'Hot dog con toppings para visualización de comida rápida en AR.'
+        },
+        nuggets: {
+          title: 'Nuggets de Pollo',
+          price: 'S/ 11.00',
+          ingredients: 'Nuggets crocantes con salsa para menú infantil o combo.'
+        },
+        classic_burger: {
+          title: 'Hamburguesa Clásica',
+          price: 'S/ 22.00',
+          ingredients: 'Hamburguesa clásica modelada en 3D como NFT de comida rápida.'
+        },
+        blt_sandwich: {
+          title: 'Sandwich BLT',
+          price: 'S/ 18.00',
+          ingredients: 'Sandwich con tocino, lechuga y tomate como NFT individual.'
+        },
+        ham_cheese: {
+          title: 'Sandwich de Queso',
+          price: 'S/ 16.00',
+          ingredients: 'Sandwich de queso y jamón pensado para vitrinas digitales.'
+        },
+        pizza_slice: {
+          title: 'Pizza Especial',
+          price: 'S/ 12.00',
+          ingredients: 'Rebanadas individuales presentadas para compartir como pizza en AR.'
+        },
+        sushi_rolls: {
+          title: 'Sushi Rolls',
+          price: 'S/ 20.00',
+          ingredients: 'Rolls individuales para mostrar el detalle del modelo en AR.'
+        },
+        nigiri: {
+          title: 'Nigiri de Salmón',
+          price: 'S/ 18.00',
+          ingredients: 'Nigiri de salmón como NFT gastronómico de alta definición.'
+        },
+        ramen: {
+          title: 'Ramen de Camarones',
+          price: 'S/ 24.00',
+          ingredients: 'Bowl de ramen con camarones y toppings como NFT asiático.'
         }
       };
+
+      const modelImages = {
+        'coffe-model': 'img/cafe/cafe.png',
+        'coffee-cup-model': 'img/cafe/taza_cafe.png',
+        'latte-model': 'img/cafe/latte.png',
+        'hot-chocolate-model': 'img/cafe/chocolate_caliente.png',
+        'croissant-model': 'img/cafe/croissant.png',
+        'donut-model': 'img/cafe/dona.png',
+        'muffin-model': 'img/cafe/muffin.png',
+        'cupcake-model': 'img/cafe/cupcake.png',
+        'fries-model': 'img/hamburguesa/papas_fritas.png',
+        'hotdog-model': 'img/hamburguesa/hotdog.png',
+        'nuggets-model': 'img/hamburguesa/nuggets.png',
+        'sandwich-blt-model': 'img/hamburguesa/blt_sandwich.png',
+        'sandwich-ham-cheese-model': 'img/hamburguesa/sandwich_queso.png',
+        'burger-model': 'img/hamburguesa/hamburguesa.png',
+        'burger-classic-model': 'img/hamburguesa/classic_burger.png',
+        'burger-combo-model': 'img/hamburguesa/papas_fritas.png',
+        'pizza-model': 'img/pizza/pizza.png',
+        'pizza-slice-model': 'img/pizza/rebanada_pizza.png',
+        'sushi-model': 'img/sushi/sushi.png',
+        'sushi-rolls-model': 'img/sushi/sushi_roll.png',
+        'nigiri-model': 'img/sushi/sushi_salmon.png',
+        'ramen-model': 'img/sushi/ramen.png'
+      };
+      
+      const adminStorageKey = 'adminPlatosAR';
+      
+      (function integrateAdminDishes() {
+        let raw;
+        try {
+          raw = localStorage.getItem(adminStorageKey);
+        } catch (e) {
+          return;
+        }
+        if (!raw) return;
+        let platos;
+        try {
+          platos = JSON.parse(raw);
+        } catch (e) {
+          return;
+        }
+        if (!Array.isArray(platos)) return;
+        const scene = document.querySelector('a-scene');
+        if (!scene) return;
+        const assets = scene.querySelector('a-assets');
+        if (!assets) return;
+        platos.forEach(function(p) {
+          if (!p || !p.marcador || !p.modelo || !p.imagen || !p.nombre || !p.precio || !p.descripcion || !p.tipo) {
+            return;
+          }
+          const modelId = 'admin-model-' + p.marcador;
+          if (!assets.querySelector('#' + modelId)) {
+            const asset = document.createElement('a-asset-item');
+            asset.setAttribute('id', modelId);
+            let src = p.modelo;
+            if (src.indexOf('./') !== 0) {
+              src = './' + src.replace(/^\/+/, '');
+            }
+            asset.setAttribute('src', src);
+            assets.appendChild(asset);
+          }
+          const productsKey = p.marcador;
+          if (!products[productsKey]) {
+            products[productsKey] = {
+              title: p.nombre,
+              price: 'S/ ' + p.precio,
+              ingredients: p.descripcion
+            };
+          }
+          if (!modelImages[modelId]) {
+            modelImages[modelId] = p.imagen;
+          }
+          const tipo = p.tipo;
+          const folder = tipo === 'cafe' || tipo === 'hamburguesa' || tipo === 'pizza' || tipo === 'sushi' ? tipo : 'cafe';
+          const markerUrl = "./zip´s/" + folder + "/" + p.marcador;
+          const nft = document.createElement('a-nft');
+          nft.setAttribute('type', 'nft');
+          nft.setAttribute('url', markerUrl);
+          nft.setAttribute('emitevents', 'true');
+          nft.setAttribute('smooth', 'true');
+          nft.setAttribute('smoothCount', '20');
+          nft.setAttribute('smoothTolerance', '0.002');
+          nft.setAttribute('smoothThreshold', '2');
+          nft.setAttribute('data-product-key', productsKey);
+          const entity = document.createElement('a-entity');
+          entity.setAttribute('gltf-model', '#' + modelId);
+          entity.setAttribute('scale', '4 4 4');
+          entity.setAttribute('position', '0 -1.2 0');
+          entity.setAttribute('rotation', '0 0 0');
+          entity.setAttribute('drag-rotate-scale', 'minScale: 0.5; maxScale: 2; rotationFactor: 0.5');
+          nft.appendChild(entity);
+          scene.appendChild(nft);
+        });
+      })();
       
       function getProductKeyFromMarker(marker) {
+        const custom = marker.getAttribute('data-product-key');
+        if (custom) return custom;
         const url = marker.getAttribute('url') || '';
         const value = marker.getAttribute('value');
         const preset = marker.getAttribute('preset');
-        if (url.indexOf('cafe') !== -1 || url.indexOf('caffe') !== -1) return 'cafe';
+        if (url.indexOf('cafe') !== -1 || url.indexOf('caffe') !== -1 || url.indexOf('taza_cafe') !== -1) return 'cafe';
+        if (url.indexOf('sushi_roll') !== -1 || url.indexOf('sushi_rolls') !== -1) return 'sushi_rolls';
+        if (url.indexOf('sushi_salmon') !== -1 || url.indexOf('nigiri') !== -1) return 'nigiri';
         if (url.indexOf('sushi') !== -1) return 'sushi';
+        if (url.indexOf('rebanada_pizza') !== -1 || url.indexOf('pizza_slice') !== -1) return 'pizza_slice';
         if (url.indexOf('pizza') !== -1) return 'pizza';
+        if (url.indexOf('papas_fritas') !== -1 || url.indexOf('fries') !== -1) return 'fries';
+        if (url.indexOf('hotdog') !== -1) return 'hotdog';
+        if (url.indexOf('nuggets') !== -1) return 'nuggets';
+        if (url.indexOf('latte') !== -1) return 'latte';
+        if (url.indexOf('chocolate_caliente') !== -1 || url.indexOf('chocolate') !== -1) return 'chocolate';
+        if (url.indexOf('croissant') !== -1) return 'croissant';
+        if (url.indexOf('dona') !== -1 || url.indexOf('donut') !== -1) return 'donut';
+        if (url.indexOf('muffin') !== -1) return 'muffin';
+        if (url.indexOf('cupcake') !== -1) return 'cupcake';
+        if (url.indexOf('Classic Burger') !== -1 || url.indexOf('classic_burger') !== -1) return 'classic_burger';
+        if (url.indexOf('blt_sandwich') !== -1) return 'blt_sandwich';
+        if (url.indexOf('sandwich_queso') !== -1 || url.indexOf('ham_cheese') !== -1) return 'ham_cheese';
+        if (url.indexOf('ramen') !== -1) return 'ramen';
         if (url.indexOf('burger') !== -1 || url.indexOf('hamburguesa') !== -1) return 'burger';
         if (value === '5') return 'cafe';
         if (value === '6') return 'sushi';
@@ -558,17 +1082,70 @@
       
       ;(() => {
         const markers = Array.from(document.querySelectorAll('a-marker, a-nft'));
+        let activeMarker = null;
+        const visibleMarkers = new Set();
+
+        function setActiveMarker(marker) {
+          activeMarker = marker;
+          markers.forEach(m => {
+            // Sólo dejamos visible el marcador activo;
+            // los demás se ocultan aunque sigan siendo detectados.
+            m.object3D.visible = (m === activeMarker);
+          });
+          const key = getProductKeyFromMarker(marker);
+          if (key) showProduct(key);
+        }
+
         markers.forEach(m => {
           m.addEventListener('markerFound', () => {
             console.log('markerFound', m.getAttribute('url') || m.getAttribute('value') || m.getAttribute('type'));
-            const key = getProductKeyFromMarker(m);
-            if (key) showProduct(key);
+            visibleMarkers.add(m);
+            setActiveMarker(m);
           });
+
           m.addEventListener('markerLost', () => {
             console.log('markerLost', m.getAttribute('url') || m.getAttribute('value') || m.getAttribute('type'));
-            hideProduct();
+            visibleMarkers.delete(m);
+
+            if (activeMarker === m) {
+              if (visibleMarkers.size === 0) {
+                activeMarker = null;
+                hideProduct();
+                // Si no hay ningún marcador visible, mostramos todos
+                // para la siguiente detección.
+                markers.forEach(x => { x.object3D.visible = true; });
+              } else {
+                const next = Array.from(visibleMarkers)[visibleMarkers.size - 1];
+                setActiveMarker(next);
+              }
+            }
           });
         });
+      })();
+    </script>
+
+    <script>
+      (function () {
+        const video = document.getElementById('bg-video');
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          const div = document.createElement('div');
+          div.className = 'camera-error';
+          div.textContent = 'Tu navegador no soporta acceso a cámara (getUserMedia). Prueba con Chrome o Edge.';
+          document.body.appendChild(div);
+          return;
+        }
+        navigator.mediaDevices.getUserMedia({video: {facingMode: 'environment'}})
+          .then(stream => {
+            video.srcObject = stream;
+            console.log('Cámara iniciada para fondo de video.');
+          })
+          .catch(err => {
+            console.error('Error al acceder a la cámara:', err.name, err.message);
+            const div = document.createElement('div');
+            div.className = 'camera-error';
+            div.textContent = 'Error cámara: ' + err.name + ' - ' + err.message + '. Revisa permisos para 127.0.0.1.';
+            document.body.appendChild(div);
+          });
       })();
     </script>
   </body>

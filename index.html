@@ -948,17 +948,63 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      
-      <a-marker type="barcode" value="5" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: barcode5">
+
+      <!-- Marcadores barcode para todos los platos -->
+      <a-marker type="barcode" value="0" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: latte" data-lite="extra">
         <a-entity
-          gltf-model="#coffe-model"
-          scale="7 7 7"
+          gltf-model="#latte-model"
+          scale="4.5 4.5 4.5"
           position="0 -1.2 0"
           rotation="0 0 0"
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="barcode" value="6" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: barcode6">
+      <a-marker type="barcode" value="1" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: chocolate_caliente" data-lite="extra">
+        <a-entity
+          gltf-model="#hot-chocolate-model"
+          scale="4.5 4.5 4.5"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-marker>
+      <a-marker type="barcode" value="2" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: croissant" data-lite="extra">
+        <a-entity
+          gltf-model="#croissant-model"
+          scale="4 4 4"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-marker>
+      <a-marker type="barcode" value="3" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: dona" data-lite="extra">
+        <a-entity
+          gltf-model="#donut-model"
+          scale="4 4 4"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-marker>
+      <a-marker type="barcode" value="4" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: muffin" data-lite="extra">
+        <a-entity
+          gltf-model="#muffin-model"
+          scale="4 4 4"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-marker>
+      <a-marker type="barcode" value="5" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: cafe">
+        <a-entity
+          gltf-model="#coffee-cup-model"
+          scale="4.5 4.5 4.5"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-marker>
+      <a-marker type="barcode" value="6" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: sushi">
         <a-entity
           gltf-model="#sushi-model"
           scale="6 6 6"
@@ -967,7 +1013,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="barcode" value="7" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: barcode7">
+      <a-marker type="barcode" value="7" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: pizza">
         <a-entity
           gltf-model="#pizza-model"
           scale="4.5 4.5 4.5"
@@ -976,16 +1022,115 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="barcode" value="8" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: barcode8">
+      <a-marker type="barcode" value="8" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: hamburguesa">
         <a-entity
           gltf-model="#burger-model"
-          scale="0.25 0.25 0.25"
+          scale="0.08 0.08 0.08"
           position="0 -1.2 0"
           rotation="0 0 0"
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      
+      <a-marker type="barcode" value="9" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: cupcake" data-lite="extra">
+        <a-entity
+          gltf-model="#cupcake-model"
+          scale="4 4 4"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-marker>
+      <a-marker type="barcode" value="10" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: papas_fritas" data-lite="extra">
+        <a-entity
+          gltf-model="#fries-model"
+          scale="4 4 4"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-marker>
+      <a-marker type="barcode" value="11" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: hotdog" data-lite="extra">
+        <a-entity
+          gltf-model="#hotdog-model"
+          scale="4 4 4"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-marker>
+      <a-marker type="barcode" value="12" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: nuggets" data-lite="extra">
+        <a-entity
+          gltf-model="#nuggets-model"
+          scale="4 4 4"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-marker>
+      <a-marker type="barcode" value="13" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: classic_burger" data-lite="extra">
+        <a-entity
+          gltf-model="#burger-classic-model"
+          scale="0.1 0.1 0.1"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-marker>
+      <a-marker type="barcode" value="14" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: blt_sandwich" data-lite="extra">
+        <a-entity
+          gltf-model="#sandwich-blt-model"
+          scale="4 4 4"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-marker>
+      <a-marker type="barcode" value="15" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: sandwich_queso" data-lite="extra">
+        <a-entity
+          gltf-model="#sandwich-ham-cheese-model"
+          scale="4 4 4"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-marker>
+      <a-marker type="barcode" value="16" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: rebanada_pizza" data-lite="extra">
+        <a-entity
+          gltf-model="#pizza-slice-model"
+          scale="4 4 4"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-marker>
+      <a-marker type="barcode" value="17" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: sushi_roll" data-lite="extra">
+        <a-entity
+          gltf-model="#sushi-rolls-model"
+          scale="4 4 4"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-marker>
+      <a-marker type="barcode" value="18" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: sushi_salmon" data-lite="extra">
+        <a-entity
+          gltf-model="#nigiri-model"
+          scale="4 4 4"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-marker>
+      <a-marker type="barcode" value="19" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="2" marker-model="dishId: ramen" data-lite="extra">
+        <a-entity
+          gltf-model="#ramen-model"
+          scale="4 4 4"
+          position="0 -1.2 0"
+          rotation="0 0 0"
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+        </a-entity>
+      </a-marker>
+
       <a-entity light="type: ambient; color: #FFF; intensity: 1.2"></a-entity>
       <a-entity light="type: directional; color: #FFF; intensity: 0.6" position="-1 1 1"></a-entity>
       <a-entity camera></a-entity>
@@ -1339,10 +1484,26 @@
         if (url.indexOf('sandwich_queso') !== -1 || url.indexOf('ham_cheese') !== -1) return 'ham_cheese';
         if (url.indexOf('ramen') !== -1) return 'ramen';
         if (url.indexOf('burger') !== -1 || url.indexOf('hamburguesa') !== -1) return 'burger';
+        if (value === '0') return 'latte';
+        if (value === '1') return 'chocolate';
+        if (value === '2') return 'croissant';
+        if (value === '3') return 'donut';
+        if (value === '4') return 'muffin';
         if (value === '5') return 'cafe';
         if (value === '6') return 'sushi';
         if (value === '7') return 'pizza';
         if (value === '8') return 'burger';
+        if (value === '9') return 'cupcake';
+        if (value === '10') return 'fries';
+        if (value === '11') return 'hotdog';
+        if (value === '12') return 'nuggets';
+        if (value === '13') return 'classic_burger';
+        if (value === '14') return 'blt_sandwich';
+        if (value === '15') return 'ham_cheese';
+        if (value === '16') return 'pizza_slice';
+        if (value === '17') return 'sushi_rolls';
+        if (value === '18') return 'nigiri';
+        if (value === '19') return 'ramen';
         if (preset === 'hiro') return 'cafe';
         return null;
       }

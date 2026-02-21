@@ -1146,8 +1146,11 @@
 
       function isLiteMode() {
         var modeParam = getQueryParam('mode');
+        if (modeParam === 'full') return false;
         if (modeParam === 'lite') return true;
-        return false;
+        var isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+        var lowMemory = typeof navigator.deviceMemory === 'number' && navigator.deviceMemory <= 4;
+        return isMobile && lowMemory;
       }
 
       function loadPlatosJson() {

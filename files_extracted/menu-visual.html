@@ -1013,6 +1013,28 @@
         } catch (e) {}
       }
 
+      function loadBasePlatosFromJson() {
+        return fetch('../data/platos.json')
+          .then(function(res) { return res.json(); })
+          .then(function(json) {
+            var base = json.platos || [];
+            return base.map(function(p) {
+              var marcador = (p.nftPath || '').split('/').pop() || '';
+              return {
+                id: p.id,
+                tipo: p.categoria || '',
+                nombre: p.nombre || '',
+                precio: p.precio || '',
+                descripcion: p.descripcion || '',
+                imagen: p.imagenMenu || '',
+                modelo: p.modelPath || '',
+                marcador: marcador
+              };
+            });
+          })
+          .catch(function() { return []; });
+      }
+
       // Inserta en el catálogo visual una tarjeta basada en un plato creado por el admin.
       // Cada tarjeta incluye un botón "Ver en mi mesa" que abre surface-viewer.html.
       function createCard(plato) {
@@ -1133,11 +1155,18 @@
         longPressTimer = null;
       }
 
-      // Inicializa el catálogo con platos existentes en localStorage.
+      // Inicializa el catálogo combinando platos base del JSON y platos de admin.
       function bootstrap() {
-        var platos = loadPlatos();
-        platos.forEach(createCard);
-        renderList(platos);
+        Promise.all([
+          loadBasePlatosFromJson(),
+          Promise.resolve(loadPlatos())
+        ]).then(function(results) {
+          var basePlatos = results[0] || [];
+          var adminPlatos = results[1] || [];
+          var all = basePlatos.concat(adminPlatos);
+          all.forEach(createCard);
+          renderList(all);
+        });
       }
 
       if (toggle && panel) {

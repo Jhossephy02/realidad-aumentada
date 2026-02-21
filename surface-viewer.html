@@ -239,7 +239,17 @@
     let currentModel = null;
     let hitTestSource = null;
     let hitTestSourceRequested = false;
-    let currentScale = 0.5;
+
+    function getInitialScaleByType(t) {
+      const key = String(t || '').toLowerCase();
+      if (key === 'cafe') return 0.4;
+      if (key === 'hamburguesa') return 0.35;
+      if (key === 'pizza') return 0.55;
+      if (key === 'sushi') return 0.4;
+      return 0.5;
+    }
+
+    let currentScale = getInitialScaleByType(typeParam);
 
     // Retícula que indica la posición donde se colocará el plato al tocar la pantalla.
     function createReticle() {

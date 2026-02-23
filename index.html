@@ -180,11 +180,11 @@
         });
 
         var DISH_MODEL_REGISTRY = {
-          sushi: { assetId: '#sushi-model', url: './models/sushi/sushi.glb', scale: '6 6 6', position: '0 0.02 0', rotation: '0 0 0' },
-          sushi_roll: { assetId: '#sushi-rolls-model', url: './models/sushi/sushi_rolls.glb?v=2', scale: '2.8 2.8 2.8', position: '0 0 0', rotation: '0 0 0' },
-          sushi_salmon: { assetId: '#nigiri-model', url: './models/sushi/salmon_nigiri.glb', scale: '0.02 0.02 0.02', position: '0 0.03 0', rotation: '0 0 0' },
+          sushi: { assetId: '#sushi-model', url: './models/sushi/sushi.glb', scale: '5.5 5.5 5.5', position: '0 0.02 0', rotation: '0 0 0' },
+          sushi_roll: { assetId: '#sushi-rolls-model', url: './models/sushi/sushi_rolls.glb?v=2', scale: '4 4 4', position: '0 0 0', rotation: '0 0 0' },
+          sushi_salmon: { assetId: '#nigiri-model', url: './models/sushi/salmon_nigiri.glb', scale: '0.06 0.06 0.06', position: '0 0.03 0', rotation: '0 0 0' },
           ramen: { assetId: '#ramen-model', url: './models/sushi/shrimp_ramen_bowl.glb', scale: '0.75 0.75 0.75', position: '0 0.02 0', rotation: '0 0 0' },
-          pattern_sushi: { assetId: '#sushi-model', url: './models/sushi/sushi.glb', scale: '6 6 6', position: '0 0.02 0', rotation: '0 0 0' }
+          pattern_sushi: { assetId: '#sushi-model', url: './models/sushi/sushi.glb', scale: '5.5 5.5 5.5', position: '0 0.02 0', rotation: '0 0 0' }
         };
 
         // Platos configurados desde el panel administrativo se guardan en localStorage
@@ -561,7 +561,7 @@
       <a-nft type="nft" url="./markers/sushi" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2">
         <a-entity
           gltf-model="#sushi-model"
-          scale="6 6 6"
+          scale="5.5 5.5 5.5"
           position="0 0.02 0"
           rotation="0 0 0"
           model-center
@@ -572,7 +572,7 @@
       <a-nft type="nft" url="./markers/sushi_roll" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" data-lite="extra">
         <a-entity
           gltf-model="#sushi-rolls-model"
-          scale="0.8 0.8 0.8"
+          scale="4 4 4"
           position="0 0.04 0"
           rotation="0 0 0"
           model-center
@@ -583,7 +583,7 @@
       <a-nft type="nft" url="./markers/sushi_salmon" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" data-lite="extra">
         <a-entity
           gltf-model="#nigiri-model"
-          scale="0.02 0.02 0.02"
+          scale="0.06 0.06 0.06"
           position="0 0.03 0"
           rotation="0 0 0"
           model-center
@@ -606,7 +606,7 @@
       <a-marker type="pattern" url="./pattern-sushi.patt" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" data-lite="extra">
         <a-entity
           gltf-model="#sushi-model"
-          scale="6 6 6"
+          scale="5.5 5.5 5.5"
           position="0 0.02 0"
           rotation="0 0 0"
           model-center
@@ -618,7 +618,7 @@
       <a-marker type="barcode" value="6" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2">
         <a-entity
           gltf-model="#sushi-model"
-          scale="6 6 6"
+          scale="5.5 5.5 5.5"
           position="0 0.02 0"
           rotation="0 0 0"
           model-center
@@ -628,7 +628,7 @@
       <a-marker type="barcode" value="17" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2">
         <a-entity
           gltf-model="#sushi-rolls-model"
-          scale="0.8 0.8 0.8"
+          scale="4 4 4"
           position="0 0.04 0"
           rotation="0 0 0"
           model-center
@@ -638,7 +638,7 @@
       <a-marker type="barcode" value="18" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2">
         <a-entity
           gltf-model="#nigiri-model"
-          scale="0.02 0.02 0.02"
+          scale="0.06 0.06 0.06"
           position="0 0.03 0"
           rotation="0 0 0"
           model-center

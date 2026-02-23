@@ -130,12 +130,21 @@
           }
         });
 
+        AFRAME.registerComponent('auto-rotate', {
+          schema: {
+            speed: {default: 0.0006}
+          },
+          tick: function (time, delta) {
+            this.el.object3D.rotation.y += delta * this.data.speed;
+          }
+        });
+
         var DISH_MODEL_REGISTRY = {
-          sushi: { assetId: '#sushi-model', url: './models/sushi/sushi.glb', scale: '4 4 4', position: '0 -0.9 0', rotation: '0 0 0' },
-          sushi_roll: { assetId: '#sushi-rolls-model', url: './models/sushi/sushi_rolls.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          sushi_salmon: { assetId: '#nigiri-model', url: './models/sushi/salmon_nigiri.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          ramen: { assetId: '#ramen-model', url: './models/sushi/shrimp_ramen_bowl.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          pattern_sushi: { assetId: '#sushi-model', url: './models/sushi/sushi.glb', scale: '4 4 4', position: '0 -0.9 0', rotation: '0 0 0' }
+          sushi: { assetId: '#sushi-model', url: './models/sushi/sushi.glb', scale: '1.4 1.4 1.4', position: '0 -0.1 0', rotation: '0 0 0' },
+          sushi_roll: { assetId: '#sushi-rolls-model', url: './models/sushi/sushi_rolls.glb', scale: '1.4 1.4 1.4', position: '0 -0.1 0', rotation: '0 0 0' },
+          sushi_salmon: { assetId: '#nigiri-model', url: './models/sushi/salmon_nigiri.glb', scale: '1.4 1.4 1.4', position: '0 -0.1 0', rotation: '0 0 0' },
+          ramen: { assetId: '#ramen-model', url: './models/sushi/shrimp_ramen_bowl.glb', scale: '1.4 1.4 1.4', position: '0 -0.1 0', rotation: '0 0 0' },
+          pattern_sushi: { assetId: '#sushi-model', url: './models/sushi/sushi.glb', scale: '1.4 1.4 1.4', position: '0 -0.1 0', rotation: '0 0 0' }
         };
 
         // Platos configurados desde el panel administrativo se guardan en localStorage
@@ -509,54 +518,59 @@
       </a-assets>
 
       <!-- Marcadores NFT para platos de sushi -->
-      <a-nft type="nft" url="./markers/sushi" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: sushi">
+      <a-nft type="nft" url="./markers/sushi" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2">
         <a-entity
           gltf-model="#sushi-model"
-          scale="6 6 6"
-          position="0 -1.2 0"
+          scale="1.4 1.4 1.4"
+          position="0 -0.1 0"
           rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5"
+          auto-rotate="speed: 0.0006">
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./markers/sushi_roll" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: sushi_roll" data-lite="extra">
+      <a-nft type="nft" url="./markers/sushi_roll" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" data-lite="extra">
         <a-entity
           gltf-model="#sushi-rolls-model"
-          scale="4 4 4"
-          position="0 -1.2 0"
+          scale="1.4 1.4 1.4"
+          position="0 -0.1 0"
           rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5"
+          auto-rotate="speed: 0.0006">
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./markers/sushi_salmon" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: sushi_salmon" data-lite="extra">
+      <a-nft type="nft" url="./markers/sushi_salmon" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" data-lite="extra">
         <a-entity
           gltf-model="#nigiri-model"
-          scale="4 4 4"
-          position="0 -1.2 0"
+          scale="1.4 1.4 1.4"
+          position="0 -0.1 0"
           rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5"
+          auto-rotate="speed: 0.0006">
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./markers/ramen" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: ramen" data-lite="extra">
+      <a-nft type="nft" url="./markers/ramen" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" data-lite="extra">
         <a-entity
           gltf-model="#ramen-model"
-          scale="4 4 4"
-          position="0 -1.2 0"
+          scale="1.4 1.4 1.4"
+          position="0 -0.1 0"
           rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5"
+          auto-rotate="speed: 0.0006">
         </a-entity>
       </a-nft>
       
       <!-- Marcador pattern para sushi -->
-      <a-marker type="pattern" url="./pattern-sushi.patt" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: pattern_sushi" data-lite="extra">
+      <a-marker type="pattern" url="./pattern-sushi.patt" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" data-lite="extra">
         <a-entity
           gltf-model="#sushi-model"
-          scale="6 6 6"
-          position="0 -1.2 0"
+          scale="1.4 1.4 1.4"
+          position="0 -0.1 0"
           rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5"
+          auto-rotate="speed: 0.0006">
         </a-entity>
       </a-marker>
 
@@ -564,37 +578,41 @@
       <a-marker type="barcode" value="6" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2">
         <a-entity
           gltf-model="#sushi-model"
-          scale="4 4 4"
-          position="0 -0.9 0"
+          scale="1.4 1.4 1.4"
+          position="0 -0.1 0"
           rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5"
+          auto-rotate="speed: 0.0006">
         </a-entity>
       </a-marker>
       <a-marker type="barcode" value="17" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2">
         <a-entity
           gltf-model="#sushi-rolls-model"
-          scale="4 4 4"
-          position="0 -1.2 0"
+          scale="1.4 1.4 1.4"
+          position="0 -0.1 0"
           rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5"
+          auto-rotate="speed: 0.0006">
         </a-entity>
       </a-marker>
       <a-marker type="barcode" value="18" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2">
         <a-entity
           gltf-model="#nigiri-model"
-          scale="4 4 4"
-          position="0 -1.2 0"
+          scale="1.4 1.4 1.4"
+          position="0 -0.1 0"
           rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5"
+          auto-rotate="speed: 0.0006">
         </a-entity>
       </a-marker>
       <a-marker type="barcode" value="19" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2">
         <a-entity
           gltf-model="#ramen-model"
-          scale="4 4 4"
-          position="0 -1.2 0"
+          scale="1.4 1.4 1.4"
+          position="0 -0.1 0"
           rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5"
+          auto-rotate="speed: 0.0006">
         </a-entity>
       </a-marker>
 

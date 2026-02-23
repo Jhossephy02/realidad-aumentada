@@ -131,11 +131,11 @@
         });
 
         var DISH_MODEL_REGISTRY = {
-          sushi: { assetId: '#sushi-model', url: './models/sushi/sushi.glb', scale: '4.5 4.5 4.5', position: '0 -1.2 0', rotation: '0 0 0' },
+          sushi: { assetId: '#sushi-model', url: './models/sushi/sushi.glb', scale: '4 4 4', position: '0 -0.9 0', rotation: '0 0 0' },
           sushi_roll: { assetId: '#sushi-rolls-model', url: './models/sushi/sushi_rolls.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
           sushi_salmon: { assetId: '#nigiri-model', url: './models/sushi/salmon_nigiri.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
           ramen: { assetId: '#ramen-model', url: './models/sushi/shrimp_ramen_bowl.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          pattern_sushi: { assetId: '#sushi-model', url: './models/sushi/sushi.glb', scale: '4.5 4.5 4.5', position: '0 -1.2 0', rotation: '0 0 0' }
+          pattern_sushi: { assetId: '#sushi-model', url: './models/sushi/sushi.glb', scale: '4 4 4', position: '0 -0.9 0', rotation: '0 0 0' }
         };
 
         // Platos configurados desde el panel administrativo se guardan en localStorage
@@ -592,13 +592,13 @@
       <a-marker type="barcode" value="6" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: sushi">
         <a-entity
           gltf-model="#sushi-model"
-          scale="6 6 6"
-          position="0 -1.2 0"
+          scale="4 4 4"
+          position="0 -0.9 0"
           rotation="0 0 0"
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="barcode" value="17" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: sushi_roll" data-lite="extra">
+      <a-marker type="barcode" value="17" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: sushi_roll">
         <a-entity
           gltf-model="#sushi-rolls-model"
           scale="4 4 4"
@@ -607,7 +607,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="barcode" value="18" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: sushi_salmon" data-lite="extra">
+      <a-marker type="barcode" value="18" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: sushi_salmon">
         <a-entity
           gltf-model="#nigiri-model"
           scale="4 4 4"
@@ -616,7 +616,7 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="barcode" value="19" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: ramen" data-lite="extra">
+      <a-marker type="barcode" value="19" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: ramen">
         <a-entity
           gltf-model="#ramen-model"
           scale="4 4 4"

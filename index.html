@@ -575,7 +575,7 @@
           scale="0.8 0.8 0.8"
           position="0 0.04 0"
           rotation="0 0 0"
-          model-center="rotX: 180"
+          model-center="rotZ: 180"
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-nft>
@@ -631,7 +631,7 @@
           scale="0.8 0.8 0.8"
           position="0 0.04 0"
           rotation="0 0 0"
-          model-center="rotX: 180"
+          model-center="rotZ: 180"
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
@@ -720,7 +720,7 @@
           entity.setAttribute('scale', plato.scale || '1 1 1');
           entity.setAttribute('position', plato.position || '0 0 0');
           entity.setAttribute('rotation', plato.rotation || '0 0 0');
-          entity.setAttribute('model-center', rollFix ? 'rotX: 180' : '');
+          entity.setAttribute('model-center', rollFix ? 'rotZ: 180' : '');
           entity.setAttribute('drag-rotate-scale', 'minScale: 0.5; maxScale: 2; rotationFactor: 0.5');
           marker.appendChild(entity);
           scene.appendChild(marker);
@@ -884,7 +884,7 @@
           entity.setAttribute('scale', scale);
           entity.setAttribute('position', '0 0 0');
           entity.setAttribute('rotation', '0 0 0');
-          entity.setAttribute('model-center', rollFix ? 'rotX: 180' : '');
+          entity.setAttribute('model-center', rollFix ? 'rotZ: 180' : '');
           entity.setAttribute('drag-rotate-scale', 'minScale: 0.5; maxScale: 2; rotationFactor: 0.5');
           nft.appendChild(entity);
           scene.appendChild(nft);

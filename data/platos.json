@@ -1,23 +1,10 @@
 {
   "platos": [
     {
-      "id": "cafe",
-      "nombre": "Café Americano",
-      "precio": 8.0,
-      "descripcion": "Café 100% arábica con agua filtrada.",
-      "categoria": "cafe",
-      "nftPath": "markers/cafe",
-      "modelPath": "models/cafe/coffee_cup.glb",
-      "scale": "0.3 0.3 0.3",
-      "rotation": "-90 0 0",
-      "position": "0 0 0",
-      "imagenMenu": "img/cafe/cafe.png"
-    },
-    {
       "id": "sushi",
-      "nombre": "Sushi Variado",
-      "precio": 18.0,
-      "descripcion": "Surtido de sushi fresco.",
+      "nombre": "Makis New Styles (10 pzs)",
+      "precio": 25.0,
+      "descripcion": "Makis New Styles de Zelva Nikkei (Amazon, Anticuchero, Banzai, Kaminaki, Parrillero, Pulpo al Olivo, Jalea).",
       "categoria": "sushi",
       "nftPath": "markers/sushi",
       "modelPath": "models/sushi/sushi.glb",
@@ -25,32 +12,6 @@
       "rotation": "-90 0 0",
       "position": "0 0 0",
       "imagenMenu": "img/sushi/sushi.png"
-    },
-    {
-      "id": "pizza",
-      "nombre": "Pizza Clásica",
-      "precio": 20.0,
-      "descripcion": "Masa artesanal con mozzarella y salsa de tomate.",
-      "categoria": "pizza",
-      "nftPath": "markers/pizza",
-      "modelPath": "models/pizza/pizza.glb",
-      "scale": "0.4 0.4 0.4",
-      "rotation": "-90 0 0",
-      "position": "0 0 0",
-      "imagenMenu": "img/pizza/pizza.png"
-    },
-    {
-      "id": "hamburguesa",
-      "nombre": "Hamburguesa Clásica",
-      "precio": 22.0,
-      "descripcion": "Carne de res, queso cheddar y vegetales frescos.",
-      "categoria": "hamburguesa",
-      "nftPath": "markers/hamburguesa",
-      "modelPath": "models/hamburguesa/classic_burger.glb",
-      "scale": "0.001 0.001 0.001",
-      "rotation": "0 0 0",
-      "position": "0 -0.2 0",
-      "imagenMenu": "img/hamburguesa/hamburguesa.png"
     }
   ]
 }

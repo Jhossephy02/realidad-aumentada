@@ -130,38 +130,12 @@
           }
         });
 
-        // Registro central de platos y modelos asociados para WebAR por imagen.
-        // Cada clave representa el identificador lógico del plato (dishId)
-        // y se vincula a un asset 3D precargado y una configuración básica de transformación.
         var DISH_MODEL_REGISTRY = {
-          cafe: { url: './models/cafe/coffee_cup.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          sushi: { url: './models/sushi/sushi.glb', scale: '4.5 4.5 4.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          pizza: { url: './models/pizza/pizza.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          hamburguesa: { url: './models/hamburguesa/classic_burger.glb', scale: '0.08 0.08 0.08', position: '0 -1.2 0', rotation: '0 0 0' },
-          latte: { url: './models/cafe/cafe_latte_with_art.glb', scale: '4.5 4.5 4.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          chocolate_caliente: { url: './models/cafe/hot_chocolate.glb', scale: '4.5 4.5 4.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          croissant: { url: './models/cafe/croissant.glb', scale: '3 3 3', position: '0 -1.2 0', rotation: '0 0 0' },
-          dona: { url: './models/cafe/donut.glb', scale: '3 3 3', position: '0 -1.2 0', rotation: '0 0 0' },
-          muffin: { url: './models/cafe/chocolate_muffin.glb', scale: '3 3 3', position: '0 -1.2 0', rotation: '0 0 0' },
-          cupcake: { url: './models/cafe/fnaf_1_cupcake.glb', scale: '3 3 3', position: '0 -1.2 0', rotation: '0 0 0' },
-          papas_fritas: { url: './models/hamburguesa/fries_with_ketchup.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          hotdog: { url: './models/hamburguesa/hot_dog__hotdog.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          nuggets: { url: './models/hamburguesa/nuggets_mc.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          classic_burger: { url: './models/hamburguesa/classic_burger.glb', scale: '0.1 0.1 0.1', position: '0 -1.2 0', rotation: '0 0 0' },
-          blt_sandwich: { url: './models/hamburguesa/blt_sandwich.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          sandwich_queso: { url: './models/hamburguesa/ham__cheese_sandwich.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          rebanada_pizza: { url: './models/pizza/day_292_pizza_slice.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          sushi_roll: { url: './models/sushi/sushi_rolls.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          sushi_salmon: { url: './models/sushi/salmon_nigiri.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          ramen: { url: './models/sushi/shrimp_ramen_bowl.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          pattern_cafe: { url: './models/cafe/coffee_cup.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          pattern_sushi: { url: './models/sushi/sushi.glb', scale: '4.5 4.5 4.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          pattern_pizza: { url: './models/pizza/pizza.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          pattern_hamburguesa: { url: './models/hamburguesa/classic_burger.glb', scale: '0.08 0.08 0.08', position: '0 -1.2 0', rotation: '0 0 0' },
-          barcode5: { url: './models/cafe/coffee_cup.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          barcode6: { url: './models/sushi/sushi.glb', scale: '4.5 4.5 4.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          barcode7: { url: './models/pizza/pizza.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
-          barcode8: { url: './models/hamburguesa/classic_burger.glb', scale: '0.1 0.1 0.1', position: '0 -1.2 0', rotation: '0 0 0' }
+          sushi: { assetId: '#sushi-model', url: './models/sushi/sushi.glb', scale: '4.5 4.5 4.5', position: '0 -1.2 0', rotation: '0 0 0' },
+          sushi_roll: { assetId: '#sushi-rolls-model', url: './models/sushi/sushi_rolls.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
+          sushi_salmon: { assetId: '#nigiri-model', url: './models/sushi/salmon_nigiri.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
+          ramen: { assetId: '#ramen-model', url: './models/sushi/shrimp_ramen_bowl.glb', scale: '3.5 3.5 3.5', position: '0 -1.2 0', rotation: '0 0 0' },
+          pattern_sushi: { assetId: '#sushi-model', url: './models/sushi/sushi.glb', scale: '4.5 4.5 4.5', position: '0 -1.2 0', rotation: '0 0 0' }
         };
 
         // Platos configurados desde el panel administrativo se guardan en localStorage
@@ -433,10 +407,10 @@
         z-index: 1000;
         background: rgba(0, 0, 0, 0.7);
         color: #ffffff;
-        padding: 12px 16px;
-        border-radius: 12px;
-        max-width: 260px;
-        font-size: 13px;
+        padding: 14px 18px;
+        border-radius: 14px;
+        max-width: 280px;
+        font-size: 14px;
         backdrop-filter: blur(6px);
         opacity: 0;
         transform: translateY(-10px);
@@ -452,11 +426,13 @@
       }
       .product-title {
         font-weight: 600;
-        margin-bottom: 4px;
+        margin-bottom: 6px;
+        font-size: 15px;
       }
       .product-price {
         font-weight: 500;
         margin-bottom: 8px;
+        font-size: 14px;
       }
       .product-section-title {
         font-size: 12px;
@@ -464,8 +440,20 @@
         margin-bottom: 2px;
       }
       .product-ingredients {
+        font-size: 13px;
+        line-height: 1.5;
+      }
+      .product-reset-btn {
+        margin-top: 10px;
+        width: 100%;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: none;
+        background: #ff4757;
+        color: #ffffff;
         font-size: 12px;
-        line-height: 1.4;
+        font-weight: 500;
+        cursor: pointer;
       }
       .camera-error {
         position: fixed;
@@ -517,6 +505,7 @@
       <div class="product-price" id="product-price"></div>
       <div class="product-section-title">Ingredientes</div>
       <div class="product-ingredients" id="product-ingredients"></div>
+      <button class="product-reset-btn" id="product-reset-btn">Escanear otro plato</button>
     </div>
 
     <div class="ui-container">
@@ -541,206 +530,17 @@
       style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;">
       
       <a-assets>
-        <a-asset-item id="coffe-model" src="./models/cafe/coffe2.glb"></a-asset-item>
         <a-asset-item id="sushi-model" src="./models/sushi/sushi.glb"></a-asset-item>
-        <a-asset-item id="pizza-model" src="./models/pizza/pizza.glb"></a-asset-item>
-        <a-asset-item id="burger-model" src="./models/hamburguesa/classic_burger.glb"></a-asset-item>
-        <a-asset-item id="coffee-cup-model" src="./models/cafe/coffee_cup.glb"></a-asset-item>
-        <a-asset-item id="latte-model" src="./models/cafe/cafe_latte_with_art.glb"></a-asset-item>
-        <a-asset-item id="hot-chocolate-model" src="./models/cafe/hot_chocolate.glb"></a-asset-item>
-        <a-asset-item id="croissant-model" src="./models/cafe/croissant.glb"></a-asset-item>
-        <a-asset-item id="donut-model" src="./models/cafe/donut.glb"></a-asset-item>
-        <a-asset-item id="muffin-model" src="./models/cafe/chocolate_muffin.glb"></a-asset-item>
-        <a-asset-item id="cupcake-model" src="./models/cafe/fnaf_1_cupcake.glb"></a-asset-item>
-        <a-asset-item id="fries-model" src="./models/hamburguesa/fries_with_ketchup.glb"></a-asset-item>
-        <a-asset-item id="hotdog-model" src="./models/hamburguesa/hot_dog__hotdog.glb"></a-asset-item>
-        <a-asset-item id="nuggets-model" src="./models/hamburguesa/nuggets_mc.glb"></a-asset-item>
-        <a-asset-item id="sandwich-blt-model" src="./models/hamburguesa/blt_sandwich.glb"></a-asset-item>
-        <a-asset-item id="sandwich-ham-cheese-model" src="./models/hamburguesa/ham__cheese_sandwich.glb"></a-asset-item>
-        <a-asset-item id="burger-classic-model" src="./models/hamburguesa/classic_burger.glb"></a-asset-item>
-        <a-asset-item id="burger-combo-model" src="./models/hamburguesa/hamburgersa-combo.glb"></a-asset-item>
-        <a-asset-item id="pizza-slice-model" src="./models/pizza/day_292_pizza_slice.glb"></a-asset-item>
         <a-asset-item id="sushi-rolls-model" src="./models/sushi/sushi_rolls.glb"></a-asset-item>
         <a-asset-item id="nigiri-model" src="./models/sushi/salmon_nigiri.glb"></a-asset-item>
         <a-asset-item id="ramen-model" src="./models/sushi/shrimp_ramen_bowl.glb"></a-asset-item>
       </a-assets>
 
-      <!-- Marcador de Café 2 (Carta Yu-Gi-Oh) -->
-      <a-nft 
-        type="nft" 
-        url="./markers/cafe"
-        emitevents="true"
-        smooth="true" 
-        smoothCount="4" 
-        smoothTolerance="0.02" 
-        smoothThreshold="2"
-        marker-model="dishId: cafe">
-        <a-entity
-          gltf-model="#coffee-cup-model"
-          scale="3.5 3.5 3.5"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-nft>
-
-      <!-- Marcador de Sushi -->
+      <!-- Marcadores NFT para platos de sushi -->
       <a-nft type="nft" url="./markers/sushi" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: sushi">
         <a-entity
           gltf-model="#sushi-model"
           scale="6 6 6"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-nft>
-
-      <!-- Marcador de Pizza -->
-      <a-nft type="nft" url="./markers/pizza" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: pizza">
-        <a-entity
-          gltf-model="#pizza-model"
-          scale="4.5 4.5 4.5"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-nft>
-
-      <!-- Marcador de Hamburguesa -->
-      <a-nft type="nft" url="./markers/burger" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: hamburguesa">
-        <a-entity
-          gltf-model="#burger-model"
-          scale="0.08 0.08 0.08"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-nft>
-
-      <a-nft type="nft" url="./markers/latte/latte" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: latte" data-lite="extra">
-        <a-entity
-          gltf-model="#latte-model"
-          scale="6.5 6.5 6.5"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-nft>
-
-      <a-nft type="nft" url="./markers/chocolate_caliente/chocolate_caliente" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: chocolate_caliente" data-lite="extra">
-        <a-entity
-          gltf-model="#hot-chocolate-model"
-          scale="6 6 6"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-nft>
-
-      <a-nft type="nft" url="./markers/croissant/croissant" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: croissant" data-lite="extra">
-        <a-entity
-          gltf-model="#croissant-model"
-          scale="3.5 3.5 3.5"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-nft>
-
-      <a-nft type="nft" url="./markers/dona/dona" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: dona" data-lite="extra">
-        <a-entity
-          gltf-model="#donut-model"
-          scale="3.5 3.5 3.5"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-nft>
-
-      <a-nft type="nft" url="./markers/muffin/muffin" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: muffin" data-lite="extra">
-        <a-entity
-          gltf-model="#muffin-model"
-          scale="3.5 3.5 3.5"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-nft>
-
-      <a-nft type="nft" url="./markers/cupcake/cupcake" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: cupcake" data-lite="extra">
-        <a-entity
-          gltf-model="#cupcake-model"
-          scale="3.5 3.5 3.5"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-nft>
-
-      <a-nft type="nft" url="./markers/papas_fritas/papas_fritas" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: papas_fritas" data-lite="extra">
-        <a-entity
-          gltf-model="#fries-model"
-          scale="4 4 4"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-nft>
-
-      <a-nft type="nft" url="./markers/hotdog/hotdog" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: hotdog" data-lite="extra">
-        <a-entity
-          gltf-model="#hotdog-model"
-          scale="4 4 4"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-nft>
-
-      <a-nft type="nft" url="./markers/nuggets/nuggets" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: nuggets" data-lite="extra">
-        <a-entity
-          gltf-model="#nuggets-model"
-          scale="4 4 4"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-nft>
-
-      <a-nft type="nft" url="./markers/classic_burger/classic_burger" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: classic_burger" data-lite="extra">
-        <a-entity
-          gltf-model="#burger-classic-model"
-          scale="0.1 0.1 0.1"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-nft>
-
-      <a-nft type="nft" url="./markers/blt_sandwich/blt_sandwich" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: blt_sandwich" data-lite="extra">
-        <a-entity
-          gltf-model="#sandwich-blt-model"
-          scale="4 4 4"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-nft>
-
-      <a-nft type="nft" url="./markers/sandwich_queso/sandwich_queso" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: sandwich_queso" data-lite="extra">
-        <a-entity
-          gltf-model="#sandwich-ham-cheese-model"
-          scale="4 4 4"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-nft>
-
-      <a-nft type="nft" url="./markers/rebanada_pizza/rebanada_pizza" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: rebanada_pizza" data-lite="extra">
-        <a-entity
-          gltf-model="#pizza-slice-model"
-          scale="4 4 4"
           position="0 -1.2 0"
           rotation="0 0 0"
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
@@ -777,15 +577,7 @@
         </a-entity>
       </a-nft>
       
-      <a-marker type="pattern" url="./pattern-caffe.patt" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: pattern_cafe" data-lite="extra">
-        <a-entity
-          gltf-model="#coffe-model"
-          scale="7 7 7"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-marker>
+      <!-- Marcador pattern para sushi -->
       <a-marker type="pattern" url="./pattern-sushi.patt" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: pattern_sushi" data-lite="extra">
         <a-entity
           gltf-model="#sushi-model"
@@ -795,309 +587,12 @@
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
-      <a-marker type="pattern" url="./pattern-pizza.patt" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: pattern_pizza" data-lite="extra">
-        <a-entity
-          gltf-model="#pizza-model"
-          scale="4.5 4.5 4.5"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-marker>
-      <a-marker type="pattern" url="./pattern-hamburguesa.patt" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: pattern_hamburguesa" data-lite="extra">
-        <a-entity
-          gltf-model="#burger-model"
-          scale="0.08 0.08 0.08"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-marker>
-      <a-marker preset="hiro" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" data-lite="extra">
-        <a-entity
-          gltf-model="#coffe-model"
-          scale="7 7 7"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-        <a-entity
-          gltf-model="#coffee-cup-model"
-          scale="6.5 6.5 6.5"
-          position="-1 -1.2 0"
-          rotation="0 20 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-        <a-entity
-          gltf-model="#latte-model"
-          scale="6.5 6.5 6.5"
-          position="1 -1.2 0"
-          rotation="0 -20 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-        <a-entity
-          gltf-model="#hot-chocolate-model"
-          scale="6 6 6"
-          position="0 -1.2 -1"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-        <a-entity
-          gltf-model="#croissant-model"
-          scale="3.5 3.5 3.5"
-          position="-1.2 -1.2 -1"
-          rotation="0 15 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-        <a-entity
-          gltf-model="#donut-model"
-          scale="3.5 3.5 3.5"
-          position="1.2 -1.2 -1"
-          rotation="0 -15 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-        <a-entity
-          gltf-model="#muffin-model"
-          scale="3.5 3.5 3.5"
-          position="-0.7 -1.2 1"
-          rotation="0 10 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-        <a-entity
-          gltf-model="#cupcake-model"
-          scale="3.5 3.5 3.5"
-          position="0.7 -1.2 1"
-          rotation="0 -10 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-        <a-entity
-          gltf-model="#fries-model"
-          scale="4 4 4"
-          position="-2 -1.2 0"
-          rotation="0 15 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-        <a-entity
-          gltf-model="#hotdog-model"
-          scale="4 4 4"
-          position="2 -1.2 0"
-          rotation="0 -15 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-        <a-entity
-          gltf-model="#nuggets-model"
-          scale="4 4 4"
-          position="-2 -1.2 -1.4"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-        <a-entity
-          gltf-model="#sandwich-blt-model"
-          scale="4 4 4"
-          position="2 -1.2 -1.4"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-        <a-entity
-          gltf-model="#sandwich-ham-cheese-model"
-          scale="4 4 4"
-          position="0 -1.2 2"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-        <a-entity
-          gltf-model="#burger-classic-model"
-          scale="0.003 0.003 0.003"
-          position="-2.5 -1.2 1.5"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-        <a-entity
-          gltf-model="#burger-combo-model"
-          scale="0.004 0.004 0.004"
-          position="2.5 -1.2 1.5"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-        <a-entity
-          gltf-model="#pizza-slice-model"
-          scale="4 4 4"
-          position="-3 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-        <a-entity
-          gltf-model="#sushi-rolls-model"
-          scale="4 4 4"
-          position="3 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-        <a-entity
-          gltf-model="#nigiri-model"
-          scale="4 4 4"
-          position="-3 -1.2 -1.5"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-        <a-entity
-          gltf-model="#ramen-model"
-          scale="4 4 4"
-          position="3 -1.2 -1.5"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-marker>
 
-      <!-- Marcadores barcode para todos los platos -->
-      <a-marker type="barcode" value="0" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: latte" data-lite="extra">
-        <a-entity
-          gltf-model="#latte-model"
-          scale="4.5 4.5 4.5"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-marker>
-      <a-marker type="barcode" value="1" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: chocolate_caliente" data-lite="extra">
-        <a-entity
-          gltf-model="#hot-chocolate-model"
-          scale="4.5 4.5 4.5"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-marker>
-      <a-marker type="barcode" value="2" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: croissant" data-lite="extra">
-        <a-entity
-          gltf-model="#croissant-model"
-          scale="4 4 4"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-marker>
-      <a-marker type="barcode" value="3" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: dona" data-lite="extra">
-        <a-entity
-          gltf-model="#donut-model"
-          scale="4 4 4"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-marker>
-      <a-marker type="barcode" value="4" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: muffin" data-lite="extra">
-        <a-entity
-          gltf-model="#muffin-model"
-          scale="4 4 4"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-marker>
-      <a-marker type="barcode" value="5" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: cafe">
-        <a-entity
-          gltf-model="#coffee-cup-model"
-          scale="4.5 4.5 4.5"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-marker>
+      <!-- Marcadores barcode para platos de sushi -->
       <a-marker type="barcode" value="6" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: sushi">
         <a-entity
           gltf-model="#sushi-model"
           scale="6 6 6"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-marker>
-      <a-marker type="barcode" value="7" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: pizza">
-        <a-entity
-          gltf-model="#pizza-model"
-          scale="4.5 4.5 4.5"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-marker>
-      <a-marker type="barcode" value="8" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: hamburguesa">
-        <a-entity
-          gltf-model="#burger-model"
-          scale="0.08 0.08 0.08"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-marker>
-      <a-marker type="barcode" value="9" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: cupcake" data-lite="extra">
-        <a-entity
-          gltf-model="#cupcake-model"
-          scale="4 4 4"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-marker>
-      <a-marker type="barcode" value="10" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: papas_fritas" data-lite="extra">
-        <a-entity
-          gltf-model="#fries-model"
-          scale="4 4 4"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-marker>
-      <a-marker type="barcode" value="11" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: hotdog" data-lite="extra">
-        <a-entity
-          gltf-model="#hotdog-model"
-          scale="4 4 4"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-marker>
-      <a-marker type="barcode" value="12" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: nuggets" data-lite="extra">
-        <a-entity
-          gltf-model="#nuggets-model"
-          scale="4 4 4"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-marker>
-      <a-marker type="barcode" value="13" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: classic_burger" data-lite="extra">
-        <a-entity
-          gltf-model="#burger-classic-model"
-          scale="0.1 0.1 0.1"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-marker>
-      <a-marker type="barcode" value="14" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: blt_sandwich" data-lite="extra">
-        <a-entity
-          gltf-model="#sandwich-blt-model"
-          scale="4 4 4"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-marker>
-      <a-marker type="barcode" value="15" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: sandwich_queso" data-lite="extra">
-        <a-entity
-          gltf-model="#sandwich-ham-cheese-model"
-          scale="4 4 4"
-          position="0 -1.2 0"
-          rotation="0 0 0"
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-marker>
-      <a-marker type="barcode" value="16" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: rebanada_pizza" data-lite="extra">
-        <a-entity
-          gltf-model="#pizza-slice-model"
-          scale="4 4 4"
           position="0 -1.2 0"
           rotation="0 0 0"
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
@@ -1157,7 +652,8 @@
         var modeParam = getQueryParam('mode');
         if (modeParam === 'full') return false;
         if (modeParam === 'lite') return true;
-        return isMobileDevice() && hasLowMemory();
+        if (isMobileDevice()) return true;
+        return hasLowMemory();
       }
 
       function loadPlatosJson() {
@@ -1202,8 +698,7 @@
       function preloadKeyDishModels() {
         var scene = document.querySelector('a-scene');
         if (!scene) return;
-        var ids = ['cafe', 'sushi', 'pizza', 'hamburguesa'];
-        ids.forEach(function (id) {
+        Object.keys(DISH_MODEL_REGISTRY).forEach(function (id) {
           var cfg = DISH_MODEL_REGISTRY[id];
           if (!cfg) return;
           var temp = document.createElement('a-entity');
@@ -1242,133 +737,36 @@
       const productIngredients = document.getElementById('product-ingredients');
       const globalLoader = document.getElementById('global-loader');
       const modelLoader = document.getElementById('model-loader');
+      const productResetBtn = document.getElementById('product-reset-btn');
       
       // PRECIOS CORREGIDOS según las imágenes
       // Mapa base de platos para la demo del restaurante.
       // Cada entrada se asocia a un marcador mediante getProductKeyFromMarker.
       const products = {
-        cafe: {
-          title: 'Café Americano',
-          price: 'S/ 8.00',
-          ingredients: 'Café 100% arábica, agua filtrada.'
-        },
         sushi: {
-          title: 'Sushi mixto',
+          title: 'Makis New Styles (10 pzs)',
           price: 'S/ 25.00',
-          ingredients: 'Arroz sazonado, salmón, palta, alga nori, salsa de soya.'
-        },
-        pizza: {
-          title: 'Pizza clásica',
-          price: 'S/ 18.00',
-          ingredients: 'Masa artesanal, salsa de tomate, queso mozzarella, orégano.'
-        },
-        burger: {
-          title: 'Hamburguesa de la casa',
-          price: 'S/ 20.00',
-          ingredients: 'Carne de res, queso cheddar, lechuga, tomate, salsa especial.'
-        },
-        latte: {
-          title: 'Latte Arte',
-          price: 'S/ 12.00',
-          ingredients: 'Taza de latte con arte en la espuma como NFT de cafetería.'
-        },
-        chocolate: {
-          title: 'Chocolate Caliente',
-          price: 'S/ 11.00',
-          ingredients: 'Chocolate espeso con espuma y toppings ideal para ver en AR.'
-        },
-        croissant: {
-          title: 'Croissant Mantequilla',
-          price: 'S/ 7.00',
-          ingredients: 'Croissant hojaldrado y dorado para resaltar el modelado 3D.'
-        },
-        donut: {
-          title: 'Donut Glaseada',
-          price: 'S/ 6.50',
-          ingredients: 'Donut con glaseado brillante y detalles de color para NFT dulce.'
-        },
-        muffin: {
-          title: 'Muffin de Chocolate',
-          price: 'S/ 7.50',
-          ingredients: 'Muffin esponjoso con chips de chocolate como NFT de repostería.'
-        },
-        cupcake: {
-          title: 'Cupcake Temático',
-          price: 'S/ 8.00',
-          ingredients: 'Cupcake decorado para propuestas creativas de postres en AR.'
-        },
-        fries: {
-          title: 'Papas Fritas',
-          price: 'S/ 10.00',
-          ingredients: 'Papas fritas con salsa como NFT de acompañamiento.'
-        },
-        hotdog: {
-          title: 'Hot Dog',
-          price: 'S/ 9.00',
-          ingredients: 'Hot dog con toppings para visualización de comida rápida en AR.'
-        },
-        nuggets: {
-          title: 'Nuggets de Pollo',
-          price: 'S/ 11.00',
-          ingredients: 'Nuggets crocantes con salsa para menú infantil o combo.'
-        },
-        classic_burger: {
-          title: 'Hamburguesa Clásica',
-          price: 'S/ 22.00',
-          ingredients: 'Hamburguesa clásica modelada en 3D como NFT de comida rápida.'
-        },
-        blt_sandwich: {
-          title: 'Sandwich BLT',
-          price: 'S/ 18.00',
-          ingredients: 'Sandwich con tocino, lechuga y tomate como NFT individual.'
-        },
-        ham_cheese: {
-          title: 'Sandwich de Queso',
-          price: 'S/ 16.00',
-          ingredients: 'Sandwich de queso y jamón pensado para vitrinas digitales.'
-        },
-        pizza_slice: {
-          title: 'Pizza Especial',
-          price: 'S/ 12.00',
-          ingredients: 'Rebanadas individuales presentadas para compartir como pizza en AR.'
+          ingredients: 'Variedades como Amazon, Anticuchero, Banzai, Kaminaki, Parrillero, Pulpo al Olivo y Jalea.'
         },
         sushi_rolls: {
-          title: 'Sushi Rolls',
-          price: 'S/ 20.00',
-          ingredients: 'Rolls individuales para mostrar el detalle del modelo en AR.'
+          title: 'Volcano Roll (5 pzs)',
+          price: 'S/ 19.00',
+          ingredients: 'Roll tipo Volcano de la sección 5 piezas del menú Zelva Nikkei.'
         },
         nigiri: {
-          title: 'Nigiri de Salmón',
-          price: 'S/ 18.00',
-          ingredients: 'Nigiri de salmón como NFT gastronómico de alta definición.'
+          title: 'Nigiris especiales (2 bocados)',
+          price: 'S/ 15.00',
+          ingredients: 'Inca Nigiri, Misoyaki, Pasión, Coco Beach y Hotate Spicy.'
         },
         ramen: {
-          title: 'Ramen de Camarones',
-          price: 'S/ 24.00',
-          ingredients: 'Bowl de ramen con camarones y toppings como NFT asiático.'
+          title: 'Zelva Ramen',
+          price: 'S/ 32.00',
+          ingredients: 'Caldo caliente con fideos y topping nikkei, ideal para el frío.'
         }
       };
 
       // Relación opcional entre ids de modelos GLB y sus imágenes de referencia 2D.
       const modelImages = {
-        'coffe-model': 'img/cafe/cafe.png',
-        'coffee-cup-model': 'img/cafe/taza_cafe.png',
-        'latte-model': 'img/cafe/latte.png',
-        'hot-chocolate-model': 'img/cafe/chocolate_caliente.png',
-        'croissant-model': 'img/cafe/croissant.png',
-        'donut-model': 'img/cafe/dona.png',
-        'muffin-model': 'img/cafe/muffin.png',
-        'cupcake-model': 'img/cafe/cupcake.png',
-        'fries-model': 'img/hamburguesa/papas_fritas.png',
-        'hotdog-model': 'img/hamburguesa/hotdog.png',
-        'nuggets-model': 'img/hamburguesa/nuggets.png',
-        'sandwich-blt-model': 'img/hamburguesa/blt_sandwich.png',
-        'sandwich-ham-cheese-model': 'img/hamburguesa/sandwich_queso.png',
-        'burger-model': 'img/hamburguesa/hamburguesa.png',
-        'burger-classic-model': 'img/hamburguesa/classic_burger.png',
-        'burger-combo-model': 'img/hamburguesa/papas_fritas.png',
-        'pizza-model': 'img/pizza/pizza.png',
-        'pizza-slice-model': 'img/pizza/rebanada_pizza.png',
         'sushi-model': 'img/sushi/sushi.png',
         'sushi-rolls-model': 'img/sushi/sushi_roll.png',
         'nigiri-model': 'img/sushi/sushi_salmon.png',
@@ -1435,7 +833,7 @@
             modelImages[modelId] = p.imagen;
           }
           const tipo = p.tipo;
-          const folder = tipo === 'cafe' || tipo === 'hamburguesa' || tipo === 'pizza' || tipo === 'sushi' ? tipo : 'cafe';
+          const folder = 'sushi';
           const markerUrl = "./zip´s/" + folder + "/" + p.marcador;
           const nft = document.createElement('a-nft');
           nft.setAttribute('type', 'nft');
@@ -1449,10 +847,6 @@
           const entity = document.createElement('a-entity');
           const baseModelId = '#' + modelId;
           let scale = '4 4 4';
-          if (folder === 'cafe') scale = '6 6 6';
-          else if (folder === 'pizza') scale = '4.5 4.5 4.5';
-          else if (folder === 'sushi') scale = '4 4 4';
-          else if (folder === 'hamburguesa') scale = '0.003 0.003 0.003';
           entity.setAttribute('gltf-model', baseModelId);
           entity.setAttribute('scale', scale);
           entity.setAttribute('position', '0 -1.2 0');
@@ -1470,48 +864,14 @@
         if (custom) return custom;
         const url = marker.getAttribute('url') || '';
         const value = marker.getAttribute('value');
-        const preset = marker.getAttribute('preset');
-        if (url.indexOf('cafe') !== -1 || url.indexOf('caffe') !== -1 || url.indexOf('taza_cafe') !== -1) return 'cafe';
         if (url.indexOf('sushi_roll') !== -1 || url.indexOf('sushi_rolls') !== -1) return 'sushi_rolls';
         if (url.indexOf('sushi_salmon') !== -1 || url.indexOf('nigiri') !== -1) return 'nigiri';
-        if (url.indexOf('sushi') !== -1) return 'sushi';
-        if (url.indexOf('rebanada_pizza') !== -1 || url.indexOf('pizza_slice') !== -1) return 'pizza_slice';
-        if (url.indexOf('pizza') !== -1) return 'pizza';
-        if (url.indexOf('papas_fritas') !== -1 || url.indexOf('fries') !== -1) return 'fries';
-        if (url.indexOf('hotdog') !== -1) return 'hotdog';
-        if (url.indexOf('nuggets') !== -1) return 'nuggets';
-        if (url.indexOf('latte') !== -1) return 'latte';
-        if (url.indexOf('chocolate_caliente') !== -1 || url.indexOf('chocolate') !== -1) return 'chocolate';
-        if (url.indexOf('croissant') !== -1) return 'croissant';
-        if (url.indexOf('dona') !== -1 || url.indexOf('donut') !== -1) return 'donut';
-        if (url.indexOf('muffin') !== -1) return 'muffin';
-        if (url.indexOf('cupcake') !== -1) return 'cupcake';
-        if (url.indexOf('Classic Burger') !== -1 || url.indexOf('classic_burger') !== -1) return 'classic_burger';
-        if (url.indexOf('blt_sandwich') !== -1) return 'blt_sandwich';
-        if (url.indexOf('sandwich_queso') !== -1 || url.indexOf('ham_cheese') !== -1) return 'ham_cheese';
         if (url.indexOf('ramen') !== -1) return 'ramen';
-        if (url.indexOf('burger') !== -1 || url.indexOf('hamburguesa') !== -1) return 'burger';
-        if (value === '0') return 'latte';
-        if (value === '1') return 'chocolate';
-        if (value === '2') return 'croissant';
-        if (value === '3') return 'donut';
-        if (value === '4') return 'muffin';
-        if (value === '5') return 'cafe';
+        if (url.indexOf('sushi') !== -1) return 'sushi';
         if (value === '6') return 'sushi';
-        if (value === '7') return 'pizza';
-        if (value === '8') return 'burger';
-        if (value === '9') return 'cupcake';
-        if (value === '10') return 'fries';
-        if (value === '11') return 'hotdog';
-        if (value === '12') return 'nuggets';
-        if (value === '13') return 'classic_burger';
-        if (value === '14') return 'blt_sandwich';
-        if (value === '15') return 'ham_cheese';
-        if (value === '16') return 'pizza_slice';
         if (value === '17') return 'sushi_rolls';
         if (value === '18') return 'nigiri';
         if (value === '19') return 'ramen';
-        if (preset === 'hiro') return 'cafe';
         return null;
       }
       
@@ -1546,6 +906,14 @@
         if (!productPanel) return;
         productPanel.classList.remove('visible');
         productPanel.classList.add('hidden');
+      }
+
+      if (productResetBtn) {
+        productResetBtn.addEventListener('click', function () {
+          if (typeof window.resetARTracking === 'function') {
+            window.resetARTracking();
+          }
+        });
       }
 
       // Funcionalidad para tomar captura (Foto)
@@ -1588,6 +956,7 @@
         const markers = Array.from(document.querySelectorAll('a-marker, a-nft'));
         let activeMarker = null;
         const visibleMarkers = new Set();
+        let trackingFrozen = false;
 
         function setActiveMarker(marker) {
           activeMarker = marker;
@@ -1600,15 +969,24 @@
 
         markers.forEach(m => {
           m.addEventListener('markerFound', () => {
+            if (trackingFrozen && activeMarker) {
+              return;
+            }
             console.log('markerFound', m.getAttribute('url') || m.getAttribute('value') || m.getAttribute('type'));
             visibleMarkers.add(m);
             if (!activeMarker) {
               setActiveMarker(m);
+              if (isLiteMode()) {
+                trackingFrozen = true;
+              }
             }
             hideGlobalLoader();
           });
 
           m.addEventListener('markerLost', () => {
+            if (trackingFrozen) {
+              return;
+            }
             console.log('markerLost', m.getAttribute('url') || m.getAttribute('value') || m.getAttribute('type'));
             visibleMarkers.delete(m);
 
@@ -1616,8 +994,6 @@
               if (visibleMarkers.size === 0) {
                 activeMarker = null;
                 hideProduct();
-                // Si no hay ningún marcador visible, mostramos todos
-                // para la siguiente detección.
                 markers.forEach(x => { x.object3D.visible = true; });
               } else {
                 const next = Array.from(visibleMarkers)[visibleMarkers.size - 1];
@@ -1626,6 +1002,16 @@
             }
           });
         });
+
+        window.resetARTracking = function () {
+          trackingFrozen = false;
+          activeMarker = null;
+          visibleMarkers.clear();
+          hideProduct();
+          markers.forEach(function (x) {
+            x.object3D.visible = true;
+          });
+        };
       })();
     </script>
 

@@ -139,12 +139,40 @@
           }
         });
 
+        AFRAME.registerComponent('model-center', {
+          schema: {
+            yOffset: {default: 0}
+          },
+          init: function () {
+            this.hasCentered = false;
+            this.onLoaded = this.centerModel.bind(this);
+            this.el.addEventListener('model-loaded', this.onLoaded);
+          },
+          remove: function () {
+            this.el.removeEventListener('model-loaded', this.onLoaded);
+          },
+          centerModel: function () {
+            if (this.hasCentered) return;
+            var obj = this.el.getObject3D('mesh');
+            if (!obj || !window.THREE || !THREE.Box3) return;
+            obj.updateWorldMatrix(true, true);
+            var box = new THREE.Box3().setFromObject(obj);
+            if (!isFinite(box.min.x) || !isFinite(box.min.y) || !isFinite(box.min.z)) return;
+            var center = new THREE.Vector3();
+            box.getCenter(center);
+            obj.position.x += -center.x;
+            obj.position.y += -box.min.y + (this.data.yOffset || 0);
+            obj.position.z += -center.z;
+            this.hasCentered = true;
+          }
+        });
+
         var DISH_MODEL_REGISTRY = {
-          sushi: { assetId: '#sushi-model', url: './models/sushi/sushi.glb', scale: '1.4 1.4 1.4', position: '0 0 0', rotation: '0 0 0' },
-          sushi_roll: { assetId: '#sushi-rolls-model', url: './models/sushi/sushi_rolls.glb', scale: '0.8 0.8 0.8', position: '0 0 0', rotation: '0 0 0' },
-          sushi_salmon: { assetId: '#nigiri-model', url: './models/sushi/salmon_nigiri.glb', scale: '0.35 0.35 0.35', position: '0 0 0', rotation: '0 0 0' },
-          ramen: { assetId: '#ramen-model', url: './models/sushi/shrimp_ramen_bowl.glb', scale: '0.75 0.75 0.75', position: '0 0 0', rotation: '0 0 0' },
-          pattern_sushi: { assetId: '#sushi-model', url: './models/sushi/sushi.glb', scale: '1.4 1.4 1.4', position: '0 0 0', rotation: '0 0 0' }
+          sushi: { assetId: '#sushi-model', url: './models/sushi/sushi.glb', scale: '1.4 1.4 1.4', position: '0 0.02 0', rotation: '0 0 0' },
+          sushi_roll: { assetId: '#sushi-rolls-model', url: './models/sushi/sushi_rolls.glb', scale: '0.8 0.8 0.8', position: '0 0.04 0', rotation: '0 0 0' },
+          sushi_salmon: { assetId: '#nigiri-model', url: './models/sushi/salmon_nigiri.glb', scale: '0.35 0.35 0.35', position: '0 0.03 0', rotation: '0 0 0' },
+          ramen: { assetId: '#ramen-model', url: './models/sushi/shrimp_ramen_bowl.glb', scale: '0.75 0.75 0.75', position: '0 0.02 0', rotation: '0 0 0' },
+          pattern_sushi: { assetId: '#sushi-model', url: './models/sushi/sushi.glb', scale: '1.4 1.4 1.4', position: '0 0.02 0', rotation: '0 0 0' }
         };
 
         // Platos configurados desde el panel administrativo se guardan en localStorage
@@ -522,8 +550,9 @@
         <a-entity
           gltf-model="#sushi-model"
           scale="1.4 1.4 1.4"
-          position="0 0 0"
+          position="0 0.02 0"
           rotation="0 0 0"
+          model-center
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-nft>
@@ -532,8 +561,9 @@
         <a-entity
           gltf-model="#sushi-rolls-model"
           scale="0.8 0.8 0.8"
-          position="0 0 0"
+          position="0 0.04 0"
           rotation="0 0 0"
+          model-center
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-nft>
@@ -542,8 +572,9 @@
         <a-entity
           gltf-model="#nigiri-model"
           scale="0.35 0.35 0.35"
-          position="0 0 0"
+          position="0 0.03 0"
           rotation="0 0 0"
+          model-center
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-nft>
@@ -552,8 +583,9 @@
         <a-entity
           gltf-model="#ramen-model"
           scale="0.75 0.75 0.75"
-          position="0 0 0"
+          position="0 0.02 0"
           rotation="0 0 0"
+          model-center
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-nft>
@@ -562,9 +594,10 @@
       <a-marker type="pattern" url="./pattern-sushi.patt" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" data-lite="extra">
         <a-entity
           gltf-model="#sushi-model"
-          scale="1.1 1.1 1.1"
-          position="0 0 0"
+          scale="1.4 1.4 1.4"
+          position="0 0.02 0"
           rotation="0 0 0"
+          model-center
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
@@ -574,8 +607,9 @@
         <a-entity
           gltf-model="#sushi-model"
           scale="1.4 1.4 1.4"
-          position="0 0 0"
+          position="0 0.02 0"
           rotation="0 0 0"
+          model-center
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
@@ -583,8 +617,9 @@
         <a-entity
           gltf-model="#sushi-rolls-model"
           scale="0.8 0.8 0.8"
-          position="0 0 0"
+          position="0 0.04 0"
           rotation="0 0 0"
+          model-center
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
@@ -592,8 +627,9 @@
         <a-entity
           gltf-model="#nigiri-model"
           scale="0.35 0.35 0.35"
-          position="0 0 0"
+          position="0 0.03 0"
           rotation="0 0 0"
+          model-center
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
@@ -601,8 +637,9 @@
         <a-entity
           gltf-model="#ramen-model"
           scale="0.75 0.75 0.75"
-          position="0 0 0"
+          position="0 0.02 0"
           rotation="0 0 0"
+          model-center
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
@@ -670,6 +707,7 @@
           entity.setAttribute('scale', plato.scale || '1 1 1');
           entity.setAttribute('position', plato.position || '0 0 0');
           entity.setAttribute('rotation', plato.rotation || '0 0 0');
+          entity.setAttribute('model-center', '');
           entity.setAttribute('drag-rotate-scale', 'minScale: 0.5; maxScale: 2; rotationFactor: 0.5');
           marker.appendChild(entity);
           scene.appendChild(marker);
@@ -827,11 +865,12 @@
           nft.setAttribute('data-product-key', productsKey);
           const entity = document.createElement('a-entity');
           const baseModelId = '#' + modelId;
-          let scale = '4 4 4';
+          let scale = '1 1 1';
           entity.setAttribute('gltf-model', baseModelId);
           entity.setAttribute('scale', scale);
-          entity.setAttribute('position', '0 -1.2 0');
+          entity.setAttribute('position', '0 0 0');
           entity.setAttribute('rotation', '0 0 0');
+          entity.setAttribute('model-center', '');
           entity.setAttribute('drag-rotate-scale', 'minScale: 0.5; maxScale: 2; rotationFactor: 0.5');
           nft.appendChild(entity);
           scene.appendChild(nft);

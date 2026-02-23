@@ -519,7 +519,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./markers/sushi_roll/sushi_roll" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: sushi_roll" data-lite="extra">
+      <a-nft type="nft" url="./markers/sushi_roll" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: sushi_roll" data-lite="extra">
         <a-entity
           gltf-model="#sushi-rolls-model"
           scale="4 4 4"
@@ -529,7 +529,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./markers/sushi_salmon/sushi_salmon" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: sushi_salmon" data-lite="extra">
+      <a-nft type="nft" url="./markers/sushi_salmon" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: sushi_salmon" data-lite="extra">
         <a-entity
           gltf-model="#nigiri-model"
           scale="4 4 4"
@@ -539,7 +539,7 @@
         </a-entity>
       </a-nft>
 
-      <a-nft type="nft" url="./markers/ramen/ramen" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: ramen" data-lite="extra">
+      <a-nft type="nft" url="./markers/ramen" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" marker-model="dishId: ramen" data-lite="extra">
         <a-entity
           gltf-model="#ramen-model"
           scale="4 4 4"
@@ -806,7 +806,7 @@
           }
           const tipo = p.tipo;
           const folder = 'sushi';
-          const markerUrl = "./zip´s/" + folder + "/" + p.marcador;
+          const markerUrl = "./markers/" + p.marcador;
           const nft = document.createElement('a-nft');
           nft.setAttribute('type', 'nft');
           nft.setAttribute('url', markerUrl);

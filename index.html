@@ -141,7 +141,10 @@
 
         AFRAME.registerComponent('model-center', {
           schema: {
-            yOffset: {default: 0}
+            yOffset: {default: 0},
+            rotX: {default: 0},
+            rotY: {default: 0},
+            rotZ: {default: 0}
           },
           init: function () {
             this.hasCentered = false;
@@ -163,13 +166,22 @@
             obj.position.x += -center.x;
             obj.position.y += -box.min.y + (this.data.yOffset || 0);
             obj.position.z += -center.z;
+            var toRad = THREE.MathUtils && THREE.MathUtils.degToRad ? THREE.MathUtils.degToRad : function (d) { return d * Math.PI / 180; };
+            var rx = toRad(this.data.rotX || 0);
+            var ry = toRad(this.data.rotY || 0);
+            var rz = toRad(this.data.rotZ || 0);
+            if (rx || ry || rz) {
+              obj.rotation.x += rx;
+              obj.rotation.y += ry;
+              obj.rotation.z += rz;
+            }
             this.hasCentered = true;
           }
         });
 
         var DISH_MODEL_REGISTRY = {
           sushi: { assetId: '#sushi-model', url: './models/sushi/sushi.glb', scale: '1.6 1.6 1.6', position: '0 0.02 0', rotation: '0 0 0' },
-          sushi_roll: { assetId: '#sushi-rolls-model', url: './models/sushi/sushi_rolls.glb', scale: '0.8 0.8 0.8', position: '0 0 0', rotation: '0 180 -180' },
+          sushi_roll: { assetId: '#sushi-rolls-model', url: './models/sushi/sushi_rolls.glb', scale: '0.8 0.8 0.8', position: '0 0 0', rotation: '0 0 0' },
           sushi_salmon: { assetId: '#nigiri-model', url: './models/sushi/salmon_nigiri.glb', scale: '0.28 0.28 0.28', position: '0 0.03 0', rotation: '0 0 0' },
           ramen: { assetId: '#ramen-model', url: './models/sushi/shrimp_ramen_bowl.glb', scale: '0.75 0.75 0.75', position: '0 0.02 0', rotation: '0 0 0' },
           pattern_sushi: { assetId: '#sushi-model', url: './models/sushi/sushi.glb', scale: '1.6 1.6 1.6', position: '0 0.02 0', rotation: '0 0 0' }
@@ -562,8 +574,8 @@
           gltf-model="#sushi-rolls-model"
           scale="0.8 0.8 0.8"
           position="0 0.04 0"
-          rotation="0 180 -180"
-          model-center
+          rotation="0 0 0"
+          model-center="rotX: 180"
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-nft>
@@ -618,8 +630,8 @@
           gltf-model="#sushi-rolls-model"
           scale="0.8 0.8 0.8"
           position="0 0.04 0"
-          rotation="0 180 -180"
-          model-center
+          rotation="0 0 0"
+          model-center="rotX: 180"
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
@@ -693,6 +705,7 @@
         if (!scene) return;
         platos.forEach(function (plato) {
           if (!plato.nftPath || !plato.modelPath || !plato.id) return;
+          var rollFix = plato.id === 'sushi_roll' || String(plato.modelPath || '').indexOf('sushi_roll') !== -1;
           var marker = document.createElement('a-nft');
           marker.setAttribute('type', 'nft');
           marker.setAttribute('url', plato.nftPath);
@@ -707,7 +720,7 @@
           entity.setAttribute('scale', plato.scale || '1 1 1');
           entity.setAttribute('position', plato.position || '0 0 0');
           entity.setAttribute('rotation', plato.rotation || '0 0 0');
-          entity.setAttribute('model-center', '');
+          entity.setAttribute('model-center', rollFix ? 'rotX: 180' : '');
           entity.setAttribute('drag-rotate-scale', 'minScale: 0.5; maxScale: 2; rotationFactor: 0.5');
           marker.appendChild(entity);
           scene.appendChild(marker);
@@ -829,6 +842,7 @@
           if (!p || !p.marcador || !p.modelo || !p.imagen || !p.nombre || !p.precio || !p.descripcion || !p.tipo) {
             return;
           }
+          const rollFix = p.marcador === 'sushi_roll' || String(p.modelo || '').indexOf('sushi_roll') !== -1;
           const modelId = 'admin-model-' + p.marcador;
           if (!assets.querySelector('#' + modelId)) {
             const asset = document.createElement('a-asset-item');
@@ -870,7 +884,7 @@
           entity.setAttribute('scale', scale);
           entity.setAttribute('position', '0 0 0');
           entity.setAttribute('rotation', '0 0 0');
-          entity.setAttribute('model-center', '');
+          entity.setAttribute('model-center', rollFix ? 'rotX: 180' : '');
           entity.setAttribute('drag-rotate-scale', 'minScale: 0.5; maxScale: 2; rotationFactor: 0.5');
           nft.appendChild(entity);
           scene.appendChild(nft);

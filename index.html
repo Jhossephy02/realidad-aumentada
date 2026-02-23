@@ -575,7 +575,7 @@
           scale="0.8 0.8 0.8"
           position="0 0.04 0"
           rotation="0 0 0"
-          model-center="rotZ: 180"
+          model-center
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-nft>
@@ -631,7 +631,7 @@
           scale="0.8 0.8 0.8"
           position="0 0.04 0"
           rotation="0 0 0"
-          model-center="rotZ: 180"
+          model-center
           drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
         </a-entity>
       </a-marker>
@@ -705,7 +705,6 @@
         if (!scene) return;
         platos.forEach(function (plato) {
           if (!plato.nftPath || !plato.modelPath || !plato.id) return;
-          var rollFix = plato.id === 'sushi_roll' || String(plato.modelPath || '').indexOf('sushi_roll') !== -1;
           var marker = document.createElement('a-nft');
           marker.setAttribute('type', 'nft');
           marker.setAttribute('url', plato.nftPath);
@@ -720,7 +719,7 @@
           entity.setAttribute('scale', plato.scale || '1 1 1');
           entity.setAttribute('position', plato.position || '0 0 0');
           entity.setAttribute('rotation', plato.rotation || '0 0 0');
-          entity.setAttribute('model-center', rollFix ? 'rotZ: 180' : '');
+          entity.setAttribute('model-center', '');
           entity.setAttribute('drag-rotate-scale', 'minScale: 0.5; maxScale: 2; rotationFactor: 0.5');
           marker.appendChild(entity);
           scene.appendChild(marker);
@@ -842,7 +841,6 @@
           if (!p || !p.marcador || !p.modelo || !p.imagen || !p.nombre || !p.precio || !p.descripcion || !p.tipo) {
             return;
           }
-          const rollFix = p.marcador === 'sushi_roll' || String(p.modelo || '').indexOf('sushi_roll') !== -1;
           const modelId = 'admin-model-' + p.marcador;
           if (!assets.querySelector('#' + modelId)) {
             const asset = document.createElement('a-asset-item');
@@ -884,7 +882,7 @@
           entity.setAttribute('scale', scale);
           entity.setAttribute('position', '0 0 0');
           entity.setAttribute('rotation', '0 0 0');
-          entity.setAttribute('model-center', rollFix ? 'rotZ: 180' : '');
+          entity.setAttribute('model-center', '');
           entity.setAttribute('drag-rotate-scale', 'minScale: 0.5; maxScale: 2; rotationFactor: 0.5');
           nft.appendChild(entity);
           scene.appendChild(nft);

@@ -140,36 +140,8 @@
 
         // Platos configurados desde el panel administrativo se guardan en localStorage
         // bajo esta clave. Si existe una coincidencia, se prioriza sobre el registro estático.
-        var STORAGE_KEY_PLATOS = 'adminPlatosAR';
-
-        // Devuelve la configuración de modelo 3D para un plato concreto.
-        // 1) Intenta resolver desde platos guardados por el administrador.
-        // 2) Si no hay coincidencia, usa el registro estático DISH_MODEL_REGISTRY.
         function resolveModelConfig(dishId) {
           if (!dishId) return null;
-          var platos = null;
-          try {
-            var raw = localStorage.getItem(STORAGE_KEY_PLATOS);
-            if (raw) {
-              var parsed = JSON.parse(raw);
-              if (Array.isArray(parsed)) {
-                platos = parsed;
-              }
-            }
-          } catch (e) {}
-          if (platos) {
-            var found = platos.find(function(p) {
-              return String(p.marcador || '').toLowerCase() === String(dishId).toLowerCase();
-            });
-            if (found && found.modelo) {
-              return {
-                url: found.modelo,
-                scale: '4 4 4',
-                position: '0 -1.2 0',
-                rotation: '0 0 0'
-              };
-            }
-          }
           return DISH_MODEL_REGISTRY[dishId] || null;
         }
 

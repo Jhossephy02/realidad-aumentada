@@ -800,6 +800,22 @@
       if (sceneEl && globalLoader) {
         // Escuchar evento 'arReady' para ocultar el loader solo cuando la cámara y tracking estén listos
         sceneEl.addEventListener('arReady', hideGlobalLoader);
+        
+        // Manejar errores de carga de AR (cámara bloqueada, archivo no encontrado, etc.)
+        sceneEl.addEventListener('arError', function(event) {
+          hideGlobalLoader();
+          alert('Error al iniciar la cámara o cargar los marcadores. Por favor, verifica los permisos y recarga la página.');
+          console.error('MindAR Error:', event);
+        });
+
+        // Timeout de seguridad: si en 15 segundos no carga, ocultar loader y mostrar advertencia
+        setTimeout(function() {
+          if (globalLoader && globalLoader.style.display !== 'none') {
+            hideGlobalLoader();
+            console.warn('El sistema AR está tardando demasiado. Ocultando loader por seguridad.');
+            alert('La carga está tardando más de lo esperado. Si la cámara no se activa, verifica tu conexión y permisos.');
+          }
+        }, 15000);
       }
 
       function showProduct(key) {

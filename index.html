@@ -227,7 +227,7 @@
       body {
         font-family: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         user-select: none;
-        background-color: black; /* Fondo negro para evitar bordes blancos */
+        background-color: transparent;
         margin: 0;
         overflow: hidden;
       }
@@ -481,7 +481,7 @@
         width: auto !important;
         height: auto !important;
         object-fit: cover;
-        z-index: -2;
+        z-index: 1 !important;
       }
       .dish-selector {
         position: fixed;
@@ -562,32 +562,6 @@
     </style>
   </head>
   <body>
-    <!-- Selector de Platos (Fallback si no hay targets compilados) -->
-    <div id="dish-selector" class="dish-selector hidden">
-      <h2>Selecciona un Plato</h2>
-      <div class="dish-grid">
-        <a href="?dish=ramen" class="dish-btn">
-          <img src="img/sushi/ramen.png" alt="Ramen">
-          <span>Zelva Ramen</span>
-        </a>
-        <a href="?dish=sushi_roll" class="dish-btn">
-          <img src="img/sushi/sushi_roll.png" alt="Rolls">
-          <span>Volcano Roll</span>
-        </a>
-        <a href="?dish=sushi_salmon" class="dish-btn">
-          <img src="img/sushi/sushi_salmon.png" alt="Nigiri">
-          <span>Nigiris</span>
-        </a>
-        <a href="?dish=sushi" class="dish-btn">
-          <img src="img/sushi/sushi.png" alt="Makis">
-          <span>Makis New Styles</span>
-        </a>
-      </div>
-      <p style="margin-top: 30px; font-size: 12px; opacity: 0.7; text-align: center;">
-        Selecciona el plato que deseas escanear.<br>Esto cargará el archivo de rastreo específico.
-      </p>
-    </div>
-
     <!-- Botón Volver -->
     <a href="?" id="back-btn" class="back-btn hidden">
       <span>⬅</span> Menú
@@ -637,6 +611,7 @@
          - filterMinCF / filterBeta: Suavizado de movimiento
     -->
     <a-scene
+      mindar-image="imageTargetSrc: ./targets/targets.mind; filterMinCF:0.0001; filterBeta: 0.001; uiLoading: no; missTolerance: 10; warmupTolerance: 1; autoStart: true;"
       color-space="sRGB"
       renderer="colorManagement: true, physicallyCorrectLights"
       vr-mode-ui="enabled: false"
@@ -772,64 +747,11 @@
 
       // Manejo del Selector de Platos y Configuración Dinámica de AR
       document.addEventListener('DOMContentLoaded', function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const currentDish = urlParams.get('dish');
-        const selector = document.getElementById('dish-selector');
-        const backBtn = document.getElementById('back-btn');
         const scene = document.querySelector('a-scene');
 
-        if (!currentDish) {
-          // Mostrar selector, no iniciar AR
-          selector.classList.remove('hidden');
-          // Ocultar loader global si está activo
-          if(document.getElementById('global-loader')) {
-             document.getElementById('global-loader').style.display = 'none';
-          }
-          return; // Detener inicialización de AR
-        }
-
-        // Si hay plato seleccionado:
-        selector.classList.add('hidden');
-        backBtn.classList.remove('hidden');
-        
-        // Mapeo de claves a archivos .mind individuales
-        const targetMap = {
-          'ramen': 'ramen.mind',
-          'sushi_roll': 'roll.mind',
-          'sushi_salmon': 'salmon.mind',
-          'sushi': 'sushi.mind'
-        };
-        
-        const mindFile = targetMap[currentDish];
-        if (!mindFile) {
-          alert('Plato no encontrado. Redirigiendo al menú.');
-          window.location.href = '?';
-          return;
-        }
-
-        // 1. Activar solo la entidad correspondiente.
-      // IMPORTANTE: Mantenemos el targetIndex original porque los archivos .mind parecen ser copias
-      // del archivo multi-target.
-      const entities = document.querySelectorAll('[mindar-image-target]');
-      entities.forEach(el => {
-        if (el.dataset.productKey === currentDish) {
-          console.log('Activando entidad:', currentDish);
-          // No cambiamos el targetIndex, usamos el que ya tiene definido en el HTML
-        } else {
-          // Eliminar entidades que no corresponden para evitar conflictos
-          el.parentNode.removeChild(el);
-        }
-      });
-
-      // 2. Configurar mindar-image en la escena
-      // Nota: Es mejor establecer esto antes de que A-Frame inicialice, pero aquí usamos setAttribute
-      // que reiniciará el sistema si es necesario.
-      console.log('Iniciando AR para:', currentDish, 'con archivo:', mindFile);
-      scene.setAttribute('mindar-image', `imageTargetSrc: ./targets/${mindFile}; filterMinCF:0.0001; filterBeta: 0.001; uiLoading: no; missTolerance: 10; warmupTolerance: 1; autoStart: true;`);
-      
-      // Asegurar que no haya UI de carga
-      const gl = document.getElementById('global-loader');
-      if (gl) gl.style.display = 'none';
+        // Asegurar que no haya UI de carga
+        const gl = document.getElementById('global-loader');
+        if (gl) gl.style.display = 'none';
         
         // Cargar configuración dinámica (si existe)
         loadPlatosJson()

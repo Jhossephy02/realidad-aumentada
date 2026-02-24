@@ -480,7 +480,7 @@
 
     <!-- Escena principal de WebAR por imagen (MindAR + A-Frame). -->
     <a-scene
-      mindar-image="imageTargetSrc: ./targets/targets.mind; filterMinCF:0.0001; filterBeta: 0.001;"
+      mindar-image="imageTargetSrc: ./targets/targets.mind; filterMinCF:0.0001; filterBeta: 0.001; uiLoading: no;"
       color-space="sRGB"
       renderer="colorManagement: true, physicallyCorrectLights"
       vr-mode-ui="enabled: false"
@@ -798,7 +798,8 @@
 
       const sceneEl = document.querySelector('a-scene');
       if (sceneEl && globalLoader) {
-        sceneEl.addEventListener('loaded', hideGlobalLoader);
+        // Escuchar evento 'arReady' para ocultar el loader solo cuando la cámara y tracking estén listos
+        sceneEl.addEventListener('arReady', hideGlobalLoader);
       }
 
       function showProduct(key) {

@@ -10,6 +10,30 @@
     <script src="https://cdn.jsdelivr.net/gh/aframevr/aframe@v1.3.0/dist/aframe-master.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <script>
+      // Manejador global de errores para mostrar en pantalla
+      window.onerror = function(message, source, lineno, colno, error) {
+        var errDiv = document.getElementById('debug-error');
+        if (!errDiv) {
+          errDiv = document.createElement('div');
+          errDiv.id = 'debug-error';
+          errDiv.style.position = 'fixed';
+          errDiv.style.top = '0';
+          errDiv.style.left = '0';
+          errDiv.style.width = '100%';
+          errDiv.style.background = 'rgba(255, 0, 0, 0.8)';
+          errDiv.style.color = 'white';
+          errDiv.style.zIndex = '99999';
+          errDiv.style.padding = '10px';
+          errDiv.style.fontSize = '12px';
+          errDiv.style.fontFamily = 'monospace';
+          document.body.appendChild(errDiv);
+        }
+        errDiv.innerHTML += '<div>' + message + ' at ' + source + ':' + lineno + '</div>';
+        // Ocultar loader si hay error fatal
+        var gl = document.getElementById('global-loader');
+        if (gl) gl.style.display = 'none';
+      };
+
       // Componente reutilizable para rotar y escalar modelos 3D con mouse y gestos táctiles.
       // Se aplica a todas las entidades que tengan el atributo `drag-rotate-scale`.
       if (typeof AFRAME !== 'undefined') {
@@ -180,10 +204,10 @@
         });
 
         var DISH_MODEL_REGISTRY = {
-          sushi: { assetId: '#sushi-model', targetIndex: 3, scale: '0.2 0.2 0.2', position: '0 0 0', rotation: '0 0 0' },
-          sushi_roll: { assetId: '#sushi-rolls-model', targetIndex: 1, scale: '0.2 0.2 0.2', position: '0 0 0', rotation: '0 0 0' },
-          sushi_salmon: { assetId: '#nigiri-model', targetIndex: 2, scale: '0.2 0.2 0.2', position: '0 0 0', rotation: '0 0 0' },
-          ramen: { assetId: '#ramen-model', targetIndex: 0, scale: '0.2 0.2 0.2', position: '0 0 0', rotation: '0 0 0' }
+          sushi: { url: './models/sushi/sushi.glb', targetIndex: 3, scale: '0.2 0.2 0.2', position: '0 0 0', rotation: '0 0 0' },
+          sushi_roll: { url: './models/sushi/sushi_rolls.glb?v=2', targetIndex: 1, scale: '0.2 0.2 0.2', position: '0 0 0', rotation: '0 0 0' },
+          sushi_salmon: { url: './models/sushi/salmon_nigiri.glb', targetIndex: 2, scale: '0.2 0.2 0.2', position: '0 0 0', rotation: '0 0 0' },
+          ramen: { url: './models/sushi/shrimp_ramen_bowl.glb', targetIndex: 0, scale: '0.2 0.2 0.2', position: '0 0 0', rotation: '0 0 0' }
         };
 
         // Platos configurados desde el panel administrativo se guardan en localStorage
@@ -203,6 +227,9 @@
       body {
         font-family: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         user-select: none;
+        background-color: black; /* Fondo negro para evitar bordes blancos */
+        margin: 0;
+        overflow: hidden;
       }
       .ar-loader {
         height: 100%;
@@ -384,6 +411,14 @@
         opacity: 1;
         transform: translateY(0);
       }
+      .product-image {
+        width: 100%;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        display: block;
+      }
       .product-title {
         font-weight: 600;
         margin-bottom: 6px;
@@ -436,12 +471,21 @@
         z-index: 0;
         background: #000;
       }
-      .a-canvas {
-        background-color: transparent !important;
+      video {
+        position: absolute;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        min-width: 100%;
+        min-height: 100%;
+        width: auto !important;
+        height: auto !important;
+        object-fit: cover;
+        z-index: -2;
       }
     </style>
   </head>
-  <body style="margin: 0px; overflow: hidden;">
+  <body>
     <div class="flash" id="flash-effect"></div>
 
     <div id="model-loader">
@@ -457,13 +501,11 @@
 
     <div class="ar-loader" id="global-loader">
       <div class="loader-spinner"></div>
-      <div style="margin-top: 10px; font-size: 14px;">Preparando experiencia AR...</div>
-      <button id="start-ar-btn" style="margin-top: 20px; padding: 12px 24px; font-size: 16px; font-weight: bold; background: #fff; color: #000; border: none; border-radius: 25px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-        INICIAR CÁMARA
-      </button>
+      <div id="loader-text" style="margin-top: 10px; font-size: 14px;">Preparando experiencia AR...</div>
     </div>
 
     <div class="product-panel hidden" id="product-panel">
+      <img class="product-image" id="product-image" src="" alt="Plato">
       <div class="product-title" id="product-title"></div>
       <div class="product-price" id="product-price"></div>
       <div class="product-section-title">Ingredientes</div>
@@ -488,23 +530,20 @@
          - filterMinCF / filterBeta: Suavizado de movimiento
     -->
     <a-scene
-      mindar-image="imageTargetSrc: ./targets/salmon.mind; filterMinCF:0.0001; filterBeta: 0.001; uiLoading: no; missTolerance: 10; warmupTolerance: 1; autoStart: false;"
+      mindar-image="imageTargetSrc: ./targets/targets.mind; filterMinCF:0.0001; filterBeta: 0.001; uiLoading: no; missTolerance: 10; warmupTolerance: 1; autoStart: true;"
       color-space="sRGB"
       renderer="colorManagement: true, physicallyCorrectLights"
       vr-mode-ui="enabled: false"
       device-orientation-permission-ui="enabled: false">
       
       <a-assets>
-        <a-asset-item id="sushi-model" src="./models/sushi/sushi.glb"></a-asset-item>
-        <a-asset-item id="sushi-rolls-model" src="./models/sushi/sushi_rolls.glb?v=2"></a-asset-item>
-        <a-asset-item id="nigiri-model" src="./models/sushi/salmon_nigiri.glb"></a-asset-item>
-        <a-asset-item id="ramen-model" src="./models/sushi/shrimp_ramen_bowl.glb"></a-asset-item>
+        <!-- Modelos cargados dinámicamente para mejorar velocidad de inicio de cámara -->
       </a-assets>
 
       <!-- 0. RAMEN -->
       <a-entity mindar-image-target="targetIndex: 0" data-product-key="ramen">
         <a-entity
-          gltf-model="#ramen-model"
+          gltf-model="./models/sushi/shrimp_ramen_bowl.glb"
           scale="0.2 0.2 0.2"
           position="0 0 0"
           rotation="0 0 0"
@@ -514,9 +553,9 @@
       </a-entity>
 
       <!-- 1. SUSHI ROLL -->
-      <a-entity mindar-image-target="targetIndex: 1" data-product-key="sushi_rolls">
+      <a-entity mindar-image-target="targetIndex: 1" data-product-key="sushi_roll">
         <a-entity
-          gltf-model="#sushi-rolls-model"
+          gltf-model="./models/sushi/sushi_rolls.glb?v=2"
           scale="0.2 0.2 0.2"
           position="0 0 0"
           rotation="0 0 0"
@@ -526,9 +565,9 @@
       </a-entity>
 
       <!-- 2. SUSHI SALMON -->
-      <a-entity mindar-image-target="targetIndex: 2" data-product-key="nigiri">
+      <a-entity mindar-image-target="targetIndex: 2" data-product-key="sushi_salmon">
         <a-entity
-          gltf-model="#nigiri-model"
+          gltf-model="./models/sushi/salmon_nigiri.glb"
           scale="0.2 0.2 0.2"
           position="0 0 0"
           rotation="0 0 0"
@@ -540,7 +579,7 @@
       <!-- 3. SUSHI (Main) -->
       <a-entity mindar-image-target="targetIndex: 3" data-product-key="sushi">
         <a-entity
-          gltf-model="#sushi-model"
+          gltf-model="./models/sushi/sushi.glb"
           scale="0.2 0.2 0.2"
           position="0 0 0"
           rotation="0 0 0"
@@ -623,27 +662,37 @@
         });
       }
 
-      function preloadKeyDishModels() {
+      // Función eliminada: preloadKeyDishModels (ahora usamos carga diferida post-AR)
+
+      // Configuración de carga y manejo de eventos AR
+      document.addEventListener('DOMContentLoaded', function() {
         var scene = document.querySelector('a-scene');
-        if (!scene) return;
-        Object.keys(DISH_MODEL_REGISTRY).forEach(function (id) {
-          var cfg = DISH_MODEL_REGISTRY[id];
-          if (!cfg) return;
-          var temp = document.createElement('a-entity');
-          temp.setAttribute('visible', 'false');
-          if (cfg.assetId) {
-            temp.setAttribute('gltf-model', cfg.assetId);
-          } else if (cfg.url) {
-            temp.setAttribute('gltf-model', cfg.url);
-          }
-          temp.addEventListener('model-loaded', function () {
-            if (scene.contains(temp)) {
-              scene.removeChild(temp);
-            }
+        
+        // 2. Cargar configuración dinámica (si existe)
+        loadPlatosJson()
+          .then(updateMindARTargets)
+          .then(applyAdminOverrides);
+
+        if (scene) {
+          scene.addEventListener('arReady', function () {
+            hideGlobalLoader();
           });
-          scene.appendChild(temp);
-        });
-      }
+          
+          scene.addEventListener('arError', function(event) {
+            hideGlobalLoader();
+            alert('Error al iniciar la cámara. Verifica permisos y recarga.');
+          });
+        }
+        
+        // Fallback: Si el video ya está corriendo pero arReady no disparó
+        const checkVideoInterval = setInterval(() => {
+             const video = document.querySelector('video');
+             if (video && video.readyState >= 2 && !video.paused) {
+                 hideGlobalLoader();
+                 clearInterval(checkVideoInterval);
+             }
+        }, 1000);
+      });
 
       window.addEventListener('load', function () {
         if (isLiteMode()) {
@@ -654,10 +703,6 @@
             }
           });
         }
-        preloadKeyDishModels();
-        loadPlatosJson()
-          .then(updateMindARTargets)
-          .then(applyAdminOverrides);
       });
 
       // Panel de información del plato asociado al marcador actualmente visible.
@@ -676,22 +721,26 @@
         sushi: {
           title: 'Makis New Styles (10 pzs)',
           price: 'S/ 25.00',
-          ingredients: 'Variedades como Amazon, Anticuchero, Banzai, Kaminaki, Parrillero, Pulpo al Olivo y Jalea.'
+          ingredients: 'Variedades como Amazon, Anticuchero, Banzai, Kaminaki, Parrillero, Pulpo al Olivo y Jalea.',
+          image: 'img/sushi/sushi.png'
         },
-        sushi_rolls: {
+        sushi_roll: {
           title: 'Volcano Roll (5 pzs)',
           price: 'S/ 19.00',
-          ingredients: 'Roll tipo Volcano de la sección 5 piezas del menú Zelva Nikkei.'
+          ingredients: 'Roll tipo Volcano de la sección 5 piezas del menú Zelva Nikkei.',
+          image: 'img/sushi/sushi_roll.png'
         },
-        nigiri: {
+        sushi_salmon: {
           title: 'Nigiris especiales (2 bocados)',
           price: 'S/ 15.00',
-          ingredients: 'Inca Nigiri, Misoyaki, Pasión, Coco Beach y Hotate Spicy.'
+          ingredients: 'Inca Nigiri, Misoyaki, Pasión, Coco Beach y Hotate Spicy.',
+          image: 'img/sushi/sushi_salmon.png'
         },
         ramen: {
           title: 'Zelva Ramen',
           price: 'S/ 32.00',
-          ingredients: 'Caldo caliente con fideos y topping nikkei, ideal para el frío.'
+          ingredients: 'Caldo caliente con fideos y topping nikkei, ideal para el frío.',
+          image: 'img/sushi/ramen.png'
         }
       };
 
@@ -720,15 +769,13 @@
         try {
           raw = localStorage.getItem(adminStorageKey);
         } catch (e) {
-          return;
+          // Si falla localStorage, intentar cargar desde JSON estático si no se ha hecho ya
         }
-        if (!raw) return;
-        var platos;
-        try {
-          platos = JSON.parse(raw);
-        } catch (e) {
-          return;
-        }
+        // Nota: loadPlatosJson ya se encarga de llamar a esta función con los datos del JSON
+      }
+
+      // Nueva función para procesar datos del JSON
+      function updateMindARTargets(platos) {
         if (!Array.isArray(platos)) return;
         
         var scene = document.querySelector('a-scene');
@@ -737,48 +784,52 @@
         if (!assets) return;
 
         platos.forEach(function(p) {
-          if (!p || !p.marcador || !p.modelo || !p.imagen || !p.nombre || !p.precio || !p.descripcion) {
-            return;
-          }
-          var modelId = 'admin-model-' + p.marcador;
-          if (!assets.querySelector('#' + modelId)) {
-            var asset = document.createElement('a-asset-item');
-            asset.setAttribute('id', modelId);
-            var src = p.modelo;
-            if (src.indexOf('./') !== 0) {
-              src = './' + src.replace(/^\/+/, '');
-            }
-            asset.setAttribute('src', src);
-            assets.appendChild(asset);
-          }
-          var productsKey = p.marcador;
-          if (!products[productsKey]) {
-            products[productsKey] = {
-              title: p.nombre,
-              price: 'S/ ' + p.precio,
-              ingredients: p.descripcion
-            };
-          }
-          if (!modelImages[modelId]) {
-            modelImages[modelId] = p.imagen;
+          // Validar campos requeridos (nota: imagenMenu en JSON vs imagen en localStorage)
+          var imgSrc = p.imagen || p.imagenMenu;
+          if (!p || !p.id || !p.modelPath || !imgSrc || !p.nombre || !p.precio || !p.descripcion) {
+             // Intento de compatibilidad con formato anterior
+             if (p.marcador && p.modelo) {
+                 p.id = p.marcador;
+                 p.modelPath = p.modelo;
+             } else {
+                 return;
+             }
           }
 
-          // MindAR requiere compilación previa de targets, por lo que no podemos crear nuevos targets dinámicamente.
-          // Solo actualizamos el contenido si el plato tiene un targetIndex válido que coincida con uno existente.
+          var productsKey = p.id;
+          // Actualizar o crear producto en el mapa global
+          products[productsKey] = {
+            title: p.nombre,
+            price: (typeof p.precio === 'number' ? 'S/ ' + p.precio.toFixed(2) : p.precio),
+            ingredients: p.descripcion,
+            image: imgSrc
+          };
+
+          var modelId = 'model-' + p.id;
+          // Cargar asset si no existe
+          if (!assets.querySelector('#' + modelId)) {
+            var assetItem = document.createElement('a-asset-item');
+            assetItem.setAttribute('id', modelId);
+            assetItem.setAttribute('src', p.modelPath);
+            assets.appendChild(assetItem);
+          }
+
+          // Actualizar target
           if (p.targetIndex !== undefined) {
              var targetEntity = document.querySelector(`[mindar-image-target="targetIndex: ${p.targetIndex}"]`);
              if (targetEntity) {
-               targetEntity.setAttribute('data-product-key', p.marcador);
+               targetEntity.setAttribute('data-product-key', p.id);
                // Limpiar contenido previo
                while (targetEntity.firstChild) {
                  targetEntity.removeChild(targetEntity.firstChild);
                }
                // Crear nueva entidad con el modelo
                var entity = document.createElement('a-entity');
-               entity.setAttribute('gltf-model', '#' + modelId);
-               entity.setAttribute('scale', '0.2 0.2 0.2'); 
-               entity.setAttribute('position', '0 0 0');
-               entity.setAttribute('rotation', '0 0 0');
+               // Usar gltf-model directamente con la ruta para evitar problemas de assets
+               entity.setAttribute('gltf-model', p.modelPath);
+               entity.setAttribute('scale', p.scale || '0.2 0.2 0.2'); 
+               entity.setAttribute('position', p.position || '0 0 0');
+               entity.setAttribute('rotation', p.rotation || '0 0 0');
                entity.setAttribute('model-center', '');
                entity.setAttribute('drag-rotate-scale', 'minScale: 0.1; maxScale: 1; rotationFactor: 0.5');
                targetEntity.appendChild(entity);
@@ -804,47 +855,26 @@
         }, 400);
       }
 
-      const sceneEl = document.querySelector('a-scene');
-      const startBtn = document.getElementById('start-ar-btn');
 
-      if (startBtn) {
-        startBtn.addEventListener('click', function() {
-          startBtn.style.display = 'none';
-          // Mostrar mensaje de carga
-          const p = document.querySelector('#global-loader p');
-          if (p) p.textContent = 'Iniciando cámara... Por favor espera.';
-          
-          if (sceneEl.systems['mindar-image-system']) {
-            sceneEl.systems['mindar-image-system'].start();
-          }
-        });
-      }
 
-      if (sceneEl && globalLoader) {
-        // Escuchar evento 'arReady' para ocultar el loader solo cuando la cámara y tracking estén listos
-        sceneEl.addEventListener('arReady', hideGlobalLoader);
-        
-        // Manejar errores de carga de AR (cámara bloqueada, archivo no encontrado, etc.)
-        sceneEl.addEventListener('arError', function(event) {
-          hideGlobalLoader();
-          alert('Error al iniciar la cámara o cargar los marcadores. Por favor, verifica los permisos y recarga la página.');
-          console.error('MindAR Error:', event);
-        });
-
-        // Timeout de seguridad: si en 15 segundos no carga, ocultar loader y mostrar advertencia
-        setTimeout(function() {
-          if (globalLoader && globalLoader.style.display !== 'none') {
-            hideGlobalLoader();
-            console.warn('El sistema AR está tardando demasiado. Ocultando loader por seguridad.');
-            alert('La carga está tardando más de lo esperado. Si la cámara no se activa, verifica tu conexión y permisos.');
-          }
-        }, 15000);
-      }
+      // Fallback: Si después de 5 segundos no ha iniciado, mostrar botón manual
+      // (Eliminado a petición del usuario para que sea totalmente automático)
 
       function showProduct(key) {
         if (!productPanel) return;
         const p = products[key];
         if (!p) return;
+        
+        const img = document.getElementById('product-image');
+        if (img) {
+          if (p.image) {
+            img.src = p.image;
+            img.style.display = 'block';
+          } else {
+            img.style.display = 'none';
+          }
+        }
+
         productTitle.textContent = p.title;
         productPrice.textContent = p.price;
         productIngredients.textContent = p.ingredients;
@@ -965,48 +995,6 @@
       })();
     </script>
 
-    <!-- Debug UI para verificar detección de targets -->
-    <div id="debug-ui" style="position: fixed; top: 10px; left: 10px; background: rgba(0,0,0,0.7); color: lime; padding: 10px; z-index: 9999; pointer-events: none; font-family: monospace; font-size: 12px; border-radius: 5px;">
-      <b>Debug Status:</b><br>
-      AR System: <span id="ar-status">Init...</span><br>
-      Target 0 (Ramen): <span id="status-0">Waiting...</span><br>
-      Target 1 (Roll): <span id="status-1">Waiting...</span><br>
-      Target 2 (Salmon): <span id="status-2">Waiting...</span><br>
-      Target 3 (Sushi): <span id="status-3">Waiting...</span>
-    </div>
 
-    <script>
-      window.addEventListener('load', () => {
-        const arStatus = document.getElementById('ar-status');
-        const scene = document.querySelector('a-scene');
-        if (scene) {
-          scene.addEventListener('arReady', () => {
-            if (arStatus) { arStatus.textContent = 'Ready'; arStatus.style.color = 'lime'; }
-          });
-          scene.addEventListener('arError', () => {
-            if (arStatus) { arStatus.textContent = 'Error'; arStatus.style.color = 'red'; }
-          });
-        }
-        const targets = document.querySelectorAll('[mindar-image-target]');
-        targets.forEach(t => {
-          t.addEventListener('targetFound', () => {
-            let idxStr = t.getAttribute('mindar-image-target');
-            let match = idxStr.match(/targetIndex:\s*(\d+)/);
-            if (match && match[1]) {
-               const el = document.getElementById('status-' + match[1]);
-               if (el) { el.textContent = 'FOUND'; el.style.color = 'lime'; }
-            }
-          });
-          t.addEventListener('targetLost', () => {
-            let idxStr = t.getAttribute('mindar-image-target');
-            let match = idxStr.match(/targetIndex:\s*(\d+)/);
-            if (match && match[1]) {
-               const el = document.getElementById('status-' + match[1]);
-               if (el) { el.textContent = 'Lost'; el.style.color = 'orange'; }
-            }
-          });
-        });
-      });
-    </script>
   </body>
 </html>

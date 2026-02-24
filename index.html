@@ -457,7 +457,10 @@
 
     <div class="ar-loader" id="global-loader">
       <div class="loader-spinner"></div>
-      <div>Detectando cámara y preparando la experiencia de menú en Realidad Aumentada...</div>
+      <div style="margin-top: 10px; font-size: 14px;">Preparando experiencia AR...</div>
+      <button id="start-ar-btn" style="margin-top: 20px; padding: 12px 24px; font-size: 16px; font-weight: bold; background: #fff; color: #000; border: none; border-radius: 25px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        INICIAR CÁMARA
+      </button>
     </div>
 
     <div class="product-panel hidden" id="product-panel">
@@ -485,7 +488,7 @@
          - filterMinCF / filterBeta: Suavizado de movimiento
     -->
     <a-scene
-      mindar-image="imageTargetSrc: ./targets/targets.mind; filterMinCF:0.0001; filterBeta: 0.001; uiLoading: no; missTolerance: 10; warmupTolerance: 1;"
+      mindar-image="imageTargetSrc: ./targets/salmon.mind; filterMinCF:0.0001; filterBeta: 0.001; uiLoading: no; missTolerance: 10; warmupTolerance: 1; autoStart: false;"
       color-space="sRGB"
       renderer="colorManagement: true, physicallyCorrectLights"
       vr-mode-ui="enabled: false"
@@ -802,6 +805,21 @@
       }
 
       const sceneEl = document.querySelector('a-scene');
+      const startBtn = document.getElementById('start-ar-btn');
+
+      if (startBtn) {
+        startBtn.addEventListener('click', function() {
+          startBtn.style.display = 'none';
+          // Mostrar mensaje de carga
+          const p = document.querySelector('#global-loader p');
+          if (p) p.textContent = 'Iniciando cámara... Por favor espera.';
+          
+          if (sceneEl.systems['mindar-image-system']) {
+            sceneEl.systems['mindar-image-system'].start();
+          }
+        });
+      }
+
       if (sceneEl && globalLoader) {
         // Escuchar evento 'arReady' para ocultar el loader solo cuando la cámara y tracking estén listos
         sceneEl.addEventListener('arReady', hideGlobalLoader);
@@ -947,5 +965,48 @@
       })();
     </script>
 
+    <!-- Debug UI para verificar detección de targets -->
+    <div id="debug-ui" style="position: fixed; top: 10px; left: 10px; background: rgba(0,0,0,0.7); color: lime; padding: 10px; z-index: 9999; pointer-events: none; font-family: monospace; font-size: 12px; border-radius: 5px;">
+      <b>Debug Status:</b><br>
+      AR System: <span id="ar-status">Init...</span><br>
+      Target 0 (Ramen): <span id="status-0">Waiting...</span><br>
+      Target 1 (Roll): <span id="status-1">Waiting...</span><br>
+      Target 2 (Salmon): <span id="status-2">Waiting...</span><br>
+      Target 3 (Sushi): <span id="status-3">Waiting...</span>
+    </div>
+
+    <script>
+      window.addEventListener('load', () => {
+        const arStatus = document.getElementById('ar-status');
+        const scene = document.querySelector('a-scene');
+        if (scene) {
+          scene.addEventListener('arReady', () => {
+            if (arStatus) { arStatus.textContent = 'Ready'; arStatus.style.color = 'lime'; }
+          });
+          scene.addEventListener('arError', () => {
+            if (arStatus) { arStatus.textContent = 'Error'; arStatus.style.color = 'red'; }
+          });
+        }
+        const targets = document.querySelectorAll('[mindar-image-target]');
+        targets.forEach(t => {
+          t.addEventListener('targetFound', () => {
+            let idxStr = t.getAttribute('mindar-image-target');
+            let match = idxStr.match(/targetIndex:\s*(\d+)/);
+            if (match && match[1]) {
+               const el = document.getElementById('status-' + match[1]);
+               if (el) { el.textContent = 'FOUND'; el.style.color = 'lime'; }
+            }
+          });
+          t.addEventListener('targetLost', () => {
+            let idxStr = t.getAttribute('mindar-image-target');
+            let match = idxStr.match(/targetIndex:\s*(\d+)/);
+            if (match && match[1]) {
+               const el = document.getElementById('status-' + match[1]);
+               if (el) { el.textContent = 'Lost'; el.style.color = 'orange'; }
+            }
+          });
+        });
+      });
+    </script>
   </body>
 </html>

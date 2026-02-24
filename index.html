@@ -608,7 +608,7 @@
 
     <div class="ar-loader" id="global-loader">
       <div class="loader-spinner"></div>
-      <div id="loader-text" style="margin-top: 10px; font-size: 14px;">Preparando experiencia AR...</div>
+      <div id="loader-text" style="margin-top: 10px; font-size: 14px;">Iniciando cámara...</div>
     </div>
 
     <div class="product-panel hidden" id="product-panel">
@@ -637,7 +637,6 @@
          - filterMinCF / filterBeta: Suavizado de movimiento
     -->
     <a-scene
-      mindar-image="filterMinCF:0.0001; filterBeta: 0.001; uiLoading: no; missTolerance: 10; warmupTolerance: 1; autoStart: false;"
       color-space="sRGB"
       renderer="colorManagement: true, physicallyCorrectLights"
       vr-mode-ui="enabled: false"
@@ -808,25 +807,25 @@
           return;
         }
 
-        console.log('Iniciando AR para:', currentDish, 'con archivo:', mindFile);
+        // 1. Activar solo la entidad correspondiente.
+      // IMPORTANTE: Mantenemos el targetIndex original porque los archivos .mind parecen ser copias
+      // del archivo multi-target.
+      const entities = document.querySelectorAll('[mindar-image-target]');
+      entities.forEach(el => {
+        if (el.dataset.productKey === currentDish) {
+          console.log('Activando entidad:', currentDish);
+          // No cambiamos el targetIndex, usamos el que ya tiene definido en el HTML
+        } else {
+          // Eliminar entidades que no corresponden para evitar conflictos
+          el.parentNode.removeChild(el);
+        }
+      });
 
-        // 1. Configurar mindar-image en la escena
-        // Nota: Es mejor establecer esto antes de que A-Frame inicialice, pero aquí usamos setAttribute
-        // que reiniciará el sistema si es necesario.
-        scene.setAttribute('mindar-image', `imageTargetSrc: ./targets/${mindFile}; filterMinCF:0.0001; filterBeta: 0.001; uiLoading: no; missTolerance: 10; warmupTolerance: 1; autoStart: true;`);
-
-        // 2. Activar solo la entidad correspondiente y ajustar su targetIndex a 0
-        // (Porque los archivos individuales suelen tener el target en índice 0)
-        const entities = document.querySelectorAll('[mindar-image-target]');
-        entities.forEach(el => {
-          if (el.dataset.productKey === currentDish) {
-            el.setAttribute('mindar-image-target', 'targetIndex: 0');
-            console.log('Activando entidad:', currentDish);
-          } else {
-            // Eliminar entidades que no corresponden para evitar conflictos
-            el.parentNode.removeChild(el);
-          }
-        });
+      // 2. Configurar mindar-image en la escena
+      // Nota: Es mejor establecer esto antes de que A-Frame inicialice, pero aquí usamos setAttribute
+      // que reiniciará el sistema si es necesario.
+      console.log('Iniciando AR para:', currentDish, 'con archivo:', mindFile);
+      scene.setAttribute('mindar-image', `imageTargetSrc: ./targets/${mindFile}; filterMinCF:0.0001; filterBeta: 0.001; uiLoading: no; missTolerance: 10; warmupTolerance: 1; autoStart: true;`);
         
         // Cargar configuración dinámica (si existe)
         loadPlatosJson()

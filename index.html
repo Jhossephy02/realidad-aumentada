@@ -479,8 +479,13 @@
     </div>
 
     <!-- Escena principal de WebAR por imagen (MindAR + A-Frame). -->
+    <!-- Ajustes de tracking para mejorar detección:
+         - missTolerance: 10 (mantiene el modelo más tiempo si se pierde momentáneamente)
+         - warmupTolerance: 1 (detecta más rápido, con menos frames consecutivos requeridos)
+         - filterMinCF / filterBeta: Suavizado de movimiento
+    -->
     <a-scene
-      mindar-image="imageTargetSrc: ./targets/targets.mind; filterMinCF:0.0001; filterBeta: 0.001; uiLoading: no;"
+      mindar-image="imageTargetSrc: ./targets/targets.mind; filterMinCF:0.0001; filterBeta: 0.001; uiLoading: no; missTolerance: 10; warmupTolerance: 1;"
       color-space="sRGB"
       renderer="colorManagement: true, physicallyCorrectLights"
       vr-mode-ui="enabled: false"

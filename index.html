@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/gh/aframevr/aframe@v1.3.0/dist/aframe-master.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <script>
       // Componente reutilizable para rotar y escalar modelos 3D con mouse y gestos táctiles.
       // Se aplica a todas las entidades que tengan el atributo `drag-rotate-scale`.
@@ -180,11 +180,10 @@
         });
 
         var DISH_MODEL_REGISTRY = {
-          sushi: { assetId: '#sushi-model', url: './models/sushi/sushi.glb', scale: '5.5 5.5 5.5', position: '0 0.02 0', rotation: '0 0 0' },
-          sushi_roll: { assetId: '#sushi-rolls-model', url: './models/sushi/sushi_rolls.glb?v=2', scale: '4 4 4', position: '0 0 0', rotation: '0 0 0' },
-          sushi_salmon: { assetId: '#nigiri-model', url: './models/sushi/salmon_nigiri.glb', scale: '0.06 0.06 0.06', position: '0 0.03 0', rotation: '0 0 0' },
-          ramen: { assetId: '#ramen-model', url: './models/sushi/shrimp_ramen_bowl.glb', scale: '0.75 0.75 0.75', position: '0 0.02 0', rotation: '0 0 0' },
-          pattern_sushi: { assetId: '#sushi-model', url: './models/sushi/sushi.glb', scale: '5.5 5.5 5.5', position: '0 0.02 0', rotation: '0 0 0' }
+          sushi: { assetId: '#sushi-model', targetIndex: 3, scale: '0.2 0.2 0.2', position: '0 0 0', rotation: '0 0 0' },
+          sushi_roll: { assetId: '#sushi-rolls-model', targetIndex: 1, scale: '0.2 0.2 0.2', position: '0 0 0', rotation: '0 0 0' },
+          sushi_salmon: { assetId: '#nigiri-model', targetIndex: 2, scale: '0.2 0.2 0.2', position: '0 0 0', rotation: '0 0 0' },
+          ramen: { assetId: '#ramen-model', targetIndex: 0, scale: '0.2 0.2 0.2', position: '0 0 0', rotation: '0 0 0' }
         };
 
         // Platos configurados desde el panel administrativo se guardan en localStorage
@@ -193,66 +192,6 @@
           if (!dishId) return null;
           return DISH_MODEL_REGISTRY[dishId] || null;
         }
-
-        // Componente que se coloca en cada marcador (a-nft / a-marker) y
-        // decide qué modelo 3D cargar cuando el marcador es detectado.
-        AFRAME.registerComponent('marker-model', {
-          schema: {
-            dishId: {type: 'string'}
-          },
-          init: function () {
-            this.modelEntity = this.el.querySelector('[marker-model-host]') || this.el.querySelector('a-entity');
-            this.onMarkerFound = this.handleMarkerFound.bind(this);
-            this.onModelLoaded = this.handleModelLoaded.bind(this);
-            this.onModelError = this.handleModelError.bind(this);
-            this.modelInitialized = false;
-            this.el.addEventListener('markerFound', this.onMarkerFound);
-          },
-          remove: function () {
-            this.el.removeEventListener('markerFound', this.onMarkerFound);
-            if (this.modelEntity) {
-              this.modelEntity.removeEventListener('model-loaded', this.onModelLoaded);
-              this.modelEntity.removeEventListener('model-error', this.onModelError);
-            }
-          },
-          handleModelLoaded: function () {
-            hideModelLoader();
-          },
-          handleModelError: function () {
-            hideModelLoader();
-          },
-          handleMarkerFound: function () {
-            var dishId = this.data.dishId;
-            var cfg = resolveModelConfig(dishId);
-            if (!cfg) {
-              console.warn('No se encontró modelo para marcador', dishId);
-              return;
-            }
-            var host = this.modelEntity || this.el;
-            if (!this.modelInitialized) {
-              showModelLoader();
-              if (cfg.assetId) {
-                host.setAttribute('gltf-model', cfg.assetId);
-              } else if (cfg.url) {
-                host.setAttribute('gltf-model', cfg.url);
-              }
-              if (this.modelEntity) {
-                this.modelEntity.addEventListener('model-loaded', this.onModelLoaded, { once: true });
-                this.modelEntity.addEventListener('model-error', this.onModelError, { once: true });
-              }
-              if (cfg.scale) {
-                host.setAttribute('scale', cfg.scale);
-              }
-              if (cfg.position) {
-                host.setAttribute('position', cfg.position);
-              }
-              if (cfg.rotation) {
-                host.setAttribute('rotation', cfg.rotation);
-              }
-              this.modelInitialized = true;
-            }
-          }
-        });
       }
     </script>
     <style>
@@ -265,7 +204,7 @@
         font-family: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         user-select: none;
       }
-      .arjs-loader {
+      .ar-loader {
         height: 100%;
         width: 100%;
         position: absolute;
@@ -516,7 +455,7 @@
       <span>Menú AR</span>
     </div>
 
-    <div class="arjs-loader" id="global-loader">
+    <div class="ar-loader" id="global-loader">
       <div class="loader-spinner"></div>
       <div>Detectando cámara y preparando la experiencia de menú en Realidad Aumentada...</div>
     </div>
@@ -532,23 +471,20 @@
     <div class="ui-container">
       <div class="hint-text">
         <span>📷</span>
-        <span>Apunta al código QR de la mesa o a la imagen del menú para ver el plato.</span>
+        <span>Apunta a la imagen del plato en el menú para verlo en 3D.</span>
       </div>
       <div class="controls">
         <div class="screenshot-btn" id="screenshot"></div>
       </div>
     </div>
 
-    <!-- Escena principal de WebAR por imagen (AR.js + A-Frame).
-         Optimizada para móviles manteniendo buena calidad de cámara. -->
+    <!-- Escena principal de WebAR por imagen (MindAR + A-Frame). -->
     <a-scene
+      mindar-image="imageTargetSrc: ./targets/targets.mind; filterMinCF:0.0001; filterBeta: 0.001;"
+      color-space="sRGB"
+      renderer="colorManagement: true, physicallyCorrectLights"
       vr-mode-ui="enabled: false"
-      embedded
-      loading-screen="enabled: false"
-      renderer="antialias: false; colorManagement: true; alpha: true; precision: mediump;"
-      arjs="sourceType: webcam; sourceWidth: 480; sourceHeight: 360; displayWidth: 640; displayHeight: 480; trackingMethod: best; detectionMode: mono_and_matrix; matrixCodeType: 3x3; debugUIEnabled: false;"
-      screenshot
-      style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;">
+      device-orientation-permission-ui="enabled: false">
       
       <a-assets>
         <a-asset-item id="sushi-model" src="./models/sushi/sushi.glb"></a-asset-item>
@@ -557,104 +493,53 @@
         <a-asset-item id="ramen-model" src="./models/sushi/shrimp_ramen_bowl.glb"></a-asset-item>
       </a-assets>
 
-      <!-- Marcadores NFT para platos de sushi -->
-      <a-nft type="nft" url="./markers/sushi" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2">
-        <a-entity
-          gltf-model="#sushi-model"
-          scale="5.5 5.5 5.5"
-          position="0 0.02 0"
-          rotation="0 0 0"
-          model-center
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-nft>
-
-      <a-nft type="nft" url="./markers/sushi_roll" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" data-lite="extra">
-        <a-entity
-          gltf-model="#sushi-rolls-model"
-          scale="4 4 4"
-          position="0 0.04 0"
-          rotation="0 0 0"
-          model-center
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-nft>
-
-      <a-nft type="nft" url="./markers/sushi_salmon" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" data-lite="extra">
-        <a-entity
-          gltf-model="#nigiri-model"
-          scale="0.06 0.06 0.06"
-          position="0 0.03 0"
-          rotation="0 0 0"
-          model-center
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-nft>
-
-      <a-nft type="nft" url="./markers/ramen" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" data-lite="extra">
+      <!-- 0. RAMEN -->
+      <a-entity mindar-image-target="targetIndex: 0" data-product-key="ramen">
         <a-entity
           gltf-model="#ramen-model"
-          scale="0.75 0.75 0.75"
-          position="0 0.02 0"
+          scale="0.2 0.2 0.2"
+          position="0 0 0"
           rotation="0 0 0"
           model-center
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+          drag-rotate-scale="minScale: 0.1; maxScale: 1; rotationFactor: 0.5">
         </a-entity>
-      </a-nft>
-      
-      <!-- Marcador pattern para sushi -->
-      <a-marker type="pattern" url="./pattern-sushi.patt" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2" data-lite="extra">
-        <a-entity
-          gltf-model="#sushi-model"
-          scale="5.5 5.5 5.5"
-          position="0 0.02 0"
-          rotation="0 0 0"
-          model-center
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-marker>
+      </a-entity>
 
-      <!-- Marcadores barcode para platos de sushi -->
-      <a-marker type="barcode" value="6" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2">
-        <a-entity
-          gltf-model="#sushi-model"
-          scale="5.5 5.5 5.5"
-          position="0 0.02 0"
-          rotation="0 0 0"
-          model-center
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
-        </a-entity>
-      </a-marker>
-      <a-marker type="barcode" value="17" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2">
+      <!-- 1. SUSHI ROLL -->
+      <a-entity mindar-image-target="targetIndex: 1" data-product-key="sushi_rolls">
         <a-entity
           gltf-model="#sushi-rolls-model"
-          scale="4 4 4"
-          position="0 0.04 0"
+          scale="0.2 0.2 0.2"
+          position="0 0 0"
           rotation="0 0 0"
           model-center
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+          drag-rotate-scale="minScale: 0.1; maxScale: 1; rotationFactor: 0.5">
         </a-entity>
-      </a-marker>
-      <a-marker type="barcode" value="18" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2">
+      </a-entity>
+
+      <!-- 2. SUSHI SALMON -->
+      <a-entity mindar-image-target="targetIndex: 2" data-product-key="nigiri">
         <a-entity
           gltf-model="#nigiri-model"
-          scale="0.06 0.06 0.06"
-          position="0 0.03 0"
+          scale="0.2 0.2 0.2"
+          position="0 0 0"
           rotation="0 0 0"
           model-center
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+          drag-rotate-scale="minScale: 0.1; maxScale: 1; rotationFactor: 0.5">
         </a-entity>
-      </a-marker>
-      <a-marker type="barcode" value="19" emitevents="true" smooth="true" smoothCount="4" smoothTolerance="0.02" smoothThreshold="2">
+      </a-entity>
+
+      <!-- 3. SUSHI (Main) -->
+      <a-entity mindar-image-target="targetIndex: 3" data-product-key="sushi">
         <a-entity
-          gltf-model="#ramen-model"
-          scale="0.75 0.75 0.75"
-          position="0 0.02 0"
+          gltf-model="#sushi-model"
+          scale="0.2 0.2 0.2"
+          position="0 0 0"
           rotation="0 0 0"
           model-center
-          drag-rotate-scale="minScale: 0.5; maxScale: 2; rotationFactor: 0.5">
+          drag-rotate-scale="minScale: 0.1; maxScale: 1; rotationFactor: 0.5">
         </a-entity>
-      </a-marker>
+      </a-entity>
 
       <a-entity light="type: ambient; color: #FFF; intensity: 1.2"></a-entity>
       <a-entity light="type: directional; color: #FFF; intensity: 0.6" position="-1 1 1"></a-entity>
@@ -700,29 +585,33 @@
           .catch(function () { return []; });
       }
 
-      function createDynamicNftMarkers(platos) {
+      function updateMindARTargets(platos) {
         var scene = document.querySelector('a-scene');
         if (!scene) return;
         platos.forEach(function (plato) {
-          if (!plato.nftPath || !plato.modelPath || !plato.id) return;
-          var marker = document.createElement('a-nft');
-          marker.setAttribute('type', 'nft');
-          marker.setAttribute('url', plato.nftPath);
-          marker.setAttribute('emitevents', 'true');
-          marker.setAttribute('smooth', 'true');
-          marker.setAttribute('smoothCount', '4');
-          marker.setAttribute('smoothTolerance', '0.02');
-          marker.setAttribute('smoothThreshold', '2');
-          marker.setAttribute('marker-model', 'dishId: ' + plato.id);
+          if (plato.targetIndex === undefined) return;
+          
+          // Buscar el target existente por índice
+          var targetEntity = document.querySelector(`[mindar-image-target="targetIndex: ${plato.targetIndex}"]`);
+          if (!targetEntity) return;
+
+          // Limpiar contenido previo si es necesario o actualizar
+          // En este caso, asumimos que platos.json tiene la verdad
+          targetEntity.setAttribute('data-product-key', plato.id);
+          
+          // Eliminar hijos previos (modelos por defecto)
+          while (targetEntity.firstChild) {
+            targetEntity.removeChild(targetEntity.firstChild);
+          }
+
           var entity = document.createElement('a-entity');
           entity.setAttribute('gltf-model', plato.modelPath);
-          entity.setAttribute('scale', plato.scale || '1 1 1');
+          entity.setAttribute('scale', plato.scale || '0.2 0.2 0.2');
           entity.setAttribute('position', plato.position || '0 0 0');
           entity.setAttribute('rotation', plato.rotation || '0 0 0');
           entity.setAttribute('model-center', '');
-          entity.setAttribute('drag-rotate-scale', 'minScale: 0.5; maxScale: 2; rotationFactor: 0.5');
-          marker.appendChild(entity);
-          scene.appendChild(marker);
+          entity.setAttribute('drag-rotate-scale', 'minScale: 0.1; maxScale: 1; rotationFactor: 0.5');
+          targetEntity.appendChild(entity);
         });
       }
 
@@ -750,15 +639,17 @@
 
       window.addEventListener('load', function () {
         if (isLiteMode()) {
-          var heavyMarkers = document.querySelectorAll('a-nft[data-lite="extra"], a-marker[data-lite="extra"]');
-          heavyMarkers.forEach(function (m) {
+          var heavyTargets = document.querySelectorAll('[mindar-image-target][data-lite="extra"]');
+          heavyTargets.forEach(function (m) {
             if (m.parentNode) {
               m.parentNode.removeChild(m);
             }
           });
         }
         preloadKeyDishModels();
-        loadPlatosJson().then(createDynamicNftMarkers);
+        loadPlatosJson()
+          .then(updateMindARTargets)
+          .then(applyAdminOverrides);
       });
 
       // Panel de información del plato asociado al marcador actualmente visible.
@@ -816,43 +707,43 @@
         modelLoader.classList.remove('visible');
       }
       
-      // Integra dinámicamente en la escena los platos que se hayan creado
-      // desde el panel administrativo (menu-visual.html) utilizando localStorage.
-      (function integrateAdminDishes() {
-        let raw;
+      function applyAdminOverrides() {
+        var raw;
         try {
           raw = localStorage.getItem(adminStorageKey);
         } catch (e) {
           return;
         }
         if (!raw) return;
-        let platos;
+        var platos;
         try {
           platos = JSON.parse(raw);
         } catch (e) {
           return;
         }
         if (!Array.isArray(platos)) return;
-        const scene = document.querySelector('a-scene');
+        
+        var scene = document.querySelector('a-scene');
         if (!scene) return;
-        const assets = scene.querySelector('a-assets');
+        var assets = scene.querySelector('a-assets');
         if (!assets) return;
+
         platos.forEach(function(p) {
-          if (!p || !p.marcador || !p.modelo || !p.imagen || !p.nombre || !p.precio || !p.descripcion || !p.tipo) {
+          if (!p || !p.marcador || !p.modelo || !p.imagen || !p.nombre || !p.precio || !p.descripcion) {
             return;
           }
-          const modelId = 'admin-model-' + p.marcador;
+          var modelId = 'admin-model-' + p.marcador;
           if (!assets.querySelector('#' + modelId)) {
-            const asset = document.createElement('a-asset-item');
+            var asset = document.createElement('a-asset-item');
             asset.setAttribute('id', modelId);
-            let src = p.modelo;
+            var src = p.modelo;
             if (src.indexOf('./') !== 0) {
               src = './' + src.replace(/^\/+/, '');
             }
             asset.setAttribute('src', src);
             assets.appendChild(asset);
           }
-          const productsKey = p.marcador;
+          var productsKey = p.marcador;
           if (!products[productsKey]) {
             products[productsKey] = {
               title: p.nombre,
@@ -863,48 +754,35 @@
           if (!modelImages[modelId]) {
             modelImages[modelId] = p.imagen;
           }
-          const tipo = p.tipo;
-          const folder = 'sushi';
-          const markerUrl = "./markers/" + p.marcador;
-          const nft = document.createElement('a-nft');
-          nft.setAttribute('type', 'nft');
-          nft.setAttribute('url', markerUrl);
-          nft.setAttribute('emitevents', 'true');
-          nft.setAttribute('smooth', 'true');
-          nft.setAttribute('smoothCount', '20');
-          nft.setAttribute('smoothTolerance', '0.002');
-          nft.setAttribute('smoothThreshold', '2');
-          nft.setAttribute('data-product-key', productsKey);
-          const entity = document.createElement('a-entity');
-          const baseModelId = '#' + modelId;
-          let scale = '1 1 1';
-          entity.setAttribute('gltf-model', baseModelId);
-          entity.setAttribute('scale', scale);
-          entity.setAttribute('position', '0 0 0');
-          entity.setAttribute('rotation', '0 0 0');
-          entity.setAttribute('model-center', '');
-          entity.setAttribute('drag-rotate-scale', 'minScale: 0.5; maxScale: 2; rotationFactor: 0.5');
-          nft.appendChild(entity);
-          scene.appendChild(nft);
+
+          // MindAR requiere compilación previa de targets, por lo que no podemos crear nuevos targets dinámicamente.
+          // Solo actualizamos el contenido si el plato tiene un targetIndex válido que coincida con uno existente.
+          if (p.targetIndex !== undefined) {
+             var targetEntity = document.querySelector(`[mindar-image-target="targetIndex: ${p.targetIndex}"]`);
+             if (targetEntity) {
+               targetEntity.setAttribute('data-product-key', p.marcador);
+               // Limpiar contenido previo
+               while (targetEntity.firstChild) {
+                 targetEntity.removeChild(targetEntity.firstChild);
+               }
+               // Crear nueva entidad con el modelo
+               var entity = document.createElement('a-entity');
+               entity.setAttribute('gltf-model', '#' + modelId);
+               entity.setAttribute('scale', '0.2 0.2 0.2'); 
+               entity.setAttribute('position', '0 0 0');
+               entity.setAttribute('rotation', '0 0 0');
+               entity.setAttribute('model-center', '');
+               entity.setAttribute('drag-rotate-scale', 'minScale: 0.1; maxScale: 1; rotationFactor: 0.5');
+               targetEntity.appendChild(entity);
+             }
+          }
         });
-      })();
+      }
       
-      // A partir del marcador detectado (NFT, patrón .patt o código de barras),
+      // A partir del target detectado (MindAR),
       // intenta deducir qué clave de producto mostrar en el panel lateral.
-      function getProductKeyFromMarker(marker) {
-        const custom = marker.getAttribute('data-product-key');
-        if (custom) return custom;
-        const url = marker.getAttribute('url') || '';
-        const value = marker.getAttribute('value');
-        if (url.indexOf('sushi_roll') !== -1 || url.indexOf('sushi_rolls') !== -1) return 'sushi_rolls';
-        if (url.indexOf('sushi_salmon') !== -1 || url.indexOf('nigiri') !== -1) return 'nigiri';
-        if (url.indexOf('ramen') !== -1) return 'ramen';
-        if (url.indexOf('sushi') !== -1) return 'sushi';
-        if (value === '6') return 'sushi';
-        if (value === '17') return 'sushi_rolls';
-        if (value === '18') return 'nigiri';
-        if (value === '19') return 'ramen';
-        return null;
+      function getProductKeyFromTarget(target) {
+        return target.getAttribute('data-product-key') || null;
       }
       
       function hideGlobalLoader() {
@@ -985,29 +863,29 @@
       });
       
       ;(() => {
-        const markers = Array.from(document.querySelectorAll('a-marker, a-nft'));
-        let activeMarker = null;
-        const visibleMarkers = new Set();
+        const targets = Array.from(document.querySelectorAll('[mindar-image-target]'));
+        let activeTarget = null;
+        const visibleTargets = new Set();
         let trackingFrozen = false;
 
-        function setActiveMarker(marker) {
-          activeMarker = marker;
-          markers.forEach(m => {
-            m.object3D.visible = (m === activeMarker);
+        function setActiveTarget(target) {
+          activeTarget = target;
+          targets.forEach(t => {
+            t.object3D.visible = (t === activeTarget);
           });
-          const key = getProductKeyFromMarker(marker);
+          const key = getProductKeyFromTarget(target);
           if (key) showProduct(key);
         }
 
-        markers.forEach(m => {
-          m.addEventListener('markerFound', () => {
-            if (trackingFrozen && activeMarker) {
+        targets.forEach(t => {
+          t.addEventListener('targetFound', () => {
+            if (trackingFrozen && activeTarget) {
               return;
             }
-            console.log('markerFound', m.getAttribute('url') || m.getAttribute('value') || m.getAttribute('type'));
-            visibleMarkers.add(m);
-            if (!activeMarker) {
-              setActiveMarker(m);
+            console.log('targetFound', t.getAttribute('mindar-image-target'));
+            visibleTargets.add(t);
+            if (!activeTarget) {
+              setActiveTarget(t);
               if (isLiteMode()) {
                 trackingFrozen = true;
               }
@@ -1015,21 +893,21 @@
             hideGlobalLoader();
           });
 
-          m.addEventListener('markerLost', () => {
+          t.addEventListener('targetLost', () => {
             if (trackingFrozen) {
               return;
             }
-            console.log('markerLost', m.getAttribute('url') || m.getAttribute('value') || m.getAttribute('type'));
-            visibleMarkers.delete(m);
+            console.log('targetLost', t.getAttribute('mindar-image-target'));
+            visibleTargets.delete(t);
 
-            if (activeMarker === m) {
-              if (visibleMarkers.size === 0) {
-                activeMarker = null;
+            if (activeTarget === t) {
+              if (visibleTargets.size === 0) {
+                activeTarget = null;
                 hideProduct();
-                markers.forEach(x => { x.object3D.visible = true; });
+                targets.forEach(x => { x.object3D.visible = true; });
               } else {
-                const next = Array.from(visibleMarkers)[visibleMarkers.size - 1];
-                setActiveMarker(next);
+                const next = Array.from(visibleTargets)[visibleTargets.size - 1];
+                setActiveTarget(next);
               }
             }
           });
@@ -1037,10 +915,10 @@
 
         window.resetARTracking = function () {
           trackingFrozen = false;
-          activeMarker = null;
-          visibleMarkers.clear();
+          activeTarget = null;
+          visibleTargets.clear();
           hideProduct();
-          markers.forEach(function (x) {
+          targets.forEach(function (x) {
             x.object3D.visible = true;
           });
         };

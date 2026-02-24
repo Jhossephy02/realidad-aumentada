@@ -6,12 +6,51 @@
       "precio": 25.0,
       "descripcion": "Makis New Styles de Zelva Nikkei (Amazon, Anticuchero, Banzai, Kaminaki, Parrillero, Pulpo al Olivo, Jalea).",
       "categoria": "sushi",
-      "nftPath": "markers/sushi",
+      "targetIndex": 3,
       "modelPath": "models/sushi/sushi.glb",
-      "scale": "0.25 0.25 0.25",
-      "rotation": "-90 0 0",
+      "scale": "0.2 0.2 0.2",
+      "rotation": "0 0 0",
       "position": "0 0 0",
       "imagenMenu": "img/sushi/sushi.png"
+    },
+    {
+      "id": "ramen",
+      "nombre": "Zelva Ramen",
+      "precio": 32.0,
+      "descripcion": "Ramen de la casa, ideal para el frío y para experiencias AR inmersivas.",
+      "categoria": "sushi",
+      "targetIndex": 0,
+      "modelPath": "models/sushi/shrimp_ramen_bowl.glb",
+      "scale": "0.2 0.2 0.2",
+      "rotation": "0 0 0",
+      "position": "0 0 0",
+      "imagenMenu": "img/sushi/ramen.png"
+    },
+    {
+      "id": "sushi_roll",
+      "nombre": "Volcano Roll",
+      "precio": 25.0,
+      "descripcion": "Delicioso rollo con salsa volcánica y relleno especial.",
+      "categoria": "sushi",
+      "targetIndex": 1,
+      "modelPath": "models/sushi/sushi_rolls.glb",
+      "scale": "0.2 0.2 0.2",
+      "rotation": "0 0 0",
+      "position": "0 0 0",
+      "imagenMenu": "img/sushi/sushi_roll.png"
+    },
+    {
+      "id": "sushi_salmon",
+      "nombre": "Nigiris Especiales",
+      "precio": 15.0,
+      "descripcion": "Selección de nigiris con salmón fresco y toques cítricos.",
+      "categoria": "sushi",
+      "targetIndex": 2,
+      "modelPath": "models/sushi/salmon_nigiri.glb",
+      "scale": "0.2 0.2 0.2",
+      "rotation": "0 0 0",
+      "position": "0 0 0",
+      "imagenMenu": "img/sushi/sushi_salmon.png"
     }
   ]
 }

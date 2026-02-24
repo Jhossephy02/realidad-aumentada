@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carta Imprimible - Menú AR</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 0;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Georgia', serif;
+      background: #fff;
+    }
+    
+    .page {
+      width: 210mm;
+      height: 297mm;
+      padding: 20mm;
+      margin: 0 auto;
+      background: #faf7f2;
+      position: relative;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      border-bottom: 3px solid #2c3e50;
+      padding-bottom: 20px;
+    }
+    
+    .header h1 {
+      font-size: 42px;
+      color: #2c3e50;
+      margin-bottom: 5px;
+      font-weight: 700;
+      letter-spacing: 2px;
+    }
+    
+    .header p {
+      font-size: 16px;
+      color: #7f8c8d;
+      font-style: italic;
+    }
+    
+    .ar-info {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .ar-info h2 {
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+    
+    .ar-info p {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    
+    .menu-section {
+      margin-bottom: 30px;
+    }
+    
+    .section-title {
+      font-size: 20px;
+      letter-spacing: 1px;
+      color: #2c3e50;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #e0d2c1;
+      padding-bottom: 5px;
+    }
+    
+    .menu-item {
+      display: grid;
+      grid-template-columns: 150px 1fr;
+      gap: 16px;
+      margin-bottom: 22px;
+      padding: 15px 0;
+      border-bottom: 1px dashed #bdc3c7;
+      page-break-inside: avoid;
+    }
+    
+    .menu-item:last-child {
+      border-bottom: none;
+    }
+    
+    .item-image {
+      width: 150px;
+      height: 150px;
+      background: #ecf0f1;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      border: 2px solid #e0e0e0;
+    }
+    
+    /* Aquí van las imágenes reales */
+    .item-image.cafe {
+      background: linear-gradient(135deg, #d4a574 0%, #8b6f47 100%);
+    }
+    
+    .item-image.sushi {
+      background: linear-gradient(135deg, #fff4e6 0%, #ffe0b2 100%);
+    }
+    
+    .item-image.pizza {
+      background: linear-gradient(135deg, #ffccbc 0%, #ff8a65 100%);
+    }
+    
+    .item-image.burger {
+      background: linear-gradient(135deg, #fff9c4 0%, #ffd54f 100%);
+    }
+    
+    .item-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .ar-icon {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(255, 71, 87, 0.95);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    
+    .item-content {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+    
+    .item-name {
+      font-size: 26px;
+      color: #2c3e50;
+      font-weight: 700;
+    }
+    
+    .item-price {
+      font-size: 24px;
+      color: #e74c3c;
+      font-weight: 700;
+    }
+    
+    .item-description {
+      font-size: 14px;
+      color: #5a6c7d;
+      line-height: 1.5;
+      margin-bottom: 10px;
+    }
+    
+    .item-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .qr-code-small {
+      width: 50px;
+      height: 50px;
+      background: #000;
+      border-radius: 6px;
+    }
+    
+    .barcode-label {
+      font-size: 12px;
+      color: #7f8c8d;
+      background: #ecf0f1;
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+
+    .nft-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .nft-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #ffffff;
+      border: 1px solid #e0d2c1;
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+
+    .nft-code {
+      width: 90px;
+      height: 90px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid #dcdfe3;
+      background: #fff;
+    }
+
+    .nft-label {
+      font-size: 13px;
+      color: #2c3e50;
+      font-weight: 700;
+    }
+
+    .nft-sub {
+      font-size: 12px;
+      color: #7f8c8d;
+      margin-top: 4px;
+    }
+    
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 2px solid #ecf0f1;
+      color: #7f8c8d;
+      font-size: 12px;
+    }
+    
+    @media print {
+      .page {
+        margin: 0;
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <h1>🍣 Zelva Nikkei · Menú AR</h1>
+      <p>Platos seleccionados del restaurante Zelva Nikkei con Realidad Aumentada</p>
+    </div>
+    
+    <div class="ar-info">
+      <h2>📱 Activa la Realidad Aumentada</h2>
+      <p>Escanea los códigos QR con tu smartphone para ver cada platillo en 3D</p>
+    </div>
+
+    <div class="menu-section">
+      <h2 class="section-title">Experiencia AR</h2>
+      <div class="nft-grid">
+        <div class="nft-item">
+          <img class="nft-code" src="../img/sushi/sushi_roll.png" alt="Volcano Roll">
+          <div>
+            <div class="nft-label">Volcano Roll</div>
+            <div class="nft-sub">Escanea esta imagen</div>
+          </div>
+        </div>
+        <div class="nft-item">
+          <img class="nft-code" src="../img/sushi/sushi_salmon.png" alt="Nigiris especiales">
+          <div>
+            <div class="nft-label">Nigiris especiales</div>
+            <div class="nft-sub">Escanea esta imagen</div>
+          </div>
+        </div>
+        <div class="nft-item">
+          <img class="nft-code" src="../img/sushi/ramen.png" alt="Zelva Ramen">
+          <div>
+            <div class="nft-label">Zelva Ramen</div>
+            <div class="nft-sub">Escanea esta imagen</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="menu-section">
+      <h2 class="section-title">Especialidades Zelva Nikkei en AR</h2>
+      <div class="menu-item">
+        <div class="item-image sushi">
+          <img src="../img/sushi/sushi.png" alt="Makis New Styles">
+          <div class="ar-icon">AR 📱</div>
+        </div>
+        <div class="item-content">
+          <div>
+            <div class="item-header">
+              <h3 class="item-name">Makis New Styles (10 pzs)</h3>
+              <div class="item-price">S/ 25.00</div>
+            </div>
+            <p class="item-description">
+              Selección de makis New Styles (Amazon, Anticuchero, Banzai, Kaminaki, Parrillero, Pulpo al Olivo, Jalea).
+            </p>
+          </div>
+          <div class="item-footer">
+            <div class="barcode-label">Disponible en AR</div>
+          </div>
+        </div>
+      </div>
+      <div class="menu-item">
+        <div class="item-image sushi">
+          <img src="../img/sushi/ramen.png" alt="Zelva Ramen">
+          <div class="ar-icon">AR 📱</div>
+        </div>
+        <div class="item-content">
+          <div>
+            <div class="item-header">
+              <h3 class="item-name">Zelva Ramen</h3>
+              <div class="item-price">S/ 32.00</div>
+            </div>
+            <p class="item-description">
+              Ramen de la casa, ideal para el frío y para experiencias AR inmersivas.
+            </p>
+          </div>
+          <div class="item-footer">
+            <div class="barcode-label">Disponible en AR</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="menu-section">
+      <h2 class="section-title">🍣 Nigiris y Sashimis</h2>
+      <h3 class="item-name">Nigiris clásicos (2 bocados)</h3>
+      <p class="item-description">
+        Trucha – S/ 12 · Pesca del día – S/ 12
+      </p>
+      <h3 class="item-name">Nigiris especiales (2 bocados) – todos S/ 15</h3>
+      <p class="item-description">
+        Inca Nigiri · Misoyaki · Pasión · Coco Beach · Hotate Spicy
+      </p>
+      <h3 class="item-name">Gunkan – todos S/ 15</h3>
+      <p class="item-description">
+        Gunkan de Pulpo · Gunkan de Kani
+      </p>
+      <h3 class="item-name">Sashimi (2 bocados)</h3>
+      <p class="item-description">
+        Trucha – S/ 12 · Pesca del día – S/ 12
+      </p>
+    </div>
+
+    <div class="menu-section">
+      <h2 class="section-title">🐟 Ceviches y Tiraditos</h2>
+      <h3 class="item-name">Ceviches</h3>
+      <p class="item-description">
+        Clásico – S/ 35 · Carretillero – S/ 42 · Regional – S/ 35 · Olvidado – S/ 30
+      </p>
+      <h3 class="item-name">Tiraditos</h3>
+      <p class="item-description">
+        Tataki Acevichado – S/ 20 · Tiradito Nikkei (8 rollitos) – S/ 30 · Tiradito Pasión (8 rollitos) – S/ 30 · Tiradito Yuzu (8 rollitos) – S/ 30 · Tiradito Thai (8 rollitos) – S/ 30
+      </p>
+    </div>
+
+    <div class="menu-section">
+      <h2 class="section-title">🍱 Makis · New Styles</h2>
+      <h3 class="item-name">10 piezas – S/ 25</h3>
+      <p class="item-description">
+        Amazon · Anticuchero · Banzai · Kaminaki · Parrillero · Pulpo al Olivo · Jalea
+      </p>
+      <h3 class="item-name">5 piezas – S/ 19</h3>
+      <p class="item-description">
+        Volcano · Yuzu · Oishi · Coco Beach · Kikuya · Kiiro
+      </p>
+    </div>
+
+    <div class="menu-section">
+      <h2 class="section-title">🍙 Classic Makis</h2>
+      <h3 class="item-name">Acevichado</h3>
+      <p class="item-description">
+        10 pzs – S/ 23 · 5 pzs – S/ 17
+      </p>
+      <h3 class="item-name">Otros Classic Makis</h3>
+      <p class="item-description">
+        California · Furai · Philadelphia · Sayonara · Shake · Yakusa
+      </p>
+    </div>
+
+    <div class="menu-section">
+      <h2 class="section-title">🍛 Dieta y Arroces</h2>
+      <h3 class="item-name">Dieta / platos especiales</h3>
+      <p class="item-description">
+        Dieta de Pollo – S/ 25 · Paco / Gamitana al Curry – S/ 45
+      </p>
+      <h3 class="item-name">Arroces</h3>
+      <p class="item-description">
+        Chanchito Nikkei – S/ 40 · Pato Borracho – S/ 50 · Tacu Tacu a lo Macho – S/ 45 · Arroz con Mariscos – S/ 45 · Zelva Yakimeshi – S/ 48 · Shipibo Rice – S/ 40 · Porción de Arroz Thai – S/ 12
+      </p>
+    </div>
+
+    <div class="menu-section">
+      <h2 class="section-title">🍛 Platos variados</h2>
+      <h3 class="item-name">A la plancha</h3>
+      <p class="item-description">
+        Pollo Canga – S/ 30 · Paiche Banzai – S/ 38 · Pollo a la plancha – S/ 30
+      </p>
+      <h3 class="item-name">Saltados</h3>
+      <p class="item-description">
+        Wildpick Regional – S/ 38 · Lomo Saltado Nikkei – S/ 45 · Nikkei a lo Pobre – S/ 45
+      </p>
+      <h3 class="item-name">Alitas (6 piezas) – todas S/ 30</h3>
+      <p class="item-description">
+        BBQ Wings · Teriyaki Wings · Acevichadas Wings · Thai Wings · Zelva Wings
+      </p>
+    </div>
+
+    <div class="menu-section">
+      <h2 class="section-title">🍢 Para picotear</h2>
+      <p class="item-description">
+        Tori Karaage – S/ 30 · Ebi Karaage – S/ 40 · Zakana Karaage – S/ 30 · Tequeños Nikkei (10) – S/ 26 · Tequeños Clásicos (10) – S/ 26 · Yakimeshi Thai – S/ 30
+      </p>
+    </div>
+
+    <div class="footer">
+      <p>Todos nuestros platillos están disponibles para visualizar en Realidad Aumentada</p>
+      <p style="margin-top: 5px;">Escanea el código QR con tu smartphone para una experiencia inmersiva</p>
+    </div>
+  </div>
+</body>
+</html>

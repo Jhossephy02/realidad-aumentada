@@ -483,9 +483,116 @@
         object-fit: cover;
         z-index: -2;
       }
+      .dish-selector {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #000;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        padding: 20px;
+        box-sizing: border-box;
+      }
+      .dish-selector.hidden {
+        display: none;
+      }
+      .dish-selector h2 {
+        margin-bottom: 20px;
+        text-align: center;
+        color: #ff9f43;
+      }
+      .dish-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        width: 100%;
+        max-width: 400px;
+      }
+      .dish-btn {
+        background: #2d3436;
+        border: 2px solid #636e72;
+        border-radius: 12px;
+        padding: 15px;
+        text-align: center;
+        color: #fff;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      .dish-btn:active {
+        transform: scale(0.95);
+        background: #00cec9;
+        border-color: #00cec9;
+      }
+      .dish-btn img {
+        width: 60px;
+        height: 60px;
+        object-fit: contain;
+        margin-bottom: 10px;
+      }
+      .dish-btn span {
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .back-btn {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 1001;
+        background: rgba(0,0,0,0.6);
+        color: #fff;
+        padding: 8px 12px;
+        border-radius: 20px;
+        text-decoration: none;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
     </style>
   </head>
   <body>
+    <!-- Selector de Platos (Fallback si no hay targets compilados) -->
+    <div id="dish-selector" class="dish-selector hidden">
+      <h2>Selecciona un Plato</h2>
+      <div class="dish-grid">
+        <a href="?dish=ramen" class="dish-btn">
+          <img src="img/sushi/ramen.png" alt="Ramen">
+          <span>Zelva Ramen</span>
+        </a>
+        <a href="?dish=sushi_roll" class="dish-btn">
+          <img src="img/sushi/sushi_roll.png" alt="Rolls">
+          <span>Volcano Roll</span>
+        </a>
+        <a href="?dish=sushi_salmon" class="dish-btn">
+          <img src="img/sushi/sushi_salmon.png" alt="Nigiri">
+          <span>Nigiris</span>
+        </a>
+        <a href="?dish=sushi" class="dish-btn">
+          <img src="img/sushi/sushi.png" alt="Makis">
+          <span>Makis New Styles</span>
+        </a>
+      </div>
+      <p style="margin-top: 30px; font-size: 12px; opacity: 0.7; text-align: center;">
+        Selecciona el plato que deseas escanear.<br>Esto cargará el archivo de rastreo específico.
+      </p>
+    </div>
+
+    <!-- Botón Volver -->
+    <a href="?" id="back-btn" class="back-btn hidden">
+      <span>⬅</span> Menú
+    </a>
+
     <div class="flash" id="flash-effect"></div>
 
     <div id="model-loader">
@@ -530,7 +637,7 @@
          - filterMinCF / filterBeta: Suavizado de movimiento
     -->
     <a-scene
-      mindar-image="imageTargetSrc: ./targets/targets.mind; filterMinCF:0.0001; filterBeta: 0.001; uiLoading: no; missTolerance: 10; warmupTolerance: 1; autoStart: true;"
+      mindar-image="filterMinCF:0.0001; filterBeta: 0.001; uiLoading: no; missTolerance: 10; warmupTolerance: 1; autoStart: false;"
       color-space="sRGB"
       renderer="colorManagement: true, physicallyCorrectLights"
       vr-mode-ui="enabled: false"
@@ -664,11 +771,64 @@
 
       // Función eliminada: preloadKeyDishModels (ahora usamos carga diferida post-AR)
 
-      // Configuración de carga y manejo de eventos AR
+      // Manejo del Selector de Platos y Configuración Dinámica de AR
       document.addEventListener('DOMContentLoaded', function() {
-        var scene = document.querySelector('a-scene');
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentDish = urlParams.get('dish');
+        const selector = document.getElementById('dish-selector');
+        const backBtn = document.getElementById('back-btn');
+        const scene = document.querySelector('a-scene');
+
+        if (!currentDish) {
+          // Mostrar selector, no iniciar AR
+          selector.classList.remove('hidden');
+          // Ocultar loader global si está activo
+          if(document.getElementById('global-loader')) {
+             document.getElementById('global-loader').style.display = 'none';
+          }
+          return; // Detener inicialización de AR
+        }
+
+        // Si hay plato seleccionado:
+        selector.classList.add('hidden');
+        backBtn.classList.remove('hidden');
         
-        // 2. Cargar configuración dinámica (si existe)
+        // Mapeo de claves a archivos .mind individuales
+        const targetMap = {
+          'ramen': 'ramen.mind',
+          'sushi_roll': 'roll.mind',
+          'sushi_salmon': 'salmon.mind',
+          'sushi': 'sushi.mind'
+        };
+        
+        const mindFile = targetMap[currentDish];
+        if (!mindFile) {
+          alert('Plato no encontrado. Redirigiendo al menú.');
+          window.location.href = '?';
+          return;
+        }
+
+        console.log('Iniciando AR para:', currentDish, 'con archivo:', mindFile);
+
+        // 1. Configurar mindar-image en la escena
+        // Nota: Es mejor establecer esto antes de que A-Frame inicialice, pero aquí usamos setAttribute
+        // que reiniciará el sistema si es necesario.
+        scene.setAttribute('mindar-image', `imageTargetSrc: ./targets/${mindFile}; filterMinCF:0.0001; filterBeta: 0.001; uiLoading: no; missTolerance: 10; warmupTolerance: 1; autoStart: true;`);
+
+        // 2. Activar solo la entidad correspondiente y ajustar su targetIndex a 0
+        // (Porque los archivos individuales suelen tener el target en índice 0)
+        const entities = document.querySelectorAll('[mindar-image-target]');
+        entities.forEach(el => {
+          if (el.dataset.productKey === currentDish) {
+            el.setAttribute('mindar-image-target', 'targetIndex: 0');
+            console.log('Activando entidad:', currentDish);
+          } else {
+            // Eliminar entidades que no corresponden para evitar conflictos
+            el.parentNode.removeChild(el);
+          }
+        });
+        
+        // Cargar configuración dinámica (si existe)
         loadPlatosJson()
           .then(updateMindARTargets)
           .then(applyAdminOverrides);

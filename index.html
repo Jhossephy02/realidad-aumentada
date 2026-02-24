@@ -606,7 +606,7 @@
       <span>Menú AR</span>
     </div>
 
-    <div class="ar-loader" id="global-loader">
+    <div class="ar-loader" id="global-loader" style="display: none;">
       <div class="loader-spinner"></div>
       <div id="loader-text" style="margin-top: 10px; font-size: 14px;">Iniciando cámara...</div>
     </div>
@@ -826,6 +826,10 @@
       // que reiniciará el sistema si es necesario.
       console.log('Iniciando AR para:', currentDish, 'con archivo:', mindFile);
       scene.setAttribute('mindar-image', `imageTargetSrc: ./targets/${mindFile}; filterMinCF:0.0001; filterBeta: 0.001; uiLoading: no; missTolerance: 10; warmupTolerance: 1; autoStart: true;`);
+      
+      // Asegurar que no haya UI de carga
+      const gl = document.getElementById('global-loader');
+      if (gl) gl.style.display = 'none';
         
         // Cargar configuración dinámica (si existe)
         loadPlatosJson()

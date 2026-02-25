@@ -10,31 +10,6 @@
     
     <style>
       body { margin: 0; overflow: hidden; font-family: sans-serif; }
-      /* Force video to fill screen on mobile */
-      .arjs-loader {
-        height: 100%;
-        width: 100%;
-        position: absolute;
-        top: 0;
-        left: 0;
-        background-color: rgba(0, 0, 0, 0.8);
-        z-index: 9999;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-      
-      /* Fix for AR.js video size on mobile */
-      video {
-        width: 100% !important;
-        height: 100% !important;
-        object-fit: cover !important;
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-        z-index: -1 !important;
-        margin: 0 !important;
-      }
       
       .ui-overlay {
         position: fixed;
@@ -78,7 +53,7 @@
     <!-- AR.js Scene Setup for 3x3 Barcodes -->
     <a-scene 
       embedded 
-      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; canvasWidth: 1920; canvasHeight: 1080;"
+      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; sourceWidth:1280; sourceHeight:960; displayWidth: 1280; displayHeight: 960;"
       renderer="logarithmicDepthBuffer: true; colorManagement: true;"
       vr-mode-ui="enabled: false">
 

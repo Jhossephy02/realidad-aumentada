@@ -10,6 +10,32 @@
     
     <style>
       body { margin: 0; overflow: hidden; font-family: sans-serif; }
+      /* Force video to fill screen on mobile */
+      .arjs-loader {
+        height: 100%;
+        width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        background-color: rgba(0, 0, 0, 0.8);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      
+      /* Fix for AR.js video size on mobile */
+      video {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        z-index: -1 !important;
+        margin: 0 !important;
+      }
+      
       .ui-overlay {
         position: fixed;
         top: 20px;
@@ -52,7 +78,7 @@
     <!-- AR.js Scene Setup for 3x3 Barcodes -->
     <a-scene 
       embedded 
-      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; canvasWidth: 1920; canvasHeight: 1080;"
       renderer="logarithmicDepthBuffer: true; colorManagement: true;"
       vr-mode-ui="enabled: false">
 
@@ -69,8 +95,7 @@
           gltf-model="#ramen-model" 
           scale="0.4 0.4 0.4" 
           rotation="0 0 0"
-          position="0 0 0"
-          animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear">
+          position="0 0 0">
         </a-entity>
         <a-text value="Zelva Ramen" position="0 0.8 0" align="center" color="#FFF" scale="2 2 2"></a-text>
       </a-marker>
@@ -81,8 +106,7 @@
           gltf-model="#roll-model" 
           scale="0.4 0.4 0.4" 
           rotation="0 0 0"
-          position="0 0 0"
-          animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear">
+          position="0 0 0">
         </a-entity>
         <a-text value="Volcano Roll" position="0 0.8 0" align="center" color="#FFF" scale="2 2 2"></a-text>
       </a-marker>
@@ -93,8 +117,7 @@
           gltf-model="#salmon-model" 
           scale="0.4 0.4 0.4" 
           rotation="0 0 0"
-          position="0 0 0"
-          animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear">
+          position="0 0 0">
         </a-entity>
         <a-text value="Nigiris" position="0 0.8 0" align="center" color="#FFF" scale="2 2 2"></a-text>
       </a-marker>
@@ -105,8 +128,7 @@
           gltf-model="#sushi-model" 
           scale="0.4 0.4 0.4" 
           rotation="0 0 0"
-          position="0 0 0"
-          animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear">
+          position="0 0 0">
         </a-entity>
         <a-text value="Makis" position="0 0.8 0" align="center" color="#FFF" scale="2 2 2"></a-text>
       </a-marker>

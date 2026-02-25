@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Marcadores para Escanear</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; }
+        .marker-container { display: inline-block; margin: 20px; text-align: center; vertical-align: top; }
+        img { width: 200px; height: 200px; border: 2px solid black; display: block; margin: 0 auto; }
+        h1 { color: #333; }
+        .btn { padding: 15px 30px; background: #28a745; color: white; text-decoration: none; border-radius: 5px; margin-top: 30px; display: inline-block; font-size: 1.2em; font-weight: bold; }
+        .note { color: #666; font-size: 0.9em; margin-top: 5px; }
+        .error-help { color: red; display: none; margin-top: 10px; }
+    </style>
+    <script>
+        function handleImageError(id) {
+            document.getElementById('error-' + id).style.display = 'block';
+        }
+    </script>
+</head>
+<body>
+    <h1>Marcadores AR (Códigos de Barras 3x3)</h1>
+    <p>Abre <b>index.html</b> en tu móvil y apunta a estos códigos.</p>
+    
+    <div class="marker-container">
+        <h3>0: Ramen</h3>
+        <img src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/0.png" 
+             alt="Barcode 0" 
+             onerror="handleImageError(0)">
+        <div id="error-0" class="error-help">
+            Error cargando imagen.<br>
+            <a href="https://github.com/nicolocarpignoli/artoolkit-barcode-markers-collection/blob/master/3x3/0.png" target="_blank">Ver en GitHub</a>
+        </div>
+    </div>
+
+    <div class="marker-container">
+        <h3>1: Roll</h3>
+        <img src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/1.png" 
+             alt="Barcode 1" 
+             onerror="handleImageError(1)">
+        <div id="error-1" class="error-help">
+            Error cargando imagen.<br>
+            <a href="https://github.com/nicolocarpignoli/artoolkit-barcode-markers-collection/blob/master/3x3/1.png" target="_blank">Ver en GitHub</a>
+        </div>
+    </div>
+
+    <div class="marker-container">
+        <h3>2: Salmón</h3>
+        <img src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/2.png" 
+             alt="Barcode 2" 
+             onerror="handleImageError(2)">
+        <div id="error-2" class="error-help">
+            Error cargando imagen.<br>
+            <a href="https://github.com/nicolocarpignoli/artoolkit-barcode-markers-collection/blob/master/3x3/2.png" target="_blank">Ver en GitHub</a>
+        </div>
+    </div>
+
+    <div class="marker-container">
+        <h3>3: Sushi</h3>
+        <img src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/3.png" 
+             alt="Barcode 3" 
+             onerror="handleImageError(3)">
+        <div id="error-3" class="error-help">
+            Error cargando imagen.<br>
+            <a href="https://github.com/nicolocarpignoli/artoolkit-barcode-markers-collection/blob/master/3x3/3.png" target="_blank">Ver en GitHub</a>
+        </div>
+    </div>
+    
+    <br><br>
+    <a href="index.html" class="btn">¡Abrir Escáner (index.html)!</a>
+</body>
+</html>

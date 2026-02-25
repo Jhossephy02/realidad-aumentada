@@ -1,1108 +1,145 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>WebAR Experience</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/gh/aframevr/aframe@v1.3.0/dist/aframe-master.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-    <script>
-      // Manejador global de errores para mostrar en pantalla
-      window.onerror = function(message, source, lineno, colno, error) {
-        var errDiv = document.getElementById('debug-error');
-        if (!errDiv) {
-          errDiv = document.createElement('div');
-          errDiv.id = 'debug-error';
-          errDiv.style.position = 'fixed';
-          errDiv.style.top = '0';
-          errDiv.style.left = '0';
-          errDiv.style.width = '100%';
-          errDiv.style.background = 'rgba(255, 0, 0, 0.8)';
-          errDiv.style.color = 'white';
-          errDiv.style.zIndex = '99999';
-          errDiv.style.padding = '10px';
-          errDiv.style.fontSize = '12px';
-          errDiv.style.fontFamily = 'monospace';
-          document.body.appendChild(errDiv);
-        }
-        errDiv.innerHTML += '<div>' + message + ' at ' + source + ':' + lineno + '</div>';
-        // Ocultar loader si hay error fatal
-        var gl = document.getElementById('global-loader');
-        if (gl) gl.style.display = 'none';
-      };
-
-      // Componente reutilizable para rotar y escalar modelos 3D con mouse y gestos táctiles.
-      // Se aplica a todas las entidades que tengan el atributo `drag-rotate-scale`.
-      if (typeof AFRAME !== 'undefined') {
-        AFRAME.registerComponent('drag-rotate-scale', {
-          schema: {
-            minScale: {default: 0.5},
-            maxScale: {default: 2.5},
-            rotationFactor: {default: 0.4},
-            zoomFactor: {default: 0.015}
-          },
-          init: function () {
-            this.isDragging = false;
-            this.previousPosition = null;
-            this.initialScale = this.el.object3D.scale.x || 1;
-            this.scaleFactor = 1;
-            this.pinchDistance = null;
-            this.onMouseDown = this.handleMouseDown.bind(this);
-            this.onMouseMove = this.handleMouseMove.bind(this);
-            this.onMouseUp = this.handleMouseUp.bind(this);
-            this.onWheel = this.handleWheel.bind(this);
-            this.onTouchStart = this.handleTouchStart.bind(this);
-            this.onTouchMove = this.handleTouchMove.bind(this);
-            this.onTouchEnd = this.handleTouchEnd.bind(this);
-            var canvas = this.el.sceneEl.canvas;
-            if (canvas) {
-              this.addListeners(canvas);
-            } else {
-              this.el.sceneEl.addEventListener('loaded', () => {
-                this.addListeners(this.el.sceneEl.canvas);
-              });
-            }
-          },
-          remove: function () {
-            var canvas = this.el.sceneEl && this.el.sceneEl.canvas;
-            if (canvas) {
-              this.removeListeners(canvas);
-            }
-          },
-          addListeners: function (canvas) {
-            canvas.addEventListener('mousedown', this.onMouseDown);
-            window.addEventListener('mousemove', this.onMouseMove);
-            window.addEventListener('mouseup', this.onMouseUp);
-            canvas.addEventListener('wheel', this.onWheel, {passive: false});
-            canvas.addEventListener('touchstart', this.onTouchStart, {passive: false});
-            canvas.addEventListener('touchmove', this.onTouchMove, {passive: false});
-            canvas.addEventListener('touchend', this.onTouchEnd);
-            canvas.addEventListener('touchcancel', this.onTouchEnd);
-          },
-          removeListeners: function (canvas) {
-            canvas.removeEventListener('mousedown', this.onMouseDown);
-            window.removeEventListener('mousemove', this.onMouseMove);
-            window.removeEventListener('mouseup', this.onMouseUp);
-            canvas.removeEventListener('wheel', this.onWheel);
-            canvas.removeEventListener('touchstart', this.onTouchStart);
-            canvas.removeEventListener('touchmove', this.onTouchMove);
-            canvas.removeEventListener('touchend', this.onTouchEnd);
-            canvas.removeEventListener('touchcancel', this.onTouchEnd);
-          },
-          handleMouseDown: function (evt) {
-            this.isDragging = true;
-            this.previousPosition = {x: evt.clientX, y: evt.clientY};
-          },
-          handleMouseMove: function (evt) {
-            if (!this.isDragging) return;
-            var dx = evt.clientX - this.previousPosition.x;
-            this.previousPosition = {x: evt.clientX, y: evt.clientY};
-            var rotation = this.el.object3D.rotation;
-            rotation.y += dx * this.data.rotationFactor * 0.01;
-          },
-          handleMouseUp: function () {
-            this.isDragging = false;
-          },
-          handleWheel: function (evt) {
-            evt.preventDefault();
-            var delta = evt.deltaY;
-            var factor = this.scaleFactor - delta * this.data.zoomFactor * 0.01;
-            this.setScaleFactor(factor);
-          },
-          handleTouchStart: function (evt) {
-            if (evt.touches.length === 1) {
-              this.isDragging = true;
-              this.previousPosition = {x: evt.touches[0].clientX, y: evt.touches[0].clientY};
-            } else if (evt.touches.length === 2) {
-              this.isDragging = false;
-              this.pinchDistance = this.getTouchDistance(evt.touches[0], evt.touches[1]);
-            }
-          },
-          handleTouchMove: function (evt) {
-            if (evt.touches.length === 1 && this.isDragging) {
-              var touch = evt.touches[0];
-              var dx = touch.clientX - this.previousPosition.x;
-              this.previousPosition = {x: touch.clientX, y: touch.clientY};
-              var rotation = this.el.object3D.rotation;
-              rotation.y += dx * this.data.rotationFactor * 0.01;
-            } else if (evt.touches.length === 2 && this.pinchDistance !== null) {
-              var newDistance = this.getTouchDistance(evt.touches[0], evt.touches[1]);
-              var ratio = newDistance / this.pinchDistance;
-              this.pinchDistance = newDistance;
-              var factor = this.scaleFactor * ratio;
-              this.setScaleFactor(factor);
-            }
-          },
-          handleTouchEnd: function () {
-            this.isDragging = false;
-            this.pinchDistance = null;
-          },
-          getTouchDistance: function (t1, t2) {
-            var dx = t1.clientX - t2.clientX;
-            var dy = t1.clientY - t2.clientY;
-            return Math.sqrt(dx * dx + dy * dy);
-          },
-          setScaleFactor: function (factor) {
-            var min = this.data.minScale;
-            var max = this.data.maxScale;
-            this.scaleFactor = Math.min(max, Math.max(min, factor));
-            var s = this.initialScale * this.scaleFactor;
-            this.el.object3D.scale.set(s, s, s);
-          }
-        });
-
-        AFRAME.registerComponent('auto-rotate', {
-          schema: {
-            speed: {default: 0.0006}
-          },
-          tick: function (time, delta) {
-            this.el.object3D.rotation.y += delta * this.data.speed;
-          }
-        });
-
-        AFRAME.registerComponent('model-center', {
-          schema: {
-            yOffset: {default: 0},
-            rotX: {default: 0},
-            rotY: {default: 0},
-            rotZ: {default: 0}
-          },
-          init: function () {
-            this.hasCentered = false;
-            this.onLoaded = this.centerModel.bind(this);
-            this.el.addEventListener('model-loaded', this.onLoaded);
-          },
-          remove: function () {
-            this.el.removeEventListener('model-loaded', this.onLoaded);
-          },
-          centerModel: function () {
-            if (this.hasCentered) return;
-            var obj = this.el.getObject3D('mesh');
-            if (!obj || !window.THREE || !THREE.Box3) return;
-            obj.updateWorldMatrix(true, true);
-            var box = new THREE.Box3().setFromObject(obj);
-            if (!isFinite(box.min.x) || !isFinite(box.min.y) || !isFinite(box.min.z)) return;
-            var center = new THREE.Vector3();
-            box.getCenter(center);
-            obj.position.x += -center.x;
-            obj.position.y += -box.min.y + (this.data.yOffset || 0);
-            obj.position.z += -center.z;
-            var toRad = THREE.MathUtils && THREE.MathUtils.degToRad ? THREE.MathUtils.degToRad : function (d) { return d * Math.PI / 180; };
-            var rx = toRad(this.data.rotX || 0);
-            var ry = toRad(this.data.rotY || 0);
-            var rz = toRad(this.data.rotZ || 0);
-            if (rx || ry || rz) {
-              obj.rotation.x += rx;
-              obj.rotation.y += ry;
-              obj.rotation.z += rz;
-            }
-            this.hasCentered = true;
-          }
-        });
-
-        var DISH_MODEL_REGISTRY = {
-          sushi: { url: './models/sushi/sushi.glb', targetIndex: 3, scale: '0.2 0.2 0.2', position: '0 0 0', rotation: '0 0 0' },
-          sushi_roll: { url: './models/sushi/sushi_rolls.glb?v=2', targetIndex: 1, scale: '0.2 0.2 0.2', position: '0 0 0', rotation: '0 0 0' },
-          sushi_salmon: { url: './models/sushi/salmon_nigiri.glb', targetIndex: 2, scale: '0.2 0.2 0.2', position: '0 0 0', rotation: '0 0 0' },
-          ramen: { url: './models/sushi/shrimp_ramen_bowl.glb', targetIndex: 0, scale: '0.2 0.2 0.2', position: '0 0 0', rotation: '0 0 0' }
-        };
-
-        // Platos configurados desde el panel administrativo se guardan en localStorage
-        // bajo esta clave. Si existe una coincidencia, se prioriza sobre el registro estático.
-        function resolveModelConfig(dishId) {
-          if (!dishId) return null;
-          return DISH_MODEL_REGISTRY[dishId] || null;
-        }
-      }
-    </script>
+    <title>WebAR - Escáner de Códigos de Barras</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- A-Frame -->
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <!-- AR.js for Barcode/Marker Tracking -->
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    
     <style>
-      :root {
-        --primary-color: #ff4757;
-        --secondary-color: #2f3542;
-        --accent-color: #ffffff;
-      }
-      html {
-        background-color: transparent;
-      }
-      body {
-        font-family: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        user-select: none;
-        background-color: transparent;
-        margin: 0;
-        overflow: hidden;
-      }
-      .ar-loader {
-        height: 100%;
-        width: 100%;
-        position: absolute;
-        top: 0;
-        left: 0;
-        background: radial-gradient(circle, #2f3542 0%, #000000 100%);
-        z-index: 9999;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        color: white;
-        transition: opacity 0.4s ease;
-      }
-      .loader-spinner {
-        width: 50px;
-        height: 50px;
-        border: 5px solid rgba(255, 255, 255, 0.1);
-        border-top: 5px solid var(--primary-color);
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin-bottom: 20px;
-      }
-      #model-loader {
+      body { margin: 0; overflow: hidden; font-family: sans-serif; }
+      .ui-overlay {
         position: fixed;
-        inset: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        pointer-events: none;
-        z-index: 1500;
-        opacity: 0;
-        transition: opacity 0.25s ease;
-      }
-      #model-loader.visible {
-        opacity: 1;
-      }
-      #model-loader-inner {
-        pointer-events: auto;
-        padding: 10px 16px;
-        border-radius: 999px;
-        background: rgba(15, 23, 42, 0.9);
-        border: 1px solid rgba(148, 163, 184, 0.8);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 12px;
-        color: #e5e7eb;
-      }
-      #model-loader-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 999px;
-        border: 2px solid rgba(248, 250, 252, 0.2);
-        border-top-color: #f97316;
-        animation: spin 0.8s linear infinite;
-      }
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-      .ui-container {
-        position: absolute;
-        bottom: 40px;
-        left: 0;
-        right: 0;
-        z-index: 1000;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        pointer-events: none;
-      }
-      .hint-text {
-        background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.9));
-        color: white;
-        padding: 10px 18px;
-        border-radius: 999px;
-        font-size: 13px;
-        margin-bottom: 18px;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(148, 163, 184, 0.7);
-        box-shadow: 0 14px 40px rgba(15, 23, 42, 0.8);
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-      }
-      .controls {
-        display: flex;
-        align-items: center;
-        gap: 30px;
-        pointer-events: auto;
-      }
-      .screenshot-btn {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        border: 5px solid white;
-        background: rgba(255, 255, 255, 0.2);
-        cursor: pointer;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        box-shadow: 0 0 20px rgba(0,0,0,0.4);
-        position: relative;
-      }
-      .screenshot-btn::after {
-        content: '';
-        width: 60px;
-        height: 60px;
-        background: white;
-        border-radius: 50%;
-        transition: all 0.2s;
-      }
-      .screenshot-btn:active {
-        transform: scale(0.9);
-      }
-      .screenshot-btn:active::after {
-        transform: scale(0.8);
-        background: var(--primary-color);
-      }
-      .header-ui {
-        position: absolute;
-        top: 16px;
-        left: 16px;
-        z-index: 1000;
-        color: white;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.6);
-        padding: 8px 14px;
-        border-radius: 999px;
-        background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.92));
-        border: 1px solid rgba(148, 163, 184, 0.8);
-        font-size: 12px;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-      }
-      .flash {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: white;
-        z-index: 2000;
-        opacity: 0;
-        pointer-events: none;
-      }
-      .flash.active {
-        animation: flashAnim 0.5s;
-      }
-      @keyframes flashAnim {
-        0% { opacity: 1; }
-        100% { opacity: 0; }
-      }
-      .product-panel {
-        position: absolute;
         top: 20px;
-        right: 20px;
-        z-index: 1000;
-        background: rgba(0, 0, 0, 0.7);
-        color: #ffffff;
-        padding: 14px 18px;
-        border-radius: 14px;
-        max-width: 280px;
-        font-size: 14px;
-        backdrop-filter: blur(6px);
-        opacity: 0;
-        transform: translateY(-10px);
-        transition: opacity 0.25s ease, transform 0.25s ease;
-      }
-      .product-panel.hidden {
-        display: none;
-      }
-      .product-panel.visible {
-        display: block;
-        opacity: 1;
-        transform: translateY(0);
-      }
-      .product-image {
-        width: 100%;
-        height: 120px;
-        object-fit: cover;
-        border-radius: 8px;
-        margin-bottom: 10px;
-        display: block;
-      }
-      .product-title {
-        font-weight: 600;
-        margin-bottom: 6px;
-        font-size: 15px;
-      }
-      .product-price {
-        font-weight: 500;
-        margin-bottom: 8px;
-        font-size: 14px;
-      }
-      .product-section-title {
-        font-size: 12px;
-        opacity: 0.9;
-        margin-bottom: 2px;
-      }
-      .product-ingredients {
-        font-size: 13px;
-        line-height: 1.5;
-      }
-      .product-reset-btn {
-        margin-top: 10px;
-        width: 100%;
-        padding: 8px 12px;
-        border-radius: 999px;
-        border: none;
-        background: #ff4757;
-        color: #ffffff;
-        font-size: 12px;
-        font-weight: 500;
-        cursor: pointer;
-      }
-      .camera-error {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        background: #000;
-        color: #fff;
-        padding: 10px 16px;
-        z-index: 3000;
-        font-size: 14px;
-      }
-      .bg-video {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        object-fit: cover;
-        z-index: 0;
-        background: #000;
-      }
-      video {
-        position: absolute;
-        top: 50% !important;
-        left: 50% !important;
-        transform: translate(-50%, -50%) !important;
-        min-width: 100%;
-        min-height: 100%;
-        width: auto !important;
-        height: auto !important;
-        object-fit: cover;
-        z-index: -2 !important;
-      }
-      .a-canvas {
-        z-index: 1 !important;
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-      }
-      .dish-selector {
-        position: fixed;
-        top: 0;
         left: 0;
         width: 100%;
-        height: 100%;
-        background: #000;
-        z-index: 9999;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        color: #fff;
-        padding: 20px;
-        box-sizing: border-box;
-      }
-      .dish-selector.hidden {
-        display: none;
-      }
-      .dish-selector h2 {
-        margin-bottom: 20px;
         text-align: center;
-        color: #ff9f43;
+        color: white;
+        z-index: 100;
+        pointer-events: none;
+        text-shadow: 2px 2px 4px black;
       }
-      .dish-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
-        width: 100%;
-        max-width: 400px;
-      }
-      .dish-btn {
-        background: #2d3436;
-        border: 2px solid #636e72;
-        border-radius: 12px;
+      .marker-guide {
+        background: rgba(0,0,0,0.7);
         padding: 15px;
-        text-align: center;
-        color: #fff;
-        cursor: pointer;
-        text-decoration: none;
-        transition: all 0.2s;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-      }
-      .dish-btn:active {
-        transform: scale(0.95);
-        background: #00cec9;
-        border-color: #00cec9;
-      }
-      .dish-btn img {
-        width: 60px;
-        height: 60px;
-        object-fit: contain;
-        margin-bottom: 10px;
-      }
-      .dish-btn span {
-        font-size: 14px;
-        font-weight: 600;
-      }
-      .back-btn {
-        position: fixed;
-        top: 20px;
-        left: 20px;
-        z-index: 1001;
-        background: rgba(0,0,0,0.6);
-        color: #fff;
-        padding: 8px 12px;
         border-radius: 20px;
-        text-decoration: none;
-        font-size: 12px;
-        display: flex;
-        align-items: center;
-        gap: 5px;
+        display: inline-block;
+      }
+      .debug-info {
+        position: fixed;
+        bottom: 10px;
+        left: 10px;
+        color: lime;
+        font-family: monospace;
+        z-index: 100;
+        background: rgba(0,0,0,0.5);
+        padding: 5px;
       }
     </style>
   </head>
   <body>
-    <!-- Botón Volver -->
-    <a href="?" id="back-btn" class="back-btn hidden">
-      <span>⬅</span> Menú
-    </a>
-
-    <div class="flash" id="flash-effect"></div>
-
-    <div id="model-loader">
-      <div id="model-loader-inner">
-        <div id="model-loader-dot"></div>
-        <span>Cargando modelo 3D del plato...</span>
+    <div class="ui-overlay">
+      <div class="marker-guide">
+        <h3>📷 MODO CÓDIGO DE BARRAS</h3>
+        <p>Apunta a los códigos cuadrados (0, 1, 2, 3)</p>
       </div>
     </div>
+    
+    <div class="debug-info" id="debug-text">Esperando cámara...</div>
 
-    <div class="header-ui">
-      <span>Menú AR</span>
-    </div>
+    <!-- AR.js Scene Setup for 3x3 Barcodes -->
+    <a-scene 
+      embedded 
+      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+      renderer="logarithmicDepthBuffer: true; colorManagement: true;"
+      vr-mode-ui="enabled: false">
 
-    <div class="ar-loader" id="global-loader" style="display: none;">
-      <div class="loader-spinner"></div>
-      <div id="loader-text" style="margin-top: 10px; font-size: 14px;">Iniciando cámara...</div>
-    </div>
-
-    <div class="product-panel hidden" id="product-panel">
-      <img class="product-image" id="product-image" src="" alt="Plato">
-      <div class="product-title" id="product-title"></div>
-      <div class="product-price" id="product-price"></div>
-      <div class="product-section-title">Ingredientes</div>
-      <div class="product-ingredients" id="product-ingredients"></div>
-      <button class="product-reset-btn" id="product-reset-btn">Escanear otro plato</button>
-    </div>
-
-    <div class="ui-container">
-      <div class="hint-text">
-        <span>📷</span>
-        <span>Apunta a la imagen del plato en el menú para verlo en 3D.</span>
-      </div>
-      <div class="controls">
-        <div class="screenshot-btn" id="screenshot"></div>
-      </div>
-    </div>
-
-    <!-- Escena principal de WebAR por imagen (MindAR + A-Frame). -->
-    <!-- Ajustes de tracking para mejorar detección:
-         - missTolerance: 10 (mantiene el modelo más tiempo si se pierde momentáneamente)
-         - warmupTolerance: 1 (detecta más rápido, con menos frames consecutivos requeridos)
-         - filterMinCF / filterBeta: Suavizado de movimiento
-    -->
-    <a-scene
-      mindar-image="imageTargetSrc: ./targets/targets.mind; filterMinCF:0.0001; filterBeta: 0.001; uiLoading: no; missTolerance: 10; warmupTolerance: 1; autoStart: true;"
-      color-space="sRGB"
-      renderer="colorManagement: true, physicallyCorrectLights"
-      vr-mode-ui="enabled: false"
-      device-orientation-permission-ui="enabled: false">
-      
       <a-assets>
-        <!-- Modelos cargados dinámicamente para mejorar velocidad de inicio de cámara -->
+        <a-asset-item id="ramen-model" src="models/sushi/shrimp_ramen_bowl.glb"></a-asset-item>
+        <a-asset-item id="roll-model" src="models/sushi/sushi_rolls.glb?v=2"></a-asset-item>
+        <a-asset-item id="salmon-model" src="models/sushi/salmon_nigiri.glb"></a-asset-item>
+        <a-asset-item id="sushi-model" src="models/sushi/sushi.glb"></a-asset-item>
       </a-assets>
 
-      <!-- 0. RAMEN -->
-      <a-entity mindar-image-target="targetIndex: 0" data-product-key="ramen">
-        <!-- Debug Visuals (Hardcoded fallback) -->
-        <a-box color="red" opacity="0.8" depth="0.2" height="0.2" width="0.2" position="0 0 0"></a-box>
-        <a-text value="DETECTADO\nCargando..." color="#00FF00" align="center" side="double" position="0 0.25 0" scale="1 1 1"></a-text>
-        
-        <a-entity
-          gltf-model="./models/sushi/shrimp_ramen_bowl.glb"
-          scale="0.2 0.2 0.2"
-          position="0 0 0"
+      <!-- MARKER 0: RAMEN -->
+      <a-marker type="barcode" value="0" id="marker-0">
+        <a-entity 
+          gltf-model="#ramen-model" 
+          scale="0.4 0.4 0.4" 
           rotation="0 0 0"
-          model-center
-          drag-rotate-scale="minScale: 0.1; maxScale: 1; rotationFactor: 0.5">
-        </a-entity>
-      </a-entity>
-
-      <!-- 1. SUSHI ROLL -->
-      <a-entity mindar-image-target="targetIndex: 1" data-product-key="sushi_roll">
-        <!-- Debug Visuals (Hardcoded fallback) -->
-        <a-box color="red" opacity="0.8" depth="0.2" height="0.2" width="0.2" position="0 0 0"></a-box>
-        <a-text value="DETECTADO\nCargando..." color="#00FF00" align="center" side="double" position="0 0.25 0" scale="1 1 1"></a-text>
-
-        <a-entity
-          gltf-model="./models/sushi/sushi_rolls.glb?v=2"
-          scale="0.2 0.2 0.2"
           position="0 0 0"
-          rotation="0 0 0"
-          model-center
-          drag-rotate-scale="minScale: 0.1; maxScale: 1; rotationFactor: 0.5">
+          animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear">
         </a-entity>
-      </a-entity>
+        <a-text value="Zelva Ramen" position="0 0.8 0" align="center" color="#FFF" scale="2 2 2"></a-text>
+      </a-marker>
 
-      <!-- 2. SUSHI SALMON -->
-      <a-entity mindar-image-target="targetIndex: 2" data-product-key="sushi_salmon">
-        <!-- Debug Visuals (Hardcoded fallback) -->
-        <a-box color="red" opacity="0.8" depth="0.2" height="0.2" width="0.2" position="0 0 0"></a-box>
-        <a-text value="DETECTADO\nCargando..." color="#00FF00" align="center" side="double" position="0 0.25 0" scale="1 1 1"></a-text>
-
-        <a-entity
-          gltf-model="./models/sushi/salmon_nigiri.glb"
-          scale="0.2 0.2 0.2"
+      <!-- MARKER 1: SUSHI ROLL -->
+      <a-marker type="barcode" value="1" id="marker-1">
+        <a-entity 
+          gltf-model="#roll-model" 
+          scale="0.4 0.4 0.4" 
+          rotation="0 0 0"
           position="0 0 0"
-          rotation="0 0 0"
-          model-center
-          drag-rotate-scale="minScale: 0.1; maxScale: 1; rotationFactor: 0.5">
+          animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear">
         </a-entity>
-      </a-entity>
+        <a-text value="Volcano Roll" position="0 0.8 0" align="center" color="#FFF" scale="2 2 2"></a-text>
+      </a-marker>
 
-      <!-- 3. SUSHI (Main) -->
-      <a-entity mindar-image-target="targetIndex: 3" data-product-key="sushi">
-        <!-- Debug Visuals (Hardcoded fallback) -->
-        <a-box color="red" opacity="0.8" depth="0.2" height="0.2" width="0.2" position="0 0 0"></a-box>
-        <a-text value="DETECTADO\nCargando..." color="#00FF00" align="center" side="double" position="0 0.25 0" scale="1 1 1"></a-text>
-
-        <a-entity
-          gltf-model="./models/sushi/sushi.glb"
-          scale="0.2 0.2 0.2"
+      <!-- MARKER 2: SALMON -->
+      <a-marker type="barcode" value="2" id="marker-2">
+        <a-entity 
+          gltf-model="#salmon-model" 
+          scale="0.4 0.4 0.4" 
+          rotation="0 0 0"
           position="0 0 0"
-          rotation="0 0 0"
-          model-center
-          drag-rotate-scale="minScale: 0.1; maxScale: 1; rotationFactor: 0.5">
+          animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear">
         </a-entity>
-      </a-entity>
+        <a-text value="Nigiris" position="0 0.8 0" align="center" color="#FFF" scale="2 2 2"></a-text>
+      </a-marker>
 
-      <a-entity light="type: ambient; color: #FFF; intensity: 1.2"></a-entity>
-      <a-entity light="type: directional; color: #FFF; intensity: 0.6" position="-1 1 1"></a-entity>
+      <!-- MARKER 3: SUSHI MAIN -->
+      <a-marker type="barcode" value="3" id="marker-3">
+        <a-entity 
+          gltf-model="#sushi-model" 
+          scale="0.4 0.4 0.4" 
+          rotation="0 0 0"
+          position="0 0 0"
+          animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear">
+        </a-entity>
+        <a-text value="Makis" position="0 0.8 0" align="center" color="#FFF" scale="2 2 2"></a-text>
+      </a-marker>
+
       <a-entity camera></a-entity>
     </a-scene>
 
     <script>
-      var DISH_DATA_JSON = {};
+      // Simple debug script
+      const debugText = document.getElementById('debug-text');
+      const scene = document.querySelector('a-scene');
 
-      function getQueryParam(name) {
-        var params = new URLSearchParams(window.location.search);
-        return params.get(name);
-      }
-
-      function isMobileDevice() {
-        var ua = navigator.userAgent || '';
-        return /Android|iPhone|iPad|iPod/i.test(ua);
-      }
-
-      function hasLowMemory() {
-        return typeof navigator.deviceMemory === 'number' && navigator.deviceMemory <= 4;
-      }
-
-      function isLiteMode() {
-        var modeParam = getQueryParam('mode');
-        if (modeParam === 'full') return false;
-        if (modeParam === 'lite') return true;
-        if (isMobileDevice()) return true;
-        return hasLowMemory();
-      }
-
-      function loadPlatosJson() {
-        return fetch('data/platos.json')
-          .then(function (res) { return res.json(); })
-          .then(function (json) {
-            var index = {};
-            (json.platos || []).forEach(function (p) {
-              index[p.id] = p;
-            });
-            DISH_DATA_JSON = index;
-            return json.platos || [];
-          })
-          .catch(function () { return []; });
-      }
-
-      function updateMindARTargets(platos) {
-        var scene = document.querySelector('a-scene');
-        if (!scene) return;
-        platos.forEach(function (plato) {
-          if (plato.targetIndex === undefined) return;
-          
-          // Buscar el target existente por índice
-          var targetEntity = document.querySelector(`[mindar-image-target="targetIndex: ${plato.targetIndex}"]`);
-          if (!targetEntity) return;
-
-          // Limpiar contenido previo si es necesario o actualizar
-          // En este caso, asumimos que platos.json tiene la verdad
-          targetEntity.setAttribute('data-product-key', plato.id);
-          
-          // Eliminar hijos previos (modelos por defecto)
-          while (targetEntity.firstChild) {
-            targetEntity.removeChild(targetEntity.firstChild);
-          }
-
-          // DEBUG: Añadir caja roja para verificar tracking (siempre visible si hay tracking)
-          var debugBox = document.createElement('a-box');
-          debugBox.setAttribute('color', 'red');
-          debugBox.setAttribute('opacity', '0.8'); 
-          debugBox.setAttribute('depth', '0.2');
-          debugBox.setAttribute('height', '0.2');
-          debugBox.setAttribute('width', '0.2');
-          debugBox.setAttribute('position', '0 0 0'); 
-          targetEntity.appendChild(debugBox); 
-          
-          // AÑADIR INDICADOR DE CARGA VISUAL EN EL TARGET
-          var loadingText = document.createElement('a-text');
-          loadingText.setAttribute('value', 'DETECTADO\nCargando...');
-          loadingText.setAttribute('color', '#00FF00'); // Verde brillante
-          loadingText.setAttribute('align', 'center');
-          loadingText.setAttribute('side', 'double');
-          loadingText.setAttribute('position', '0 0.25 0');
-          loadingText.setAttribute('scale', '1 1 1');
-          targetEntity.appendChild(loadingText);
-
-          var entity = document.createElement('a-entity');
-          entity.setAttribute('gltf-model', plato.modelPath);
-          
-          // Ocultar texto cuando cargue
-          entity.addEventListener('model-loaded', () => {
-             console.log('Modelo cargado:', plato.id);
-             loadingText.setAttribute('visible', 'false');
-          });
-          
-          entity.addEventListener('model-error', (e) => {
-             console.error('Error modelo:', plato.id, e);
-             loadingText.setAttribute('value', 'Error al cargar modelo');
-             loadingText.setAttribute('color', 'red');
-          });
-          entity.setAttribute('scale', plato.scale || '0.2 0.2 0.2');
-          entity.setAttribute('position', plato.position || '0 0 0');
-          entity.setAttribute('rotation', plato.rotation || '0 0 0');
-          entity.setAttribute('model-center', '');
-          entity.setAttribute('drag-rotate-scale', 'minScale: 0.1; maxScale: 1; rotationFactor: 0.5');
-          targetEntity.appendChild(entity);
-        });
-      }
-
-      // Función eliminada: preloadKeyDishModels (ahora usamos carga diferida post-AR)
-
-      // Manejo del Selector de Platos y Configuración Dinámica de AR
-      document.addEventListener('DOMContentLoaded', function() {
-        // Force video to background
-        var style = document.createElement('style');
-        style.innerHTML = `
-          video { z-index: -10 !important; }
-          .a-canvas { z-index: 1 !important; }
-          body { background: transparent !important; }
-          html { background: transparent !important; }
-        `;
-        document.head.appendChild(style);
-
-        const scene = document.querySelector('a-scene');
-
-        // Asegurar que no haya UI de carga
-        const gl = document.getElementById('global-loader');
-        if (gl) gl.style.display = 'none';
-        
-        // Cargar configuración dinámica (si existe)
-        loadPlatosJson()
-          .then(updateMindARTargets)
-          .then(applyAdminOverrides);
-
-        if (scene) {
-          scene.addEventListener('arReady', function () {
-            hideGlobalLoader();
-          });
-          
-          scene.addEventListener('arError', function(event) {
-            hideGlobalLoader();
-            alert('Error al iniciar la cámara. Verifica permisos y recarga.');
-          });
-        }
-        
-        // Fallback: Si el video ya está corriendo pero arReady no disparó
-        const checkVideoInterval = setInterval(() => {
-             const video = document.querySelector('video');
-             if (video && video.readyState >= 2 && !video.paused) {
-                 hideGlobalLoader();
-                 clearInterval(checkVideoInterval);
-             }
-        }, 1000);
+      scene.addEventListener('loaded', () => {
+        debugText.innerText = "Cámara lista. Apunta a un código.";
       });
 
-      window.addEventListener('load', function () {
-        if (isLiteMode()) {
-          var heavyTargets = document.querySelectorAll('[mindar-image-target][data-lite="extra"]');
-          heavyTargets.forEach(function (m) {
-            if (m.parentNode) {
-              m.parentNode.removeChild(m);
-            }
-          });
-        }
+      scene.addEventListener('camera-error', (e) => {
+        debugText.innerText = "Error de cámara: " + e.detail;
+        debugText.style.color = "red";
       });
 
-      // Panel de información del plato asociado al marcador actualmente visible.
-      const productPanel = document.getElementById('product-panel');
-      const productTitle = document.getElementById('product-title');
-      const productPrice = document.getElementById('product-price');
-      const productIngredients = document.getElementById('product-ingredients');
-      const globalLoader = document.getElementById('global-loader');
-      const modelLoader = document.getElementById('model-loader');
-      const productResetBtn = document.getElementById('product-reset-btn');
-      
-      // PRECIOS CORREGIDOS según las imágenes
-      // Mapa base de platos para la demo del restaurante.
-      // Cada entrada se asocia a un marcador mediante getProductKeyFromMarker.
-      const products = {
-        sushi: {
-          title: 'Makis New Styles (10 pzs)',
-          price: 'S/ 25.00',
-          ingredients: 'Variedades como Amazon, Anticuchero, Banzai, Kaminaki, Parrillero, Pulpo al Olivo y Jalea.',
-          image: 'img/sushi/sushi.png'
-        },
-        sushi_roll: {
-          title: 'Volcano Roll (5 pzs)',
-          price: 'S/ 19.00',
-          ingredients: 'Roll tipo Volcano de la sección 5 piezas del menú Zelva Nikkei.',
-          image: 'img/sushi/sushi_roll.png'
-        },
-        sushi_salmon: {
-          title: 'Nigiris especiales (2 bocados)',
-          price: 'S/ 15.00',
-          ingredients: 'Inca Nigiri, Misoyaki, Pasión, Coco Beach y Hotate Spicy.',
-          image: 'img/sushi/sushi_salmon.png'
-        },
-        ramen: {
-          title: 'Zelva Ramen',
-          price: 'S/ 32.00',
-          ingredients: 'Caldo caliente con fideos y topping nikkei, ideal para el frío.',
-          image: 'img/sushi/ramen.png'
-        }
-      };
-
-      // Relación opcional entre ids de modelos GLB y sus imágenes de referencia 2D.
-      const modelImages = {
-        'sushi-model': 'img/sushi/sushi.png',
-        'sushi-rolls-model': 'img/sushi/sushi_roll.png',
-        'nigiri-model': 'img/sushi/sushi_salmon.png',
-        'ramen-model': 'img/sushi/ramen.png'
-      };
-      
-      const adminStorageKey = 'adminPlatosAR';
-      
-      function showModelLoader() {
-        if (!modelLoader) return;
-        modelLoader.classList.add('visible');
-      }
-      
-      function hideModelLoader() {
-        if (!modelLoader) return;
-        modelLoader.classList.remove('visible');
-      }
-      
-      function applyAdminOverrides() {
-        var raw;
-        try {
-          raw = localStorage.getItem(adminStorageKey);
-        } catch (e) {
-          // Si falla localStorage, intentar cargar desde JSON estático si no se ha hecho ya
-        }
-        // Nota: loadPlatosJson ya se encarga de llamar a esta función con los datos del JSON
-      }
-
-      // Nueva función para procesar datos del JSON
-      function updateMindARTargets(platos) {
-        if (!Array.isArray(platos)) return;
-        
-        var scene = document.querySelector('a-scene');
-        if (!scene) return;
-        var assets = scene.querySelector('a-assets');
-        if (!assets) return;
-
-        platos.forEach(function(p) {
-          // Validar campos requeridos (nota: imagenMenu en JSON vs imagen en localStorage)
-          var imgSrc = p.imagen || p.imagenMenu;
-          if (!p || !p.id || !p.modelPath || !imgSrc || !p.nombre || !p.precio || !p.descripcion) {
-             // Intento de compatibilidad con formato anterior
-             if (p.marcador && p.modelo) {
-                 p.id = p.marcador;
-                 p.modelPath = p.modelo;
-             } else {
-                 return;
-             }
-          }
-
-          var productsKey = p.id;
-          // Actualizar o crear producto en el mapa global
-          products[productsKey] = {
-            title: p.nombre,
-            price: (typeof p.precio === 'number' ? 'S/ ' + p.precio.toFixed(2) : p.precio),
-            ingredients: p.descripcion,
-            image: imgSrc
-          };
-
-          var modelId = 'model-' + p.id;
-          // Cargar asset si no existe
-          if (!assets.querySelector('#' + modelId)) {
-            var assetItem = document.createElement('a-asset-item');
-            assetItem.setAttribute('id', modelId);
-            assetItem.setAttribute('src', p.modelPath);
-            assets.appendChild(assetItem);
-          }
-
-          // Actualizar target
-          if (p.targetIndex !== undefined) {
-             var targetEntity = document.querySelector(`[mindar-image-target="targetIndex: ${p.targetIndex}"]`);
-             if (targetEntity) {
-               targetEntity.setAttribute('data-product-key', p.id);
-               // Limpiar contenido previo
-               while (targetEntity.firstChild) {
-                 targetEntity.removeChild(targetEntity.firstChild);
-               }
-               // Crear nueva entidad con el modelo
-               var entity = document.createElement('a-entity');
-               // Usar gltf-model directamente con la ruta para evitar problemas de assets
-               entity.setAttribute('gltf-model', p.modelPath);
-               entity.setAttribute('scale', p.scale || '0.2 0.2 0.2'); 
-               entity.setAttribute('position', p.position || '0 0 0');
-               entity.setAttribute('rotation', p.rotation || '0 0 0');
-               entity.setAttribute('model-center', '');
-               entity.setAttribute('drag-rotate-scale', 'minScale: 0.1; maxScale: 1; rotationFactor: 0.5');
-               targetEntity.appendChild(entity);
-             }
-          }
+      // Marker listeners
+      [0, 1, 2, 3].forEach(id => {
+        const marker = document.getElementById('marker-' + id);
+        marker.addEventListener('markerFound', () => {
+          debugText.innerText = `¡Código ${id} DETECTADO!`;
+          debugText.style.color = "#00FF00";
         });
-      }
-      
-      // A partir del target detectado (MindAR),
-      // intenta deducir qué clave de producto mostrar en el panel lateral.
-      function getProductKeyFromTarget(target) {
-        return target.getAttribute('data-product-key') || null;
-      }
-      
-      function hideGlobalLoader() {
-        if (!globalLoader) return;
-        globalLoader.style.opacity = '0';
-        globalLoader.style.pointerEvents = 'none';
-        setTimeout(function () {
-          if (globalLoader && globalLoader.style) {
-            globalLoader.style.display = 'none';
-          }
-        }, 400);
-      }
-
-
-
-      // Fallback: Si después de 5 segundos no ha iniciado, mostrar botón manual
-      // (Eliminado a petición del usuario para que sea totalmente automático)
-
-      function showProduct(key) {
-        if (!productPanel) return;
-        const p = products[key];
-        if (!p) return;
-        
-        const img = document.getElementById('product-image');
-        if (img) {
-          if (p.image) {
-            img.src = p.image;
-            img.style.display = 'block';
-          } else {
-            img.style.display = 'none';
-          }
-        }
-
-        productTitle.textContent = p.title;
-        productPrice.textContent = p.price;
-        productIngredients.textContent = p.ingredients;
-        productPanel.classList.remove('hidden');
-        productPanel.classList.add('visible');
-      }
-      
-      function hideProduct() {
-        if (!productPanel) return;
-        productPanel.classList.remove('visible');
-        productPanel.classList.add('hidden');
-      }
-
-      if (productResetBtn) {
-        productResetBtn.addEventListener('click', function () {
-          if (typeof window.resetARTracking === 'function') {
-            window.resetARTracking();
-          }
+        marker.addEventListener('markerLost', () => {
+          debugText.innerText = "Buscando códigos...";
+          debugText.style.color = "lime";
         });
-      }
-
-      // Funcionalidad para tomar captura (Foto)
-      document.getElementById('screenshot').addEventListener('click', function() {
-        // Efecto de flash
-        const flash = document.getElementById('flash-effect');
-        flash.classList.add('active');
-        setTimeout(() => flash.classList.remove('active'), 500);
-
-        const scene = document.querySelector('a-scene');
-        const video = document.querySelector('video');
-        
-        // Crear canvas final con el tamaño real del video
-        const finalCanvas = document.createElement('canvas');
-        finalCanvas.width = video.videoWidth;
-        finalCanvas.height = video.videoHeight;
-        const ctx = finalCanvas.getContext('2d');
-
-        // 1. Dibujar el video de fondo
-        ctx.drawImage(video, 0, 0, finalCanvas.width, finalCanvas.height);
-        
-        // 2. Dibujar la capa de AR (A-Frame)
-        scene.renderer.render(scene.object3D, scene.camera);
-        ctx.drawImage(scene.canvas, 0, 0, finalCanvas.width, finalCanvas.height);
-
-        // 3. Descargar la captura
-        try {
-          const dataURL = finalCanvas.toDataURL('image/png');
-          const link = document.createElement('a');
-          const date = new Date().getTime();
-          link.download = `Captura-MenuAR-${date}.png`;
-          link.href = dataURL;
-          link.click();
-        } catch (err) {
-          console.error("Error al tomar la captura:", err);
-        }
       });
-      
-      ;(() => {
-        const targets = Array.from(document.querySelectorAll('[mindar-image-target]'));
-        
-        targets.forEach(t => {
-          t.addEventListener('targetFound', () => {
-            console.log('targetFound', t.getAttribute('mindar-image-target'));
-            const key = getProductKeyFromTarget(t);
-            if (key) showProduct(key);
-            hideGlobalLoader();
-          });
-
-          t.addEventListener('targetLost', () => {
-            console.log('targetLost', t.getAttribute('mindar-image-target'));
-            hideProduct();
-          });
-        });
-      })();
     </script>
-
-
   </body>
 </html>

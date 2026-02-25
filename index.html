@@ -11,18 +11,6 @@
     <style>
       body { margin: 0; overflow: hidden; font-family: sans-serif; }
       
-      .ui-overlay {
-        position: fixed;
-        top: 20px;
-        left: 0;
-        width: 100%;
-        text-align: center;
-        color: white;
-        z-index: 100;
-        pointer-events: none;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-      }
-
       .capture-button {
         position: fixed;
         bottom: 30px;
@@ -33,13 +21,14 @@
         background-color: rgba(255, 255, 255, 0.8);
         border: 4px solid white;
         border-radius: 50%;
-        z-index: 100;
+        z-index: 1000;
         cursor: pointer;
         pointer-events: auto;
         box-shadow: 0 4px 8px rgba(0,0,0,0.5);
         display: flex;
         justify-content: center;
         align-items: center;
+        -webkit-tap-highlight-color: transparent;
       }
       
       .capture-button:active {
@@ -53,67 +42,16 @@
         background-color: #333;
         border-radius: 50%;
       }
-      
-      .debug-info {
-        position: fixed;
-        bottom: 10px;
-        left: 10px;
-        color: lime;
-        background: rgba(0, 0, 0, 0.5);
-        padding: 5px;
-        font-family: monospace;
-        z-index: 9999;
-        pointer-events: none;
-        display: none; /* Hidden by default */
-      }
-    </style>
-        position: fixed;
-        top: 20px;
-        left: 0;
-        width: 100%;
-        text-align: center;
-        color: white;
-        z-index: 100;
-        pointer-events: none;
-        text-shadow: 2px 2px 4px black;
-      }
-      .marker-guide {
-        background: rgba(0,0,0,0.7);
-        padding: 15px;
-        border-radius: 20px;
-        display: inline-block;
-      }
-      .debug-info {
-        position: fixed;
-        bottom: 10px;
-        left: 10px;
-        color: lime;
-        font-family: monospace;
-        z-index: 100;
-        background: rgba(0,0,0,0.5);
-        padding: 5px;
-      }
     </style>
   </head>
   <body>
-    <!-- Scanner UI Overlay -->
-    <div class="scanner-overlay" id="scanner-ui">
-      <div class="scanner-frame" id="scanner-frame">
-        <div class="corner-tr"></div>
-        <div class="corner-bl"></div>
-        <div class="scanner-line"></div>
-        <div class="scanning-text">Escaneando plato...</div>
-      </div>
-    </div>
-
-    <div class="ui-overlay">
-      <div class="header">
-        <h1>Menú AR</h1>
-        <p>Encuadra el código en el recuadro</p>
-      </div>
+    <!-- Capture Button -->
+    <div class="capture-button" id="capture-btn">
+      <div class="capture-icon"></div>
     </div>
     
-    <div class="debug-info" id="debug-text">Esperando cámara...</div>
+    <!-- Hidden Debug Element to prevent JS errors -->
+    <div id="debug-text" style="display: none;"></div>
 
     <!-- AR.js Scene Setup for 3x3 Barcodes -->
     <a-scene 
@@ -198,14 +136,31 @@
 
       // Capture Button Logic
       captureBtn.addEventListener('click', () => {
+        // 1. Get the AR.js video element (camera feed)
+        const video = document.querySelector('video');
+        // 2. Get the A-Frame WebGL canvas (3D models)
         const sceneEl = document.querySelector('a-scene');
-        // Use A-Frame screenshot component
-        const screenshot = sceneEl.components.screenshot.getCanvas('perspective');
+        const glCanvas = sceneEl.components.screenshot.getCanvas('perspective');
         
-        // Create download link
+        if (!video || !glCanvas) return;
+
+        // 3. Create a temporary canvas to merge both
+        const captureCanvas = document.createElement('canvas');
+        captureCanvas.width = glCanvas.width;
+        captureCanvas.height = glCanvas.height;
+        const ctx = captureCanvas.getContext('2d');
+
+        // 4. Draw Video (Scale to fit)
+        // Note: AR.js video sizing can be tricky. We draw it to cover the canvas.
+        ctx.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
+
+        // 5. Draw WebGL Scene on top
+        ctx.drawImage(glCanvas, 0, 0);
+
+        // 6. Download the merged image
         const link = document.createElement('a');
-        link.download = 'web-ar-foto.png';
-        link.href = screenshot.toDataURL('image/png');
+        link.download = `web-ar-foto-${Date.now()}.png`;
+        link.href = captureCanvas.toDataURL('image/png');
         link.click();
       });
 

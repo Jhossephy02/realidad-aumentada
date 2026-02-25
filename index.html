@@ -119,7 +119,7 @@
     <a-scene 
       embedded 
       arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
-      renderer="logarithmicDepthBuffer: true; colorManagement: true; precision: medium;"
+      renderer="logarithmicDepthBuffer: true; colorManagement: true; precision: medium; preserveDrawingBuffer: true;"
       vr-mode-ui="enabled: false">
 
       <a-assets>
@@ -131,54 +131,54 @@
 
       <!-- MARKER 0: RAMEN -->
       <a-marker type="barcode" value="0" id="marker-0">
-        <a-entity 
-          id="model-0"
-          gltf-model="#ramen-model" 
-          scale="0.5 0.5 0.5" 
-          rotation="-90 0 0"
-          position="0 0 0"
-          visible="false">
+        <a-entity id="content-0" visible="false">
+          <a-entity 
+            gltf-model="#ramen-model" 
+            scale="0.6 0.6 0.6" 
+            rotation="-90 0 0"
+            position="0 0 0">
+          </a-entity>
+          <a-text value="Zelva Ramen" position="0 0 0.8" rotation="-90 0 0" align="center" color="#FFF" scale="2 2 2"></a-text>
         </a-entity>
-        <a-text value="Zelva Ramen" position="0 0 0.8" rotation="-90 0 0" align="center" color="#FFF" scale="2 2 2"></a-text>
       </a-marker>
 
       <!-- MARKER 1: SUSHI ROLL -->
       <a-marker type="barcode" value="1" id="marker-1">
-        <a-entity 
-          id="model-1"
-          gltf-model="#roll-model" 
-          scale="0.5 0.5 0.5" 
-          rotation="-90 0 0"
-          position="0 0 0"
-          visible="false">
+        <a-entity id="content-1" visible="false">
+          <a-entity 
+            gltf-model="#roll-model" 
+            scale="0.6 0.6 0.6" 
+            rotation="-90 0 0"
+            position="0 0 0">
+          </a-entity>
+          <a-text value="Volcano Roll" position="0 0 0.8" rotation="-90 0 0" align="center" color="#FFF" scale="2 2 2"></a-text>
         </a-entity>
-        <a-text value="Volcano Roll" position="0 0 0.8" rotation="-90 0 0" align="center" color="#FFF" scale="2 2 2"></a-text>
       </a-marker>
 
       <!-- MARKER 2: SALMON -->
       <a-marker type="barcode" value="2" id="marker-2">
-        <a-entity 
-          id="model-2"
-          gltf-model="#salmon-model" 
-          scale="0.5 0.5 0.5" 
-          rotation="-90 0 0"
-          position="0 0 0"
-          visible="false">
+        <a-entity id="content-2" visible="false">
+          <a-entity 
+            gltf-model="#salmon-model" 
+            scale="0.6 0.6 0.6" 
+            rotation="-90 0 0"
+            position="0 0 0">
+          </a-entity>
+          <a-text value="Nigiris" position="0 0 0.8" rotation="-90 0 0" align="center" color="#FFF" scale="2 2 2"></a-text>
         </a-entity>
-        <a-text value="Nigiris" position="0 0 0.8" rotation="-90 0 0" align="center" color="#FFF" scale="2 2 2"></a-text>
       </a-marker>
 
       <!-- MARKER 3: SUSHI MAIN -->
       <a-marker type="barcode" value="3" id="marker-3">
-        <a-entity 
-          id="model-3"
-          gltf-model="#sushi-model" 
-          scale="0.5 0.5 0.5" 
-          rotation="-90 0 0"
-          position="0 0 0"
-          visible="false">
+        <a-entity id="content-3" visible="false">
+          <a-entity 
+            gltf-model="#sushi-model" 
+            scale="0.6 0.6 0.6" 
+            rotation="-90 0 0"
+            position="0 0 0">
+          </a-entity>
+          <a-text value="Makis" position="0 0 0.8" rotation="-90 0 0" align="center" color="#FFF" scale="2 2 2"></a-text>
         </a-entity>
-        <a-text value="Makis" position="0 0 0.8" rotation="-90 0 0" align="center" color="#FFF" scale="2 2 2"></a-text>
       </a-marker>
 
       <a-entity camera></a-entity>
@@ -212,22 +212,22 @@
       // Handle marker detection with STRICT single-model logic
       [0, 1, 2, 3].forEach(id => {
         const marker = document.getElementById('marker-' + id);
-        const modelEntity = document.getElementById('model-' + id);
+        const contentEntity = document.getElementById('content-' + id);
         
         marker.addEventListener('markerFound', () => {
           // If NO marker is currently active, lock this one and show it
           if (activeMarkerId === null) {
             activeMarkerId = id;
-            modelEntity.setAttribute('visible', 'true');
+            contentEntity.setAttribute('visible', 'true');
             debugText.innerText = `Mostrando plato ${id}`;
           } 
           // If THIS marker is already active (redundant check but safe), ensure visible
           else if (activeMarkerId === id) {
-            modelEntity.setAttribute('visible', 'true');
+            contentEntity.setAttribute('visible', 'true');
           }
           // If ANOTHER marker is active, keep this one HIDDEN
           else {
-            modelEntity.setAttribute('visible', 'false');
+            contentEntity.setAttribute('visible', 'false');
           }
         });
 
@@ -235,7 +235,7 @@
           // Only reset if the lost marker was the active one
           if (activeMarkerId === id) {
             activeMarkerId = null;
-            modelEntity.setAttribute('visible', 'false');
+            contentEntity.setAttribute('visible', 'false');
             debugText.innerText = "Buscando códigos...";
           }
         });

@@ -224,6 +224,9 @@
         --secondary-color: #2f3542;
         --accent-color: #ffffff;
       }
+      html {
+        background-color: transparent;
+      }
       body {
         font-family: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         user-select: none;
@@ -481,7 +484,13 @@
         width: auto !important;
         height: auto !important;
         object-fit: cover;
+        z-index: -2 !important;
+      }
+      .a-canvas {
         z-index: 1 !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
       }
       .dish-selector {
         position: fixed;
@@ -623,6 +632,10 @@
 
       <!-- 0. RAMEN -->
       <a-entity mindar-image-target="targetIndex: 0" data-product-key="ramen">
+        <!-- Debug Visuals (Hardcoded fallback) -->
+        <a-box color="red" opacity="0.8" depth="0.2" height="0.2" width="0.2" position="0 0 0"></a-box>
+        <a-text value="DETECTADO\nCargando..." color="#00FF00" align="center" side="double" position="0 0.25 0" scale="1 1 1"></a-text>
+        
         <a-entity
           gltf-model="./models/sushi/shrimp_ramen_bowl.glb"
           scale="0.2 0.2 0.2"
@@ -635,6 +648,10 @@
 
       <!-- 1. SUSHI ROLL -->
       <a-entity mindar-image-target="targetIndex: 1" data-product-key="sushi_roll">
+        <!-- Debug Visuals (Hardcoded fallback) -->
+        <a-box color="red" opacity="0.8" depth="0.2" height="0.2" width="0.2" position="0 0 0"></a-box>
+        <a-text value="DETECTADO\nCargando..." color="#00FF00" align="center" side="double" position="0 0.25 0" scale="1 1 1"></a-text>
+
         <a-entity
           gltf-model="./models/sushi/sushi_rolls.glb?v=2"
           scale="0.2 0.2 0.2"
@@ -647,6 +664,10 @@
 
       <!-- 2. SUSHI SALMON -->
       <a-entity mindar-image-target="targetIndex: 2" data-product-key="sushi_salmon">
+        <!-- Debug Visuals (Hardcoded fallback) -->
+        <a-box color="red" opacity="0.8" depth="0.2" height="0.2" width="0.2" position="0 0 0"></a-box>
+        <a-text value="DETECTADO\nCargando..." color="#00FF00" align="center" side="double" position="0 0.25 0" scale="1 1 1"></a-text>
+
         <a-entity
           gltf-model="./models/sushi/salmon_nigiri.glb"
           scale="0.2 0.2 0.2"
@@ -659,6 +680,10 @@
 
       <!-- 3. SUSHI (Main) -->
       <a-entity mindar-image-target="targetIndex: 3" data-product-key="sushi">
+        <!-- Debug Visuals (Hardcoded fallback) -->
+        <a-box color="red" opacity="0.8" depth="0.2" height="0.2" width="0.2" position="0 0 0"></a-box>
+        <a-text value="DETECTADO\nCargando..." color="#00FF00" align="center" side="double" position="0 0.25 0" scale="1 1 1"></a-text>
+
         <a-entity
           gltf-model="./models/sushi/sushi.glb"
           scale="0.2 0.2 0.2"
@@ -732,8 +757,40 @@
             targetEntity.removeChild(targetEntity.firstChild);
           }
 
+          // DEBUG: Añadir caja roja para verificar tracking (siempre visible si hay tracking)
+          var debugBox = document.createElement('a-box');
+          debugBox.setAttribute('color', 'red');
+          debugBox.setAttribute('opacity', '0.8'); 
+          debugBox.setAttribute('depth', '0.2');
+          debugBox.setAttribute('height', '0.2');
+          debugBox.setAttribute('width', '0.2');
+          debugBox.setAttribute('position', '0 0 0'); 
+          targetEntity.appendChild(debugBox); 
+          
+          // AÑADIR INDICADOR DE CARGA VISUAL EN EL TARGET
+          var loadingText = document.createElement('a-text');
+          loadingText.setAttribute('value', 'DETECTADO\nCargando...');
+          loadingText.setAttribute('color', '#00FF00'); // Verde brillante
+          loadingText.setAttribute('align', 'center');
+          loadingText.setAttribute('side', 'double');
+          loadingText.setAttribute('position', '0 0.25 0');
+          loadingText.setAttribute('scale', '1 1 1');
+          targetEntity.appendChild(loadingText);
+
           var entity = document.createElement('a-entity');
           entity.setAttribute('gltf-model', plato.modelPath);
+          
+          // Ocultar texto cuando cargue
+          entity.addEventListener('model-loaded', () => {
+             console.log('Modelo cargado:', plato.id);
+             loadingText.setAttribute('visible', 'false');
+          });
+          
+          entity.addEventListener('model-error', (e) => {
+             console.error('Error modelo:', plato.id, e);
+             loadingText.setAttribute('value', 'Error al cargar modelo');
+             loadingText.setAttribute('color', 'red');
+          });
           entity.setAttribute('scale', plato.scale || '0.2 0.2 0.2');
           entity.setAttribute('position', plato.position || '0 0 0');
           entity.setAttribute('rotation', plato.rotation || '0 0 0');
@@ -747,6 +804,16 @@
 
       // Manejo del Selector de Platos y Configuración Dinámica de AR
       document.addEventListener('DOMContentLoaded', function() {
+        // Force video to background
+        var style = document.createElement('style');
+        style.innerHTML = `
+          video { z-index: -10 !important; }
+          .a-canvas { z-index: 1 !important; }
+          body { background: transparent !important; }
+          html { background: transparent !important; }
+        `;
+        document.head.appendChild(style);
+
         const scene = document.querySelector('a-scene');
 
         // Asegurar que no haya UI de carga
@@ -1019,64 +1086,20 @@
       
       ;(() => {
         const targets = Array.from(document.querySelectorAll('[mindar-image-target]'));
-        let activeTarget = null;
-        const visibleTargets = new Set();
-        let trackingFrozen = false;
-
-        function setActiveTarget(target) {
-          activeTarget = target;
-          targets.forEach(t => {
-            t.object3D.visible = (t === activeTarget);
-          });
-          const key = getProductKeyFromTarget(target);
-          if (key) showProduct(key);
-        }
-
+        
         targets.forEach(t => {
           t.addEventListener('targetFound', () => {
-            if (trackingFrozen && activeTarget) {
-              return;
-            }
             console.log('targetFound', t.getAttribute('mindar-image-target'));
-            visibleTargets.add(t);
-            if (!activeTarget) {
-              setActiveTarget(t);
-              if (isLiteMode()) {
-                trackingFrozen = true;
-              }
-            }
+            const key = getProductKeyFromTarget(t);
+            if (key) showProduct(key);
             hideGlobalLoader();
           });
 
           t.addEventListener('targetLost', () => {
-            if (trackingFrozen) {
-              return;
-            }
             console.log('targetLost', t.getAttribute('mindar-image-target'));
-            visibleTargets.delete(t);
-
-            if (activeTarget === t) {
-              if (visibleTargets.size === 0) {
-                activeTarget = null;
-                hideProduct();
-                targets.forEach(x => { x.object3D.visible = true; });
-              } else {
-                const next = Array.from(visibleTargets)[visibleTargets.size - 1];
-                setActiveTarget(next);
-              }
-            }
+            hideProduct();
           });
         });
-
-        window.resetARTracking = function () {
-          trackingFrozen = false;
-          activeTarget = null;
-          visibleTargets.clear();
-          hideProduct();
-          targets.forEach(function (x) {
-            x.object3D.visible = true;
-          });
-        };
       })();
     </script>
 

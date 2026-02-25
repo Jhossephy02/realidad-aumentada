@@ -42,12 +42,60 @@
         background-color: #333;
         border-radius: 50%;
       }
+
+      /* Info Panel Styles */
+      .info-panel {
+        position: fixed;
+        bottom: 110px; /* Above capture button */
+        left: 50%;
+        transform: translateX(-50%);
+        width: 85%;
+        max-width: 400px;
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 15px;
+        border-radius: 15px;
+        z-index: 900;
+        display: none; /* Hidden by default */
+        text-align: center;
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: opacity 0.3s ease;
+      }
+
+      .info-panel h2 {
+        margin: 0 0 5px 0;
+        font-size: 1.2rem;
+        color: #ff9800; /* Orange accent */
+      }
+
+      .info-panel p {
+        margin: 0;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        color: #ddd;
+      }
+
+      .info-panel .price {
+        display: block;
+        margin-top: 8px;
+        font-weight: bold;
+        font-size: 1.1rem;
+        color: #4caf50; /* Green for price */
+      }
     </style>
   </head>
   <body>
     <!-- Capture Button -->
     <div class="capture-button" id="capture-btn">
       <div class="capture-icon"></div>
+    </div>
+
+    <!-- Info Panel -->
+    <div class="info-panel" id="info-panel">
+      <h2 id="panel-title">Nombre del Plato</h2>
+      <p id="panel-desc">Descripción del plato aquí.</p>
+      <span class="price" id="panel-price">S/ 0.00</span>
     </div>
     
     <!-- Hidden Debug Element to prevent JS errors -->
@@ -82,46 +130,42 @@
             rotation="0 0 0"
             position="0 0 0">
           </a-entity>
-          <a-text value="Zelva Ramen" position="0 1 0" rotation="-90 0 0" align="center" color="#FFF" scale="3 3 3"></a-text>
         </a-entity>
       </a-marker>
 
-      <!-- MARKER 1: SUSHI ROLL -->
+      <!-- MARKER 1: SUSHI ROLL (Increased Scale) -->
       <a-marker type="barcode" value="1" id="marker-1">
         <a-entity id="content-1" visible="false">
           <a-entity 
             gltf-model="#roll-model" 
-            scale="1.5 1.5 1.5" 
+            scale="2.2 2.2 2.2" 
             rotation="0 0 0"
             position="0 0 0">
           </a-entity>
-          <a-text value="Volcano Roll" position="0 1 0" rotation="-90 0 0" align="center" color="#FFF" scale="3 3 3"></a-text>
         </a-entity>
       </a-marker>
 
-      <!-- MARKER 2: SALMON -->
+      <!-- MARKER 2: SALMON (Decreased Scale) -->
       <a-marker type="barcode" value="2" id="marker-2">
         <a-entity id="content-2" visible="false">
           <a-entity 
             gltf-model="#salmon-model" 
-            scale="1.5 1.5 1.5" 
+            scale="0.8 0.8 0.8" 
             rotation="0 0 0"
             position="0 0 0">
           </a-entity>
-          <a-text value="Nigiris" position="0 1 0" rotation="-90 0 0" align="center" color="#FFF" scale="3 3 3"></a-text>
         </a-entity>
       </a-marker>
 
-      <!-- MARKER 3: SUSHI MAIN -->
+      <!-- MARKER 3: SUSHI MAIN (Increased Scale) -->
       <a-marker type="barcode" value="3" id="marker-3">
         <a-entity id="content-3" visible="false">
           <a-entity 
             gltf-model="#sushi-model" 
-            scale="1.5 1.5 1.5" 
+            scale="2.2 2.2 2.2" 
             rotation="0 0 0"
             position="0 0 0">
           </a-entity>
-          <a-text value="Makis" position="0 1 0" rotation="-90 0 0" align="center" color="#FFF" scale="3 3 3"></a-text>
         </a-entity>
       </a-marker>
 
@@ -131,7 +175,36 @@
     <script>
       const debugText = document.getElementById('debug-text');
       const captureBtn = document.getElementById('capture-btn');
+      const infoPanel = document.getElementById('info-panel');
+      const panelTitle = document.getElementById('panel-title');
+      const panelDesc = document.getElementById('panel-desc');
+      const panelPrice = document.getElementById('panel-price');
+
       let activeMarkerId = null;
+
+      // Dish Data
+      const dishes = {
+        0: {
+          name: "Zelva Ramen",
+          desc: "Ramen de la casa, ideal para el frío y para experiencias AR inmersivas.",
+          price: "S/ 32.00"
+        },
+        1: {
+          name: "Volcano Roll",
+          desc: "Delicioso rollo con salsa volcánica y relleno especial.",
+          price: "S/ 25.00"
+        },
+        2: {
+          name: "Nigiris Especiales",
+          desc: "Selección de nigiris con salmón fresco y toques cítricos.",
+          price: "S/ 15.00"
+        },
+        3: {
+          name: "Makis New Styles",
+          desc: "Makis New Styles de Zelva Nikkei (Amazon, Anticuchero, Banzai, Kaminaki, Parrillero, Pulpo al Olivo, Jalea).",
+          price: "S/ 25.00"
+        }
+      };
 
       const scene = document.querySelector('a-scene');
 
@@ -180,11 +253,21 @@
           if (activeMarkerId === null) {
             activeMarkerId = id;
             contentEntity.setAttribute('visible', 'true');
+            
+            // Update Info Panel
+            if (dishes[id]) {
+                panelTitle.innerText = dishes[id].name;
+                panelDesc.innerText = dishes[id].desc;
+                panelPrice.innerText = dishes[id].price;
+                infoPanel.style.display = 'block';
+            }
+            
             debugText.innerText = `Mostrando plato ${id}`;
           } 
           // If THIS marker is already active (redundant check but safe), ensure visible
           else if (activeMarkerId === id) {
             contentEntity.setAttribute('visible', 'true');
+            infoPanel.style.display = 'block';
           }
           // If ANOTHER marker is active, keep this one HIDDEN
           else {
@@ -197,6 +280,7 @@
           if (activeMarkerId === id) {
             activeMarkerId = null;
             contentEntity.setAttribute('visible', 'false');
+            infoPanel.style.display = 'none'; // Hide panel
             debugText.innerText = "Buscando códigos...";
           }
         });

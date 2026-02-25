@@ -11,6 +11,99 @@
     <style>
       body { margin: 0; overflow: hidden; font-family: sans-serif; }
       
+      /* Scanner UI */
+      .scanner-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 10;
+        pointer-events: none;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      
+      .scanner-frame {
+        width: 70vw;
+        height: 70vw;
+        max-width: 400px;
+        max-height: 400px;
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        border-radius: 20px;
+        position: relative;
+        box-shadow: 0 0 0 10000px rgba(0, 0, 0, 0.5); /* Dim background */
+        transition: border-color 0.3s;
+      }
+      
+      .scanner-frame::before, .scanner-frame::after {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        border-color: #00ff00;
+        border-style: solid;
+        transition: all 0.3s;
+      }
+      
+      /* Corners */
+      .scanner-frame::before {
+        top: -2px; left: -2px;
+        border-width: 4px 0 0 4px;
+      }
+      .scanner-frame::after {
+        bottom: -2px; right: -2px;
+        border-width: 0 4px 4px 0;
+      }
+      
+      .scanner-frame .corner-tr {
+        position: absolute;
+        top: -2px; right: -2px;
+        width: 20px; height: 20px;
+        border-top: 4px solid #00ff00;
+        border-right: 4px solid #00ff00;
+      }
+      
+      .scanner-frame .corner-bl {
+        position: absolute;
+        bottom: -2px; left: -2px;
+        width: 20px; height: 20px;
+        border-bottom: 4px solid #00ff00;
+        border-left: 4px solid #00ff00;
+      }
+
+      .scanner-line {
+        position: absolute;
+        width: 100%;
+        height: 2px;
+        background: #00ff00;
+        box-shadow: 0 0 4px #00ff00;
+        top: 50%;
+        animation: scan 2s infinite linear;
+        opacity: 0.6;
+      }
+
+      @keyframes scan {
+        0% { top: 5%; opacity: 0; }
+        10% { opacity: 1; }
+        90% { opacity: 1; }
+        100% { top: 95%; opacity: 0; }
+      }
+
+      .scanning-text {
+        position: absolute;
+        bottom: -40px;
+        width: 100%;
+        text-align: center;
+        color: #fff;
+        font-size: 16px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        font-weight: bold;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      }
+
       .ui-overlay {
         position: fixed;
         top: 20px;
@@ -41,10 +134,20 @@
     </style>
   </head>
   <body>
+    <!-- Scanner UI Overlay -->
+    <div class="scanner-overlay" id="scanner-ui">
+      <div class="scanner-frame" id="scanner-frame">
+        <div class="corner-tr"></div>
+        <div class="corner-bl"></div>
+        <div class="scanner-line"></div>
+        <div class="scanning-text">Escaneando plato...</div>
+      </div>
+    </div>
+
     <div class="ui-overlay">
-      <div class="marker-guide">
-        <h3>📷 MODO CÓDIGO DE BARRAS</h3>
-        <p>Apunta a los códigos cuadrados (0, 1, 2, 3)</p>
+      <div class="header">
+        <h1>Menú AR</h1>
+        <p>Encuadra el código en el recuadro</p>
       </div>
     </div>
     
@@ -112,29 +215,60 @@
     </a-scene>
 
     <script>
-      // Simple debug script
       const debugText = document.getElementById('debug-text');
+      const scannerFrame = document.getElementById('scanner-frame');
+      const scannerLine = document.querySelector('.scanner-line');
+      const scanningText = document.querySelector('.scanning-text');
+      let activeMarkerId = null;
+
       const scene = document.querySelector('a-scene');
 
       scene.addEventListener('loaded', () => {
-        debugText.innerText = "Cámara lista. Apunta a un código.";
+        debugText.innerText = "Cámara lista. Encuadra un código.";
+        console.log("Scene loaded");
       });
 
-      scene.addEventListener('camera-error', (e) => {
-        debugText.innerText = "Error de cámara: " + e.detail;
-        debugText.style.color = "red";
-      });
-
-      // Marker listeners
+      // Handle marker detection
       [0, 1, 2, 3].forEach(id => {
         const marker = document.getElementById('marker-' + id);
+        
         marker.addEventListener('markerFound', () => {
-          debugText.innerText = `¡Código ${id} DETECTADO!`;
-          debugText.style.color = "#00FF00";
+          // If we already have an active marker and it's not this one, ignore (or hide if possible)
+          if (activeMarkerId !== null && activeMarkerId !== id) {
+             // Optional: could try to force hide, but AR.js fights this.
+             // For now, we rely on the user focusing on one.
+             return;
+          }
+
+          if (activeMarkerId === null) {
+            activeMarkerId = id;
+            
+            // Update UI to "Locked" state
+            scannerFrame.style.borderColor = '#00FF00';
+            scannerFrame.style.boxShadow = '0 0 0 10000px rgba(0, 0, 0, 0.2)'; // Lighten background
+            scannerLine.style.display = 'none'; // Stop scanning animation
+            scanningText.innerText = "¡Plato Detectado!";
+            scanningText.style.color = "#00FF00";
+            
+            debugText.innerText = `Mostrando plato ${id}`;
+            debugText.style.color = "#00FF00";
+          }
         });
+
         marker.addEventListener('markerLost', () => {
-          debugText.innerText = "Buscando códigos...";
-          debugText.style.color = "lime";
+          if (activeMarkerId === id) {
+            activeMarkerId = null;
+            
+            // Reset UI to "Scanning" state
+            scannerFrame.style.borderColor = 'rgba(255, 255, 255, 0.5)';
+            scannerFrame.style.boxShadow = '0 0 0 10000px rgba(0, 0, 0, 0.5)'; // Darken background
+            scannerLine.style.display = 'block';
+            scanningText.innerText = "Escaneando plato...";
+            scanningText.style.color = "#fff";
+            
+            debugText.innerText = "Buscando códigos...";
+            debugText.style.color = "lime";
+          }
         });
       });
     </script>

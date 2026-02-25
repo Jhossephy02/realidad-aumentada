@@ -67,16 +67,22 @@
         <a-asset-item id="sushi-model" src="models/sushi/sushi.glb"></a-asset-item>
       </a-assets>
 
+      <!-- Lighting to ensure models are visible -->
+      <a-light type="ambient" color="#ffffff" intensity="1"></a-light>
+      <a-light type="directional" position="0 1 0" intensity="1.5" target="#directionaltarget">
+        <a-entity id="directionaltarget" position="0 0 0"></a-entity>
+      </a-light>
+
       <!-- MARKER 0: RAMEN -->
       <a-marker type="barcode" value="0" id="marker-0">
         <a-entity id="content-0" visible="false">
           <a-entity 
             gltf-model="#ramen-model" 
-            scale="0.6 0.6 0.6" 
-            rotation="-90 0 0"
+            scale="1.5 1.5 1.5" 
+            rotation="0 0 0"
             position="0 0 0">
           </a-entity>
-          <a-text value="Zelva Ramen" position="0 0 0.8" rotation="-90 0 0" align="center" color="#FFF" scale="2 2 2"></a-text>
+          <a-text value="Zelva Ramen" position="0 1 0" rotation="-90 0 0" align="center" color="#FFF" scale="3 3 3"></a-text>
         </a-entity>
       </a-marker>
 
@@ -85,11 +91,11 @@
         <a-entity id="content-1" visible="false">
           <a-entity 
             gltf-model="#roll-model" 
-            scale="0.6 0.6 0.6" 
-            rotation="-90 0 0"
+            scale="1.5 1.5 1.5" 
+            rotation="0 0 0"
             position="0 0 0">
           </a-entity>
-          <a-text value="Volcano Roll" position="0 0 0.8" rotation="-90 0 0" align="center" color="#FFF" scale="2 2 2"></a-text>
+          <a-text value="Volcano Roll" position="0 1 0" rotation="-90 0 0" align="center" color="#FFF" scale="3 3 3"></a-text>
         </a-entity>
       </a-marker>
 
@@ -98,11 +104,11 @@
         <a-entity id="content-2" visible="false">
           <a-entity 
             gltf-model="#salmon-model" 
-            scale="0.6 0.6 0.6" 
-            rotation="-90 0 0"
+            scale="1.5 1.5 1.5" 
+            rotation="0 0 0"
             position="0 0 0">
           </a-entity>
-          <a-text value="Nigiris" position="0 0 0.8" rotation="-90 0 0" align="center" color="#FFF" scale="2 2 2"></a-text>
+          <a-text value="Nigiris" position="0 1 0" rotation="-90 0 0" align="center" color="#FFF" scale="3 3 3"></a-text>
         </a-entity>
       </a-marker>
 
@@ -111,11 +117,11 @@
         <a-entity id="content-3" visible="false">
           <a-entity 
             gltf-model="#sushi-model" 
-            scale="0.6 0.6 0.6" 
-            rotation="-90 0 0"
+            scale="1.5 1.5 1.5" 
+            rotation="0 0 0"
             position="0 0 0">
           </a-entity>
-          <a-text value="Makis" position="0 0 0.8" rotation="-90 0 0" align="center" color="#FFF" scale="2 2 2"></a-text>
+          <a-text value="Makis" position="0 1 0" rotation="-90 0 0" align="center" color="#FFF" scale="3 3 3"></a-text>
         </a-entity>
       </a-marker>
 

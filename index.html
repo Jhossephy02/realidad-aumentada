@@ -261,7 +261,7 @@
 
       <!-- Marker 0: Ramen -->
       <a-marker type="barcode" value="0" id="marker-0">
-        <a-entity id="content-0" visible="false" pinch-scale>
+        <a-entity id="content-0" visible="false" pinch-scale class="clickable" data-id="0">
             <!-- 3D Model -->
             <a-entity 
               gltf-model="#ramen-model" 
@@ -274,7 +274,7 @@
 
       <!-- Marker 1: Roll -->
       <a-marker type="barcode" value="1" id="marker-1">
-        <a-entity id="content-1" visible="false" pinch-scale>
+        <a-entity id="content-1" visible="false" pinch-scale class="clickable" data-id="1">
             <!-- 3D Model -->
             <a-entity 
               gltf-model="#roll-model" 
@@ -287,7 +287,7 @@
 
       <!-- Marker 2: Salmon (Nigiri) -->
       <a-marker type="barcode" value="2" id="marker-2">
-        <a-entity id="content-2" visible="false" pinch-scale>
+        <a-entity id="content-2" visible="false" pinch-scale class="clickable" data-id="2">
             <!-- 3D Model -->
             <a-entity 
               gltf-model="#salmon-model" 
@@ -300,7 +300,7 @@
 
       <!-- Marker 3: Sushi (Makis) -->
       <a-marker type="barcode" value="3" id="marker-3">
-        <a-entity id="content-3" visible="false" pinch-scale>
+        <a-entity id="content-3" visible="false" pinch-scale class="clickable" data-id="3">
             <!-- 3D Model -->
             <a-entity 
               gltf-model="#sushi-model" 
@@ -311,7 +311,7 @@
         </a-entity>
       </a-marker>
 
-      <a-entity camera></a-entity>
+      <a-entity camera cursor="rayOrigin: mouse" raycaster="objects: .clickable"></a-entity>
     </a-scene>
 
     <script>
@@ -403,9 +403,6 @@
           ctx.drawImage(glCanvas, 0, 0, captureCanvas.width, captureCanvas.height);
         }
 
-        // 4. Draw Info Panel (Optional - Simple Text Overlay if needed, or skip)
-        // For now, we focus on the Models + Camera request.
-
         // 5. Download
         const link = document.createElement('a');
         link.download = `web-ar-capture-${Date.now()}.png`;
@@ -413,46 +410,49 @@
         link.click();
       });
 
-      // Handle marker detection with STRICT single-model logic
+      // Helper to update Info Panel
+      function showInfo(id) {
+        if (dishes[id]) {
+            panelTitle.innerText = dishes[id].name;
+            panelDesc.innerText = dishes[id].desc;
+            panelPrice.innerText = dishes[id].price;
+            infoPanel.style.display = 'block';
+            activeMarkerId = id;
+            debugText.innerText = `Seleccionado: ${dishes[id].name}`;
+        }
+      }
+
+      // Handle marker detection
       [0, 1, 2, 3].forEach(id => {
         const marker = document.getElementById('marker-' + id);
         const contentEntity = document.getElementById('content-' + id);
         
+        // Marker Found: Show model, and maybe auto-select if nothing is selected
         marker.addEventListener('markerFound', () => {
-          // If NO marker is currently active, lock this one and show it
-          if (activeMarkerId === null) {
-            activeMarkerId = id;
-            contentEntity.setAttribute('visible', 'true');
-            
-            // Update Info Panel
-            if (dishes[id]) {
-                panelTitle.innerText = dishes[id].name;
-                panelDesc.innerText = dishes[id].desc;
-                panelPrice.innerText = dishes[id].price;
-                infoPanel.style.display = 'block';
-            }
-            
-            debugText.innerText = `Mostrando plato ${id}`;
-          } 
-          // If THIS marker is already active (redundant check but safe), ensure visible
-          else if (activeMarkerId === id) {
-            contentEntity.setAttribute('visible', 'true');
-            infoPanel.style.display = 'block';
-          }
-          // If ANOTHER marker is active, keep this one HIDDEN
-          else {
-            contentEntity.setAttribute('visible', 'false');
+          contentEntity.setAttribute('visible', 'true');
+          
+          // Auto-select if no panel is currently showing
+          if (activeMarkerId === null || infoPanel.style.display === 'none') {
+            showInfo(id);
           }
         });
 
+        // Marker Lost: Hide model. If it was the selected one, hide panel.
         marker.addEventListener('markerLost', () => {
-          // Only reset if the lost marker was the active one
+          contentEntity.setAttribute('visible', 'false');
+          
           if (activeMarkerId === id) {
+            infoPanel.style.display = 'none';
             activeMarkerId = null;
-            contentEntity.setAttribute('visible', 'false');
-            infoPanel.style.display = 'none'; // Hide panel
             debugText.innerText = "Buscando códigos...";
           }
+        });
+
+        // Click Interaction: Explicitly select this dish
+        contentEntity.addEventListener('click', (evt) => {
+            // Prevent double-firing if nested
+            evt.stopPropagation();
+            showInfo(id);
         });
       });
     </script>

@@ -572,6 +572,15 @@
 
       // Update Info Panel based on activeMarkerId
       function updateState() {
+        // Enforce Exclusivity: Only activeMarkerId model is visible
+        [0, 1, 2, 3].forEach(id => {
+            const model = document.getElementById('model-' + id);
+            if (model) {
+                const isVisible = (activeMarkerId !== null && id == activeMarkerId);
+                model.setAttribute('visible', isVisible);
+            }
+        });
+
         if (activeMarkerId !== null && dishes[activeMarkerId]) {
           const dish = dishes[activeMarkerId];
           panelTitle.innerText = dish.name;
@@ -705,7 +714,7 @@
 
       [0, 1, 2, 3].forEach(id => {
         const marker = document.getElementById('marker-' + id);
-        const placeholder = document.getElementById('placeholder-' + id);
+        if (!marker) return;
         
         marker.addEventListener('markerFound', () => {
           // Clear any pending lost event for this marker
@@ -716,8 +725,8 @@
           
           visibleMarkers.add(id);
           
-          // Auto-select if it's the only one visible and nothing else is selected
-          if (visibleMarkers.size === 1 && activeMarkerId === null) {
+          // Auto-select if nothing is selected (First one wins)
+          if (activeMarkerId === null) {
               activeMarkerId = id;
           }
           
@@ -735,54 +744,6 @@
             updateState();
             delete lostTimeouts[id];
           }, 500);
-        });
-
-        // Click on Placeholder: Make this marker active
-        // Using 'click' AND 'touchstart' to ensure responsiveness
-        const handlePlaceholderClick = (evt) => {
-            // Prevent double triggering if both fire
-            if (activeMarkerId === id) return; 
-
-            console.log("Clicked placeholder", id); 
-            // Stop propagation to prevent hitting things behind
-            if(evt.stopPropagation) evt.stopPropagation();
-            
-            // Visual feedback: brief scale up
-            const ring = placeholder.querySelector('a-image');
-            if(ring) {
-                ring.setAttribute('animation', 'property: scale; to: 2 2 2; dur: 150; easing: easeOutQuad');
-                setTimeout(() => {
-                     ring.removeAttribute('animation');
-                     ring.setAttribute('scale', '1.5 1.5 1.5');
-                }, 150);
-            }
-
-            // Switch logic immediately
-            activeMarkerId = id;
-            updateState();
-        };
-
-        // Attach to placeholder entity (which contains the ring and hitbox)
-        placeholder.addEventListener('click', handlePlaceholderClick);
-        // Also listen for touchstart directly for faster response on mobile
-        // Note: raycaster usually translates touch to click, but sometimes it lags or misses small taps
-        
-        // Ensure the hitbox itself triggers the click on the parent placeholder
-        const hitbox = placeholder.querySelector('a-circle');
-        if(hitbox) {
-            // Make sure hitbox is interactable
-            hitbox.classList.add('clickable');
-            hitbox.addEventListener('click', handlePlaceholderClick);
-            
-            // Experimental: Add direct touch listener for raycaster bypass if needed
-            // But usually 'click' via cursor component is safer for 3D scene
-        }
-        
-        // Also allow clicking the active content to refresh panel
-        const content = document.getElementById('content-' + id);
-        content.classList.add('clickable'); 
-        content.addEventListener('click', (evt) => {
-             evt.stopPropagation();
         });
       });
     </script>

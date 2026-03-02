@@ -548,18 +548,21 @@
         });
 
         // Click on Placeholder: Make this marker active
-        placeholder.addEventListener('click', (evt) => {
-            evt.stopPropagation(); // Prevent bubbling
-            activeMarkerId = id;
-            updateState();
-            console.log("Switched to marker", id);
-        });
-        
-        // Also allow clicking the active content to refresh panel (optional)
-        const content = document.getElementById('content-' + id);
-        content.addEventListener('click', (evt) => {
-            evt.stopPropagation();
-        });
+      placeholder.addEventListener('click', (evt) => {
+          console.log("Clicked placeholder", id); // Debug click
+          evt.stopPropagation(); // Prevent bubbling
+          activeMarkerId = id;
+          updateState();
+      });
+      
+      // Also allow clicking the active content to refresh panel (optional)
+      const content = document.getElementById('content-' + id);
+      // Make content clickable too so it blocks clicks to things behind it
+      content.classList.add('clickable'); 
+      content.addEventListener('click', (evt) => {
+           console.log("Clicked content", id);
+           evt.stopPropagation();
+      });
       });
     </script>
   </body>

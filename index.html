@@ -218,8 +218,9 @@
         // 1. Get the AR.js video element (camera feed)
         const video = document.querySelector('video');
         // 2. Get the A-Frame WebGL canvas (3D models)
+        // Use the live canvas directly (requires preserveDrawingBuffer: true)
         const sceneEl = document.querySelector('a-scene');
-        const glCanvas = sceneEl.components.screenshot.getCanvas('perspective');
+        const glCanvas = sceneEl.canvas;
         
         if (!video || !glCanvas) return;
 
@@ -230,7 +231,6 @@
         const ctx = captureCanvas.getContext('2d');
 
         // 4. Draw Video (Scale to fit)
-        // Note: AR.js video sizing can be tricky. We draw it to cover the canvas.
         ctx.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
 
         // 5. Draw WebGL Scene on top

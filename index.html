@@ -236,36 +236,57 @@
 
       // Capture Button Logic
       captureBtn.addEventListener('click', () => {
-        // Visual Flash Effect
+        // Visual Feedback (Flash) - Trigger immediately
         flashOverlay.classList.add('flash-active');
         setTimeout(() => {
           flashOverlay.classList.remove('flash-active');
         }, 150);
 
-        // 1. Get the AR.js video element (camera feed)
-        const video = document.querySelector('video');
-        // 2. Get the A-Frame WebGL canvas (3D models)
-        // Use the live canvas directly (requires preserveDrawingBuffer: true)
-        const sceneEl = document.querySelector('a-scene');
-        const glCanvas = sceneEl.canvas;
-        
-        if (!video || !glCanvas) return;
-
-        // 3. Create a temporary canvas to merge both
+        // 1. Setup Capture Canvas (Match Viewport)
         const captureCanvas = document.createElement('canvas');
-        captureCanvas.width = glCanvas.width;
-        captureCanvas.height = glCanvas.height;
+        captureCanvas.width = window.innerWidth;
+        captureCanvas.height = window.innerHeight;
         const ctx = captureCanvas.getContext('2d');
 
-        // 4. Draw Video (Scale to fit)
-        ctx.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
+        // 2. Draw Video (Camera Feed) - Correctly Scaled (Cover)
+        const video = document.querySelector('video');
+        if (video) {
+          const vRatio = video.videoWidth / video.videoHeight;
+          const cRatio = captureCanvas.width / captureCanvas.height;
+          let sWidth, sHeight, sx, sy;
 
-        // 5. Draw WebGL Scene on top
-        ctx.drawImage(glCanvas, 0, 0);
+          // Object-fit: cover logic
+          if (cRatio > vRatio) {
+            sWidth = video.videoWidth;
+            sHeight = video.videoWidth / cRatio;
+            sx = 0;
+            sy = (video.videoHeight - sHeight) / 2;
+          } else {
+            sWidth = video.videoHeight * cRatio;
+            sHeight = video.videoHeight;
+            sx = (video.videoWidth - sWidth) / 2;
+            sy = 0;
+          }
+          
+          ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, captureCanvas.width, captureCanvas.height);
+        }
 
-        // 6. Download the merged image
+        // 3. Draw WebGL Scene (Models)
+        const sceneEl = document.querySelector('a-scene');
+        if (sceneEl && sceneEl.canvas) {
+          // FORCE RENDER to ensure model is in buffer
+          sceneEl.renderer.render(sceneEl.object3D, sceneEl.camera);
+          
+          const glCanvas = sceneEl.canvas;
+          ctx.drawImage(glCanvas, 0, 0, captureCanvas.width, captureCanvas.height);
+        }
+
+        // 4. Draw Info Panel (Optional - Simple Text Overlay if needed, or skip)
+        // For now, we focus on the Models + Camera request.
+
+        // 5. Download
         const link = document.createElement('a');
-        link.download = `web-ar-foto-${Date.now()}.png`;
+        link.download = `web-ar-capture-${Date.now()}.png`;
         link.href = captureCanvas.toDataURL('image/png');
         link.click();
       });

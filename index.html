@@ -854,7 +854,8 @@
           
           visibleMarkers.add(id);
           
-          // Auto-select if nothing is selected (First one wins)
+          // Auto-select ONLY if no marker has ever been selected yet (First detection)
+          // After this, switching requires explicit user tap.
           if (activeMarkerId === null) {
               activeMarkerId = id;
           }
@@ -867,16 +868,9 @@
           lostTimeouts[id] = setTimeout(() => {
             visibleMarkers.delete(id);
             
-            // If the active marker is lost, check if there are others visible
-            if (activeMarkerId == id) {
-                if (visibleMarkers.size > 0) {
-                    // Switch to the first available marker
-                    const nextId = visibleMarkers.values().next().value;
-                    activeMarkerId = nextId;
-                } else {
-                    activeMarkerId = null; 
-                }
-            }
+            // REMOVED Auto-Switch Logic to enforce "Sticky Selection"
+            // activeMarkerId remains set to the last selected marker.
+            // This ensures that switching only happens via explicit User Interaction (Tap).
             
             updateState();
             delete lostTimeouts[id];

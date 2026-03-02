@@ -145,94 +145,88 @@
       enforce-exclusivity>
 
       <script>
-        // Component to handle pinch gestures for scaling
-        AFRAME.registerComponent('gesture-detector', {
-          schema: {
-            element: { default: '' }
-          },
-          init: function() {
-            this.targetElement = this.data.element && document.querySelector(this.data.element);
-            if (!this.targetElement) {
-              this.targetElement = this.el;
-            }
-            this.internalState = {
-              previousState: null
-            };
-            this.emitGestureEvent = this.emitGestureEvent.bind(this);
-            this.targetElement.addEventListener("touchstart", this.emitGestureEvent);
-            this.targetElement.addEventListener("touchend", this.emitGestureEvent);
-            this.targetElement.addEventListener("touchmove", this.emitGestureEvent);
-          },
-          remove: function() {
-            this.targetElement.removeEventListener("touchstart", this.emitGestureEvent);
-            this.targetElement.removeEventListener("touchend", this.emitGestureEvent);
-            this.targetElement.removeEventListener("touchmove", this.emitGestureEvent);
-          },
-          emitGestureEvent: function(event) {
-            const currentState = this.getTouchState(event);
-            const previousState = this.internalState.previousState;
-            const gestureContinues = previousState && currentState && currentState.touchCount == previousState.touchCount;
-            const gestureEnded = previousState && !gestureContinues;
-            const gestureStarted = currentState && !gestureContinues;
+      // Gesture Detector: Emits 'onefingerstart', 'onefingermove', 'twofingerstart', 'twofingermove'
+      AFRAME.registerComponent('gesture-detector', {
+        schema: { element: { default: '' } },
+        init: function () {
+          this.targetElement = this.data.element && document.querySelector(this.data.element);
+          if (!this.targetElement) this.targetElement = this.el;
 
-            if (gestureEnded) {
-              const eventName = this.getEventPrefix(previousState.touchCount) + "fingerend";
-              this.el.emit(eventName, previousState);
-              this.internalState.previousState = null;
-            }
-            if (gestureStarted) {
-              currentState.startTime = performance.now();
-              currentState.startPosition = currentState.position;
-              currentState.startSpread = currentState.spread;
-              const eventName = this.getEventPrefix(currentState.touchCount) + "fingerstart";
-              this.el.emit(eventName, currentState);
-              this.internalState.previousState = currentState;
-            }
-            if (gestureContinues) {
-              currentState.startSpread = previousState.startSpread;
-              const eventDetail = {
-                positionChange: {
-                  x: currentState.position.x - previousState.position.x,
-                  y: currentState.position.y - previousState.position.y
-                },
-                spreadChange: currentState.spread - previousState.spread,
-                spread: currentState.spread,
-                startSpread: currentState.startSpread,
-                originalEvent: event
-              };
-              const eventName = this.getEventPrefix(currentState.touchCount) + "fingermove";
-              this.el.emit(eventName, eventDetail);
-              this.internalState.previousState = currentState;
-            }
-          },
-          getTouchState: function(event) {
-            if (event.touches.length === 0) {
-              return null;
-            }
-            const touchList = [];
-            for (let i = 0; i < event.touches.length; i++) {
-              touchList.push(event.touches[i]);
-            }
-            const touchState = {
-              touchCount: touchList.length
-            };
-            const centerPositionRawX = touchList.reduce((sum, touch) => sum + touch.clientX, 0) / touchList.length;
-            const centerPositionRawY = touchList.reduce((sum, touch) => sum + touch.clientY, 0) / touchList.length;
-            touchState.position = {
-              x: centerPositionRawX,
-              y: centerPositionRawY
-            };
-            if (touchList.length >= 2) {
-              const spread = Math.abs(touchList[0].clientX - touchList[1].clientX) + Math.abs(touchList[0].clientY - touchList[1].clientY);
-              touchState.spread = spread;
-            }
-            return touchState;
-          },
-          getEventPrefix: function(touchCount) {
-            const numberNames = ["one", "two", "three", "many"];
-            return numberNames[Math.min(touchCount, 4) - 1];
+          this.internalState = {
+            previousState: null
+          };
+
+          this.emitGestureEvent = this.emitGestureEvent.bind(this);
+          this.targetElement.addEventListener('touchstart', this.emitGestureEvent);
+          this.targetElement.addEventListener('touchend', this.emitGestureEvent);
+          this.targetElement.addEventListener('touchmove', this.emitGestureEvent);
+        },
+        remove: function () {
+          this.targetElement.removeEventListener('touchstart', this.emitGestureEvent);
+          this.targetElement.removeEventListener('touchend', this.emitGestureEvent);
+          this.targetElement.removeEventListener('touchmove', this.emitGestureEvent);
+        },
+        emitGestureEvent: function (event) {
+          const currentState = this.getTouchState(event);
+          const previousState = this.internalState.previousState;
+          const gestureContinues = previousState && currentState && currentState.touchCount == previousState.touchCount;
+          const gestureEnded = previousState && !gestureContinues;
+          const gestureStarted = currentState && !gestureContinues;
+
+          if (gestureEnded) {
+            const eventName = previousState.touchCount === 1 ? 'onefingerend' : 'twofingerend';
+            this.el.emit(eventName, { 
+                position: previousState.position, 
+                spread: previousState.spread 
+            });
+            this.internalState.previousState = null;
           }
-        });
+
+          if (gestureStarted) {
+            currentState.startTime = performance.now();
+            currentState.startPosition = currentState.position;
+            currentState.startSpread = currentState.spread;
+            const eventName = currentState.touchCount === 1 ? 'onefingerstart' : 'twofingerstart';
+            this.el.emit(eventName, currentState);
+            this.internalState.previousState = currentState;
+          }
+
+          if (gestureContinues) {
+            const eventElapsed = performance.now() - previousState.startTime;
+            const eventName = currentState.touchCount === 1 ? 'onefingermove' : 'twofingermove';
+            const detail = {
+              position: currentState.position,
+              spread: currentState.spread,
+              startSpread: previousState.startSpread, // Propagate startSpread
+              startPosition: previousState.startPosition,
+              elapsedTime: eventElapsed
+            };
+            this.el.emit(eventName, detail);
+            this.internalState.previousState = { ...currentState, startTime: previousState.startTime, startSpread: previousState.startSpread, startPosition: previousState.startPosition };
+          }
+        },
+        getTouchState: function (event) {
+          if (event.touches.length === 0) return null;
+          if (event.touches.length === 1) {
+            return {
+              touchCount: 1,
+              position: { x: event.touches[0].pageX, y: event.touches[0].pageY },
+              spread: 0
+            };
+          } else if (event.touches.length === 2) {
+            const spread = Math.hypot(
+              event.touches[0].pageX - event.touches[1].pageX,
+              event.touches[0].pageY - event.touches[1].pageY
+            );
+            return {
+              touchCount: 2,
+              position: { x: (event.touches[0].pageX + event.touches[1].pageX) / 2, y: (event.touches[0].pageY + event.touches[1].pageY) / 2 },
+              spread: spread
+            };
+          }
+          return null;
+        }
+      });
 
       // Billboard component (always look at camera)
       AFRAME.registerComponent('billboard', {
@@ -241,131 +235,71 @@
           }
       });
 
-      // Model Controller Component (Pinch Scale + Rotation)
+      // Model Controller: Handles Zoom (Pinch) and Rotation (Drag)
       AFRAME.registerComponent('model-controller', {
         schema: {
-          minScale: { default: 0.1 },
-          maxScale: { default: 10.0 },
-          rotationSpeed: { default: 2.0 } // Reduced sensitivity
+          minScale: { default: 0.2 },
+          maxScale: { default: 5.0 },
+          rotationSpeed: { default: 0.25 } // Reduced speed for precision
         },
         init: function () {
-          this.initialScale = this.el.object3D.scale.clone();
-          this.isScaling = false;
-          this.isRotating = false;
-          this.startDistance = 0;
-          this.startX = 0;
+          this.sceneEl = document.querySelector('a-scene');
+          this.handleTwoFingerMove = this.handleTwoFingerMove.bind(this);
+          this.handleOneFingerMove = this.handleOneFingerMove.bind(this);
+          this.handleOneFingerStart = this.handleOneFingerStart.bind(this);
           
-          // Bind methods
-          this.onTouchStart = this.onTouchStart.bind(this);
-          this.onTouchMove = this.onTouchMove.bind(this);
-          this.onTouchEnd = this.onTouchEnd.bind(this);
-          
-          // Add event listeners to scene (global input)
-          this.sceneEl = this.el.sceneEl;
-          this.sceneEl.canvas.addEventListener('touchstart', this.onTouchStart);
-          this.sceneEl.canvas.addEventListener('touchmove', this.onTouchMove);
-          this.sceneEl.canvas.addEventListener('touchend', this.onTouchEnd);
-          
-          // Mouse support for desktop testing
-          this.onMouseDown = this.onMouseDown.bind(this);
-          this.onMouseMove = this.onMouseMove.bind(this);
-          this.onMouseUp = this.onMouseUp.bind(this);
-          
-          this.sceneEl.canvas.addEventListener('mousedown', this.onMouseDown);
-          this.sceneEl.canvas.addEventListener('mousemove', this.onMouseMove);
-          this.sceneEl.canvas.addEventListener('mouseup', this.onMouseUp);
+          this.initialScale = null;
+          this.lastX = null;
+
+          this.sceneEl.addEventListener('twofingermove', this.handleTwoFingerMove);
+          this.sceneEl.addEventListener('onefingermove', this.handleOneFingerMove);
+          this.sceneEl.addEventListener('onefingerstart', this.handleOneFingerStart);
         },
-        
-        remove: function() {
-           // Cleanup
-           this.sceneEl.canvas.removeEventListener('touchstart', this.onTouchStart);
-           this.sceneEl.canvas.removeEventListener('touchmove', this.onTouchMove);
-           this.sceneEl.canvas.removeEventListener('touchend', this.onTouchEnd);
-           this.sceneEl.canvas.removeEventListener('mousedown', this.onMouseDown);
-           this.sceneEl.canvas.removeEventListener('mousemove', this.onMouseMove);
-           this.sceneEl.canvas.removeEventListener('mouseup', this.onMouseUp);
+        remove: function () {
+          this.sceneEl.removeEventListener('twofingermove', this.handleTwoFingerMove);
+          this.sceneEl.removeEventListener('onefingermove', this.handleOneFingerMove);
+          this.sceneEl.removeEventListener('onefingerstart', this.handleOneFingerStart);
         },
-
-        onTouchStart: function (evt) {
-          if (evt.touches.length === 2) {
-            this.isScaling = true;
-            this.startDistance = this.getDistance(evt.touches);
-          } else if (evt.touches.length === 1) {
-            // Only rotate if we are NOT interacting with UI
-            if (evt.target.closest('.ui-element')) return;
-            
-            this.isRotating = true;
-            this.startX = evt.touches[0].clientX;
-          }
+        handleOneFingerStart: function(event) {
+            this.lastX = event.detail.position.x;
         },
-
-        onTouchMove: function (evt) {
-          if (!this.el.getAttribute('visible')) return;
-
-          if (this.isScaling && evt.touches.length === 2) {
-            // Zoom Logic (Pinch)
-            const currentDistance = this.getDistance(evt.touches);
-            const scaleFactor = currentDistance / this.startDistance;
-            
-            // Linear Zoom 1:1
-            const newScale = this.initialScale.x * scaleFactor;
-
-            if (newScale >= this.data.minScale && newScale <= this.data.maxScale) {
-                this.el.object3D.scale.set(newScale, newScale, newScale);
+        handleOneFingerMove: function(event) {
+            // One-finger Rotation
+            if (this.lastX !== null) {
+                const deltaX = event.detail.position.x - this.lastX;
+                this.lastX = event.detail.position.x;
+                
+                // Rotate active model
+                if (activeMarkerId !== null) {
+                     const marker = document.getElementById('marker-' + activeMarkerId);
+                     const model = marker ? marker.querySelector('.model-entity') : null;
+                     if (model) {
+                         model.object3D.rotation.y += deltaX * (this.data.rotationSpeed * 0.01);
+                     }
+                }
             }
-          } else if (this.isRotating && evt.touches.length === 1) {
-             // Rotation Logic (1 Finger)
-             const currentX = evt.touches[0].clientX;
-             const deltaX = currentX - this.startX;
-             
-             // Normalize by screen width for consistency
-             const screenWidth = window.innerWidth;
-             const rotationAmount = (deltaX / screenWidth) * Math.PI * 2 * this.data.rotationSpeed;
-             
-             this.el.object3D.rotation.y += rotationAmount;
-             
-             this.startX = currentX;
-          }
         },
-
-        onTouchEnd: function (evt) {
-          if (evt.touches.length < 2) {
-            this.isScaling = false;
-            // Reset initial scale reference for next pinch
-            this.initialScale = this.el.object3D.scale.clone();
-          }
-          if (evt.touches.length === 0) {
-             this.isRotating = false;
-          }
-        },
-        
-        // Mouse handlers for desktop
-        onMouseDown: function(evt) {
-             if (evt.target.closest('.ui-element')) return;
-             this.isRotating = true;
-             this.startX = evt.clientX;
-        },
-        
-        onMouseMove: function(evt) {
-             if (!this.el.getAttribute('visible')) return;
-             if(this.isRotating) {
-                 const currentX = evt.clientX;
-                 const deltaX = currentX - this.startX;
-                 const screenWidth = window.innerWidth;
-                 const rotationAmount = (deltaX / screenWidth) * Math.PI * 2 * this.data.rotationSpeed;
-                 this.el.object3D.rotation.y += rotationAmount;
-                 this.startX = currentX;
+        handleTwoFingerMove: function (event) {
+          // Pinch to Zoom
+          if (activeMarkerId !== null) {
+             const marker = document.getElementById('marker-' + activeMarkerId);
+             const model = marker ? marker.querySelector('.model-entity') : null;
+             
+             if (model && event.detail.spread && event.detail.startSpread) {
+                if (!this.initialScale) {
+                    this.initialScale = model.object3D.scale.clone();
+                }
+                
+                // Linear 1:1 scaling based on spread ratio
+                const scaleFactor = event.detail.spread / event.detail.startSpread;
+                let newScale = this.initialScale.x * scaleFactor;
+                
+                // Clamp scale
+                newScale = Math.min(Math.max(newScale, this.data.minScale), this.data.maxScale);
+                
+                model.object3D.scale.set(newScale, newScale, newScale);
              }
-        },
-        
-        onMouseUp: function() {
-             this.isRotating = false;
-        },
-
-        getDistance: function (touches) {
-          const dx = touches[0].clientX - touches[1].clientX;
-          const dy = touches[0].clientY - touches[1].clientY;
-          return Math.sqrt(dx * dx + dy * dy);
+          }
         }
       });
       </script>
@@ -384,14 +318,14 @@
       </a-light>
 
     <!-- MARKER 0: Zelva Ramen -->
-    <a-marker type="barcode" value="0" id="marker-0">
+    <a-marker type="barcode" value="0" id="marker-0" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
       <a-entity id="model-0" visible="false">
         <a-entity 
           gltf-model="#ramen-model" 
           scale="3.5 3.5 3.5" 
           position="0 0 0"
           rotation="0 0 0"
-          class="ui-element"
+          class="ui-element model-entity"
           model-controller="minScale: 0.5; maxScale: 5; rotationSpeed: 0.25">
         </a-entity>
       </a-entity>
@@ -400,19 +334,18 @@
           <!-- Hit Target (Invisible) -->
           <a-circle radius="0.8" position="0 0.5 0" material="opacity: 0; transparent: true" class="clickable" click-handler></a-circle>
           <a-ring class="clickable" click-handler color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0.5 0"></a-ring>
-          <a-text value="TOCA AQUI" align="center" position="0 1.2 0" scale="2 2 2" color="#00FFFF"></a-text>
       </a-entity>
     </a-marker>
 
     <!-- MARKER 1: Volcano Roll -->
-    <a-marker type="barcode" value="1" id="marker-1">
+    <a-marker type="barcode" value="1" id="marker-1" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
       <a-entity id="model-1" visible="false">
         <a-entity 
           gltf-model="#roll-model" 
-          scale="3.5 3.5 3.5" 
+          scale="5.0 5.0 5.0" 
           position="0 0 0"
           rotation="0 0 0"
-          class="ui-element"
+          class="ui-element model-entity"
           model-controller="minScale: 0.5; maxScale: 5; rotationSpeed: 0.25">
         </a-entity>
       </a-entity>
@@ -421,19 +354,18 @@
           <!-- Hit Target (Invisible) -->
           <a-circle radius="0.8" position="0 0.5 0" material="opacity: 0; transparent: true" class="clickable" click-handler></a-circle>
           <a-ring class="clickable" click-handler color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0.5 0"></a-ring>
-          <a-text value="TOCA AQUI" align="center" position="0 1.2 0" scale="2 2 2" color="#00FFFF"></a-text>
       </a-entity>
     </a-marker>
 
     <!-- MARKER 2: Nigiris Especiales -->
-    <a-marker type="barcode" value="2" id="marker-2">
+    <a-marker type="barcode" value="2" id="marker-2" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
       <a-entity id="model-2" visible="false">
         <a-entity 
           gltf-model="#salmon-model" 
-          scale="0.5 0.5 0.5" 
+          scale="0.2 0.2 0.2" 
           position="0 0 0"
           rotation="0 0 0"
-          class="ui-element"
+          class="ui-element model-entity"
           model-controller="minScale: 0.5; maxScale: 5; rotationSpeed: 0.25">
         </a-entity>
       </a-entity>
@@ -442,19 +374,18 @@
           <!-- Hit Target (Invisible) -->
           <a-circle radius="0.8" position="0 0.5 0" material="opacity: 0; transparent: true" class="clickable" click-handler></a-circle>
           <a-ring class="clickable" click-handler color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0.5 0"></a-ring>
-          <a-text value="TOCA AQUI" align="center" position="0 1.2 0" scale="2 2 2" color="#00FFFF"></a-text>
       </a-entity>
     </a-marker>
 
     <!-- MARKER 3: Makis New Styles -->
-    <a-marker type="barcode" value="3" id="marker-3">
+    <a-marker type="barcode" value="3" id="marker-3" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
       <a-entity id="model-3" visible="false">
         <a-entity 
           gltf-model="#sushi-model" 
           scale="5 5 5" 
           position="0 0 0"
           rotation="0 0 0"
-          class="ui-element"
+          class="ui-element model-entity"
           model-controller="minScale: 0.5; maxScale: 5; rotationSpeed: 0.25">
         </a-entity>
       </a-entity>
@@ -463,7 +394,6 @@
           <!-- Hit Target (Invisible) -->
           <a-circle radius="0.8" position="0 0.5 0" material="opacity: 0; transparent: true" class="clickable" click-handler></a-circle>
           <a-ring class="clickable" click-handler color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0.5 0"></a-ring>
-          <a-text value="TOCA AQUI" align="center" position="0 1.2 0" scale="2 2 2" color="#00FFFF"></a-text>
       </a-entity>
     </a-marker>
 
@@ -549,56 +479,69 @@
         console.log("Scene click", evt.target);
       });
 
-      // Capture Button Logic
-      captureBtn.addEventListener('click', () => {
-        // Visual Feedback (Flash) - Trigger immediately
-        flashOverlay.classList.add('flash-active');
-        setTimeout(() => {
-          flashOverlay.classList.remove('flash-active');
-        }, 150);
+      // Photo Capture Logic
+      captureBtn.addEventListener('click', function() {
+        const video = document.querySelector('video');
+        const scene = document.querySelector('a-scene');
+        const glCanvas = scene.canvas; // The WebGL canvas
 
-        // 1. Setup Capture Canvas (Match Viewport)
+        // Force a render to ensure the canvas is up to date
+        scene.renderer.render(scene.object3D, scene.camera);
+
         const captureCanvas = document.createElement('canvas');
         captureCanvas.width = window.innerWidth;
         captureCanvas.height = window.innerHeight;
         const ctx = captureCanvas.getContext('2d');
 
-        // 2. Draw Video (Camera Feed) - Correctly Scaled (Cover)
-        const video = document.querySelector('video');
+        // 1. Draw Camera Feed (Video) - Handle "object-fit: cover" aspect ratio
         if (video) {
-          const vRatio = video.videoWidth / video.videoHeight;
-          const cRatio = captureCanvas.width / captureCanvas.height;
-          let sWidth, sHeight, sx, sy;
+            const videoRatio = video.videoWidth / video.videoHeight;
+            const screenRatio = captureCanvas.width / captureCanvas.height;
+            
+            let drawWidth, drawHeight, startX, startY;
 
-          // Object-fit: cover logic
-          if (cRatio > vRatio) {
-            sWidth = video.videoWidth;
-            sHeight = video.videoWidth / cRatio;
-            sx = 0;
-            sy = (video.videoHeight - sHeight) / 2;
-          } else {
-            sWidth = video.videoHeight * cRatio;
-            sHeight = video.videoHeight;
-            sx = (video.videoWidth - sWidth) / 2;
-            sy = 0;
-          }
-          
-          ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, captureCanvas.width, captureCanvas.height);
+            if (screenRatio > videoRatio) {
+                // Screen is wider than video (crop top/bottom)
+                drawWidth = captureCanvas.width;
+                drawHeight = drawWidth / videoRatio;
+                startX = 0;
+                startY = (captureCanvas.height - drawHeight) / 2;
+            } else {
+                // Screen is taller than video (crop sides)
+                drawHeight = captureCanvas.height;
+                drawWidth = drawHeight * videoRatio;
+                startX = (captureCanvas.width - drawWidth) / 2;
+                startY = 0;
+            }
+            
+            ctx.drawImage(video, startX, startY, drawWidth, drawHeight);
         }
 
-        // 3. Draw WebGL Scene (Models)
-        const sceneEl = document.querySelector('a-scene');
-        if (sceneEl && sceneEl.canvas) {
-          // FORCE RENDER to ensure model is in buffer
-          sceneEl.renderer.render(sceneEl.object3D, sceneEl.camera);
-          
-          const glCanvas = sceneEl.canvas;
-          ctx.drawImage(glCanvas, 0, 0, captureCanvas.width, captureCanvas.height);
-        }
+        // 2. Draw WebGL Scene (Models)
+        // Note: preserveDrawingBuffer: true is required in a-scene renderer config
+        ctx.drawImage(glCanvas, 0, 0, captureCanvas.width, captureCanvas.height);
 
-        // 5. Download
+        // 3. Flash Effect
+        const flash = document.createElement('div');
+        flash.style.position = 'fixed';
+        flash.style.top = '0';
+        flash.style.left = '0';
+        flash.style.width = '100%';
+        flash.style.height = '100%';
+        flash.style.backgroundColor = 'white';
+        flash.style.opacity = '1';
+        flash.style.zIndex = '9999';
+        flash.style.transition = 'opacity 0.5s ease-out';
+        document.body.appendChild(flash);
+        
+        // Trigger reflow
+        void flash.offsetWidth;
+        flash.style.opacity = '0';
+        setTimeout(() => document.body.removeChild(flash), 500);
+
+        // 4. Download
         const link = document.createElement('a');
-        link.download = `web-ar-capture-${Date.now()}.png`;
+        link.download = 'sushi-ar-' + Date.now() + '.png';
         link.href = captureCanvas.toDataURL('image/png');
         link.click();
       });

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>WebAR - Escáner de Códigos de Barras v3 (No Text)</title>
+    <title>WebAR - V4 (SIN EMOJIS)</title>
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <!-- A-Frame -->
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
@@ -358,7 +358,7 @@
 
       <a-assets>
         <a-asset-item id="ramen-model" src="models/sushi/shrimp_ramen_bowl.glb"></a-asset-item>
-        <a-asset-item id="roll-model" src="models/sushi/sushi_rolls.glb?v=2"></a-asset-item>
+        <a-asset-item id="roll-model" src="models/sushi/sushi_rolls.glb"></a-asset-item>
         <a-asset-item id="salmon-model" src="models/sushi/salmon_nigiri.glb"></a-asset-item>
         <a-asset-item id="sushi-model" src="models/sushi/sushi.glb"></a-asset-item>
       <!-- Sushi Assets (Icons for Placeholders) -->
@@ -375,9 +375,23 @@
         <a-entity id="directionaltarget" position="0 0 0"></a-entity>
       </a-light>
 
-    <!-- MARKER 0: Ramen (Ahora Roll California) -->
-    <a-marker type="barcode" value="0" id="marker-0">
-      <a-entity id="model-0" visible="false">
+    <!-- MARKER 0: Zelva Ramen -->
+    <a-marker type="barcode" value="0" id="marker-0" markerhandler>
+      <a-entity id="model-0" visible="true">
+        <a-entity 
+          gltf-model="#ramen-model" 
+          scale="3.5 3.5 3.5" 
+          position="0 0 0"
+          rotation="0 0 0"
+          class="ui-element"
+          model-controller="minScale: 0.5; maxScale: 5; rotationSpeed: 0.25">
+        </a-entity>
+      </a-entity>
+    </a-marker>
+
+    <!-- MARKER 1: Volcano Roll -->
+    <a-marker type="barcode" value="1" id="marker-1" markerhandler>
+      <a-entity id="model-1" visible="true">
         <a-entity 
           gltf-model="#roll-model" 
           scale="3.5 3.5 3.5" 
@@ -387,20 +401,13 @@
           model-controller="minScale: 0.5; maxScale: 5; rotationSpeed: 0.25">
         </a-entity>
       </a-entity>
-      <!-- Placeholder (Icono 2D que mira a cámara) -->
-      <a-entity id="placeholder-0" visible="true">
-          <!-- Hitbox invisible para clicks -->
-          <a-ring radius-inner="0" radius-outer="1.2" material="opacity: 0; transparent: true" class="clickable" position="0 0.1 0" rotation="-90 0 0"></a-ring>
-          <!-- Icono visual -->
-          <a-image src="#icon-roll" scale="1.5 1.5 1.5" position="0 0.5 0" billboard class="clickable"></a-image>
-      </a-entity>
     </a-marker>
 
-    <!-- MARKER 1: Roll (Ahora Nigiri Salmón) -->
-    <a-marker type="barcode" value="1" id="marker-1">
-      <a-entity id="model-1" visible="false">
+    <!-- MARKER 2: Nigiris Especiales -->
+    <a-marker type="barcode" value="2" id="marker-2" markerhandler>
+      <a-entity id="model-2" visible="true">
         <a-entity 
-          gltf-model="#nigiri-model" 
+          gltf-model="#salmon-model" 
           scale="0.5 0.5 0.5" 
           position="0 0 0"
           rotation="0 0 0"
@@ -408,15 +415,11 @@
           model-controller="minScale: 0.5; maxScale: 5; rotationSpeed: 0.25">
         </a-entity>
       </a-entity>
-      <a-entity id="placeholder-1" visible="true">
-          <a-ring radius-inner="0" radius-outer="1.2" material="opacity: 0; transparent: true" class="clickable" position="0 0.1 0" rotation="-90 0 0"></a-ring>
-          <a-image src="#icon-nigiri" scale="1.5 1.5 1.5" position="0 0.5 0" billboard class="clickable"></a-image>
-      </a-entity>
     </a-marker>
 
-    <!-- MARKER 2: Nigiri (Ahora Sushi Variado) -->
-    <a-marker type="barcode" value="2" id="marker-2">
-      <a-entity id="model-2" visible="false">
+    <!-- MARKER 3: Makis New Styles -->
+    <a-marker type="barcode" value="3" id="marker-3" markerhandler>
+      <a-entity id="model-3" visible="true">
         <a-entity 
           gltf-model="#sushi-model" 
           scale="5 5 5" 
@@ -426,34 +429,28 @@
           model-controller="minScale: 0.5; maxScale: 5; rotationSpeed: 0.25">
         </a-entity>
       </a-entity>
-      <a-entity id="placeholder-2" visible="true">
-          <a-ring radius-inner="0" radius-outer="1.2" material="opacity: 0; transparent: true" class="clickable" position="0 0.1 0" rotation="-90 0 0"></a-ring>
-          <a-image src="#icon-makis" scale="1.5 1.5 1.5" position="0 0.5 0" billboard class="clickable"></a-image>
-      </a-entity>
-    </a-marker>
-
-    <!-- MARKER 3: Makis (Ahora Sushi Rolls) -->
-    <a-marker type="barcode" value="3" id="marker-3">
-      <a-entity id="model-3" visible="false">
-        <a-entity 
-          gltf-model="#makis-model" 
-          scale="3.5 3.5 3.5" 
-          position="0 0 0"
-          rotation="0 0 0"
-          class="ui-element"
-          model-controller="minScale: 0.5; maxScale: 5; rotationSpeed: 0.25">
-        </a-entity>
-      </a-entity>
-      <a-entity id="placeholder-3" visible="true">
-          <a-ring radius-inner="0" radius-outer="1.2" material="opacity: 0; transparent: true" class="clickable" position="0 0.1 0" rotation="-90 0 0"></a-ring>
-          <a-image src="#icon-roll" scale="1.5 1.5 1.5" position="0 0.5 0" billboard class="clickable"></a-image>
-      </a-entity>
     </a-marker>
 
       <a-entity camera cursor="rayOrigin: mouse" raycaster="objects: .clickable" near="0.01" far="10000"></a-entity>
     </a-scene>
 
     <script>
+      // Handler for marker detection
+      AFRAME.registerComponent('markerhandler', {
+        init: function () {
+          this.el.addEventListener('markerFound', () => {
+             const markerId = this.el.id.split('-')[1];
+             console.log('Marker Found:', markerId);
+             activeMarkerId = markerId;
+             updateInfoPanel();
+          });
+          this.el.addEventListener('markerLost', () => {
+             // Optional: Hide info panel if we want strict AR
+             // infoPanel.classList.remove('visible');
+          });
+        }
+      });
+
       // Global click handler for better touch response
       AFRAME.registerComponent('cursor-listener', {
         init: function () {
@@ -576,45 +573,8 @@
         }
       });
 
-      // Update Scene State based on activeMarkerId
-      function updateState() {
-        console.log("Updating State. Active:", activeMarkerId, "Visible:", Array.from(visibleMarkers));
-        
-        // Update 3D Scene Visibility
-        [0, 1, 2, 3].forEach(id => {
-          const content = document.getElementById('content-' + id);
-          const placeholder = document.getElementById('placeholder-' + id);
-          
-          if (visibleMarkers.has(id)) {
-            // If this marker is the ACTIVE one, show content, hide placeholder
-            if (activeMarkerId === id) {
-                if (!content.getAttribute('visible')) {
-                    content.setAttribute('visible', 'true');
-                    // Reset scale if needed or animate in
-                }
-                placeholder.setAttribute('visible', 'false');
-                
-                // Ensure content is clickable so it blocks clicks to background
-                content.classList.add('clickable');
-            } 
-            // If this marker is visible but NOT active, show placeholder
-            else {
-                content.setAttribute('visible', 'false');
-                placeholder.setAttribute('visible', 'true');
-                
-                // Ensure placeholder parts are clickable
-                placeholder.classList.add('clickable');
-            }
-          } else {
-            // Not visible, hide everything
-            content.setAttribute('visible', 'false');
-            placeholder.setAttribute('visible', 'false');
-            content.classList.remove('clickable');
-            placeholder.classList.remove('clickable');
-          }
-        });
-
-        // Update Info Panel
+      // Update Info Panel based on activeMarkerId
+      function updateInfoPanel() {
         if (activeMarkerId !== null && dishes[activeMarkerId]) {
           const dish = dishes[activeMarkerId];
           panelTitle.innerText = dish.name;

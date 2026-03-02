@@ -224,7 +224,7 @@
           schema: {
             minScale: { default: 0.2 },
             maxScale: { default: 4 },
-            rotationSpeed: { default: 2 } // Speed of rotation
+            rotationSpeed: { default: 0.25 } // Slower: 4 swipes for full 360 rotation
           },
           init: function() {
             this.initialScale = this.el.object3D.scale.clone();
@@ -266,7 +266,8 @@
             if (this.el.getAttribute('visible') === false) return;
             
             // Rotate on Y axis based on horizontal drag
-            const rotationFactor = event.detail.positionChange.x * this.data.rotationSpeed;
+            // Normalize by screen width so 1 full swipe = 1 full rotation (2*PI)
+            const rotationFactor = (event.detail.positionChange.x / window.innerWidth) * this.data.rotationSpeed * 2 * Math.PI;
             this.el.object3D.rotation.y += rotationFactor;
           }
         });

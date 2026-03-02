@@ -299,11 +299,11 @@
         </a-entity>
         <!-- Placeholder/Target (Inactive) -->
         <a-entity id="placeholder-0" visible="false" class="clickable" data-id="0">
-            <a-ring color="#FFD700" radius-inner="0.4" radius-outer="0.6" rotation="-90 0 0" opacity="0.8"
-                    animation="property: scale; from: 1 1 1; to: 1.2 1.2 1.2; dir: alternate; dur: 1000; loop: true">
+            <!-- Visible Ring -->
+            <a-ring color="#FFD700" radius-inner="0.4" radius-outer="0.6" rotation="-90 0 0" opacity="0.8">
             </a-ring>
-            <!-- Invisible Hitbox -->
-            <a-circle color="#FFF" opacity="0.01" radius="0.8" rotation="-90 0 0"></a-circle>
+            <!-- Invisible Hitbox (Larger and explicitly clickable) -->
+            <a-circle visible="false" radius="1.5" rotation="-90 0 0" class="clickable"></a-circle>
         </a-entity>
       </a-marker>
 
@@ -318,10 +318,9 @@
             </a-entity>
         </a-entity>
         <a-entity id="placeholder-1" visible="false" class="clickable" data-id="1">
-            <a-ring color="#FFD700" radius-inner="0.4" radius-outer="0.6" rotation="-90 0 0" opacity="0.8"
-                    animation="property: scale; from: 1 1 1; to: 1.2 1.2 1.2; dir: alternate; dur: 1000; loop: true">
+            <a-ring color="#FFD700" radius-inner="0.4" radius-outer="0.6" rotation="-90 0 0" opacity="0.8">
             </a-ring>
-            <a-circle color="#FFF" opacity="0.01" radius="0.8" rotation="-90 0 0"></a-circle>
+            <a-circle visible="false" radius="1.5" rotation="-90 0 0" class="clickable"></a-circle>
         </a-entity>
       </a-marker>
 
@@ -336,10 +335,9 @@
             </a-entity>
         </a-entity>
         <a-entity id="placeholder-2" visible="false" class="clickable" data-id="2">
-            <a-ring color="#FFD700" radius-inner="0.4" radius-outer="0.6" rotation="-90 0 0" opacity="0.8"
-                    animation="property: scale; from: 1 1 1; to: 1.2 1.2 1.2; dir: alternate; dur: 1000; loop: true">
+            <a-ring color="#FFD700" radius-inner="0.4" radius-outer="0.6" rotation="-90 0 0" opacity="0.8">
             </a-ring>
-            <a-circle color="#FFF" opacity="0.01" radius="0.8" rotation="-90 0 0"></a-circle>
+            <a-circle visible="false" radius="1.5" rotation="-90 0 0" class="clickable"></a-circle>
         </a-entity>
       </a-marker>
 
@@ -354,10 +352,9 @@
             </a-entity>
         </a-entity>
         <a-entity id="placeholder-3" visible="false" class="clickable" data-id="3">
-            <a-ring color="#FFD700" radius-inner="0.4" radius-outer="0.6" rotation="-90 0 0" opacity="0.8"
-                    animation="property: scale; from: 1 1 1; to: 1.2 1.2 1.2; dir: alternate; dur: 1000; loop: true">
+            <a-ring color="#FFD700" radius-inner="0.4" radius-outer="0.6" rotation="-90 0 0" opacity="0.8">
             </a-ring>
-            <a-circle color="#FFF" opacity="0.01" radius="0.8" rotation="-90 0 0"></a-circle>
+            <a-circle visible="false" radius="1.5" rotation="-90 0 0" class="clickable"></a-circle>
         </a-entity>
       </a-marker>
 
@@ -534,35 +531,67 @@
           }
           
           visibleMarkers.add(id);
+          
+          // Auto-select if it's the only one visible and nothing else is selected
+          if (visibleMarkers.size === 1 && activeMarkerId === null) {
+              activeMarkerId = id;
+          }
+          
           updateState();
         });
 
         marker.addEventListener('markerLost', () => {
           // Debounce: Wait 500ms before actually declaring it lost
-          // This prevents flickering if the hand shakes briefly
           lostTimeouts[id] = setTimeout(() => {
             visibleMarkers.delete(id);
+            
+            // If the active marker is lost, we DON'T switch automatically 
+            // to prevent jumping. We wait for the user to pick another one.
+            
             updateState();
             delete lostTimeouts[id];
           }, 500);
         });
 
         // Click on Placeholder: Make this marker active
-      placeholder.addEventListener('click', (evt) => {
-          console.log("Clicked placeholder", id); // Debug click
-          evt.stopPropagation(); // Prevent bubbling
-          activeMarkerId = id;
-          updateState();
-      });
-      
-      // Also allow clicking the active content to refresh panel (optional)
-      const content = document.getElementById('content-' + id);
-      // Make content clickable too so it blocks clicks to things behind it
-      content.classList.add('clickable'); 
-      content.addEventListener('click', (evt) => {
-           console.log("Clicked content", id);
-           evt.stopPropagation();
-      });
+        placeholder.addEventListener('click', (evt) => {
+            console.log("Clicked placeholder", id); 
+            evt.stopPropagation();
+            
+            // Visual feedback: brief scale up
+            // Note: We animate the RING inside, not the whole placeholder group, to avoid scaling the hitbox oddly
+            const ring = placeholder.querySelector('a-ring');
+            if(ring) {
+                ring.setAttribute('animation', 'property: scale; to: 1.5 1.5 1.5; dur: 150; easing: easeOutQuad');
+                setTimeout(() => {
+                     ring.removeAttribute('animation');
+                     ring.setAttribute('scale', '1 1 1');
+                }, 150);
+            }
+
+            // Switch logic immediately
+            activeMarkerId = id;
+            updateState();
+        });
+        
+        // Ensure the hitbox itself triggers the click on the parent placeholder
+        const hitbox = placeholder.querySelector('a-circle');
+        if(hitbox) {
+            hitbox.addEventListener('click', (evt) => {
+                console.log("Clicked hitbox", id);
+                evt.stopPropagation();
+                // Trigger the same logic as above
+                activeMarkerId = id;
+                updateState();
+            });
+        }
+        
+        // Also allow clicking the active content to refresh panel
+        const content = document.getElementById('content-' + id);
+        content.classList.add('clickable'); 
+        content.addEventListener('click', (evt) => {
+             evt.stopPropagation();
+        });
       });
     </script>
   </body>

@@ -678,6 +678,15 @@
                  // Visual feedback for the click
                  const debugEl = document.getElementById('debug-text');
                  if (debugEl) debugEl.innerHTML = `CLICKED: M${id}`;
+                 
+                 // Animation Feedback on the Ring
+                 const ring = marker.querySelector('a-ring');
+                 if (ring) {
+                     ring.setAttribute('animation__click', 'property: scale; from: 1 1 1; to: 1.5 1.5 1.5; dur: 150; easing: easeInOutQuad; dir: alternate; loop: 2');
+                     setTimeout(() => {
+                         ring.removeAttribute('animation__click');
+                     }, 400);
+                 }
 
                  if (activeMarkerId !== id) {
                     activeMarkerId = id;
@@ -692,6 +701,16 @@
              if (marker) {
                  const id = parseInt(marker.id.split('-')[1]);
                  console.log("Raycaster touchstart marker:", id);
+                 
+                 // Visual feedback for the click
+                 const ring = marker.querySelector('a-ring');
+                 if (ring) {
+                     ring.setAttribute('animation__click', 'property: scale; from: 1 1 1; to: 1.5 1.5 1.5; dur: 150; easing: easeInOutQuad; dir: alternate; loop: 2');
+                     setTimeout(() => {
+                         ring.removeAttribute('animation__click');
+                     }, 400);
+                 }
+                 
                  if (activeMarkerId !== id) {
                     activeMarkerId = id;
                     updateState();
@@ -905,8 +924,16 @@
           lostTimeouts[id] = setTimeout(() => {
             visibleMarkers.delete(id);
             
-            // If the active marker is lost, we DON'T switch automatically 
-            // to prevent jumping. We wait for the user to pick another one.
+            // If the active marker is lost, check if there are others visible
+            if (activeMarkerId == id) {
+                if (visibleMarkers.size > 0) {
+                    // Switch to the first available marker
+                    const nextId = visibleMarkers.values().next().value;
+                    activeMarkerId = nextId;
+                } else {
+                    activeMarkerId = null; 
+                }
+            }
             
             updateState();
             delete lostTimeouts[id];

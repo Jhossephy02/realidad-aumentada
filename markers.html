@@ -1,38 +1,121 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Marcadores para Escanear</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marcadores WebAR</title>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 20px; }
-        .controls {
-            margin-bottom: 30px;
-            padding: 15px;
-            background: #f0f0f0;
-            border-radius: 8px;
-            display: inline-block;
-        }
-        .marker-container { 
-            display: inline-block; 
-            margin: 20px; 
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             text-align: center; 
-            vertical-align: top; 
-            transition: all 0.3s ease;
+            padding: 20px; 
+            background-color: #f9f9f9;
+            color: #333;
+            margin: 0;
+        }
+        h1 { 
+            color: #2c3e50; 
+            margin-bottom: 10px;
+        }
+        p {
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: inline-block;
+            margin-bottom: 40px;
+            width: 90%;
+            max-width: 500px;
+        }
+        .slider-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        input[type=range] {
+            flex-grow: 1;
+            cursor: pointer;
+        }
+        #size-label {
+            font-weight: bold;
+            color: #2980b9;
+            min-width: 60px;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .marker-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            transition: transform 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .marker-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+        .marker-card h3 {
+            margin-top: 0;
+            color: #34495e;
+        }
+        .marker-img-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            padding: 10px;
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 8px;
         }
         img { 
-            width: 200px; /* Default size */
+            width: 200px; 
             height: 200px; 
-            max-width: 100%;
-            height: auto;
-            border: 2px solid black; 
-            display: block; 
-            margin: 0 auto; 
-            background: white;
-            padding: 10px;
+            image-rendering: pixelated; /* Crisp edges for barcodes */
+            transition: width 0.2s, height 0.2s;
         }
-        h1 { color: #333; }
-        .btn { padding: 15px 30px; background: #28a745; color: white; text-decoration: none; border-radius: 5px; margin-top: 30px; display: inline-block; font-size: 1.2em; font-weight: bold; }
-        .note { color: #666; font-size: 0.9em; margin-top: 5px; }
-        .error-help { color: red; display: none; margin-top: 10px; }
+        .btn { 
+            display: inline-block;
+            padding: 15px 40px; 
+            background: #27ae60; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 50px; 
+            margin-top: 40px; 
+            font-size: 1.2em; 
+            font-weight: bold; 
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4);
+            transition: background 0.3s, transform 0.2s;
+        }
+        .btn:hover {
+            background: #2ecc71;
+            transform: scale(1.05);
+        }
+        .error-help { 
+            color: #e74c3c; 
+            font-size: 0.9em; 
+            margin-top: 10px; 
+            display: none; 
+        }
+        
+        @media (max-width: 600px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
     <script>
         function handleImageError(id) {
@@ -40,7 +123,7 @@
         }
         
         function updateSize(val) {
-            const images = document.querySelectorAll('.marker-container img');
+            const images = document.querySelectorAll('img');
             const sizeLabel = document.getElementById('size-label');
             sizeLabel.innerText = val + 'px';
             
@@ -52,60 +135,78 @@
     </script>
 </head>
 <body>
-    <h1>Marcadores AR (Códigos de Barras 3x3)</h1>
-    <p>Abre <b>index.html</b> en tu móvil y apunta a estos códigos.</p>
+    <h1>Marcadores AR (Códigos 3x3)</h1>
+    <p>Abre <b>index.html</b> en tu móvil y apunta a estos códigos para ver los platos.</p>
     
     <div class="controls">
-        <label for="size-slider">Ajustar Tamaño de Marcadores:</label><br>
-        <input type="range" id="size-slider" min="50" max="500" value="200" oninput="updateSize(this.value)">
-        <span id="size-label" style="font-weight:bold; margin-left: 10px;">200px</span>
-    </div>
-    <br>
-    <div class="marker-container">
-        <h3>0: Ramen</h3>
-        <img src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/0.png" 
-             alt="Barcode 0" 
-             onerror="handleImageError(0)">
-        <div id="error-0" class="error-help">
-            Error cargando imagen.<br>
-            <a href="https://github.com/nicolocarpignoli/artoolkit-barcode-markers-collection/blob/master/3x3/0.png" target="_blank">Ver en GitHub</a>
+        <label for="size-slider" style="display:block; margin-bottom:10px; font-weight:bold;">Ajustar Tamaño:</label>
+        <div class="slider-container">
+            <span style="font-size: 0.8em;">Pequeño</span>
+            <input type="range" id="size-slider" min="100" max="500" value="200" oninput="updateSize(this.value)">
+            <span style="font-size: 0.8em;">Grande</span>
+            <span id="size-label">200px</span>
         </div>
     </div>
 
-    <div class="marker-container">
-        <h3>1: Roll</h3>
-        <img src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/1.png" 
-             alt="Barcode 1" 
-             onerror="handleImageError(1)">
-        <div id="error-1" class="error-help">
-            Error cargando imagen.<br>
-            <a href="https://github.com/nicolocarpignoli/artoolkit-barcode-markers-collection/blob/master/3x3/1.png" target="_blank">Ver en GitHub</a>
+    <div class="grid-container">
+        <!-- Marker 0 -->
+        <div class="marker-card">
+            <h3>0: Zelva Ramen</h3>
+            <div class="marker-img-container">
+                <img src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/0.png" 
+                     alt="Barcode 0" 
+                     onerror="handleImageError(0)">
+            </div>
+            <div id="error-0" class="error-help">
+                Error cargando imagen. <br>
+                <a href="https://github.com/nicolocarpignoli/artoolkit-barcode-markers-collection/blob/master/3x3/0.png" target="_blank">Ver enlace</a>
+            </div>
         </div>
-    </div>
 
-    <div class="marker-container">
-        <h3>2: Salmón</h3>
-        <img src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/2.png" 
-             alt="Barcode 2" 
-             onerror="handleImageError(2)">
-        <div id="error-2" class="error-help">
-            Error cargando imagen.<br>
-            <a href="https://github.com/nicolocarpignoli/artoolkit-barcode-markers-collection/blob/master/3x3/2.png" target="_blank">Ver en GitHub</a>
+        <!-- Marker 1 -->
+        <div class="marker-card">
+            <h3>1: Volcano Roll</h3>
+            <div class="marker-img-container">
+                <img src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/1.png" 
+                     alt="Barcode 1" 
+                     onerror="handleImageError(1)">
+            </div>
+            <div id="error-1" class="error-help">
+                Error cargando imagen. <br>
+                <a href="https://github.com/nicolocarpignoli/artoolkit-barcode-markers-collection/blob/master/3x3/1.png" target="_blank">Ver enlace</a>
+            </div>
         </div>
-    </div>
 
-    <div class="marker-container">
-        <h3>3: Sushi</h3>
-        <img src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/3.png" 
-             alt="Barcode 3" 
-             onerror="handleImageError(3)">
-        <div id="error-3" class="error-help">
-            Error cargando imagen.<br>
-            <a href="https://github.com/nicolocarpignoli/artoolkit-barcode-markers-collection/blob/master/3x3/3.png" target="_blank">Ver en GitHub</a>
+        <!-- Marker 2 -->
+        <div class="marker-card">
+            <h3>2: Nigiris Especiales</h3>
+            <div class="marker-img-container">
+                <img src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/2.png" 
+                     alt="Barcode 2" 
+                     onerror="handleImageError(2)">
+            </div>
+            <div id="error-2" class="error-help">
+                Error cargando imagen. <br>
+                <a href="https://github.com/nicolocarpignoli/artoolkit-barcode-markers-collection/blob/master/3x3/2.png" target="_blank">Ver enlace</a>
+            </div>
+        </div>
+
+        <!-- Marker 3 -->
+        <div class="marker-card">
+            <h3>3: Makis New Styles</h3>
+            <div class="marker-img-container">
+                <img src="https://raw.githubusercontent.com/nicolocarpignoli/artoolkit-barcode-markers-collection/master/3x3/3.png" 
+                     alt="Barcode 3" 
+                     onerror="handleImageError(3)">
+            </div>
+            <div id="error-3" class="error-help">
+                Error cargando imagen. <br>
+                <a href="https://github.com/nicolocarpignoli/artoolkit-barcode-markers-collection/blob/master/3x3/3.png" target="_blank">Ver enlace</a>
+            </div>
         </div>
     </div>
     
-    <br><br>
-    <a href="index.html" class="btn">¡Abrir Escáner (index.html)!</a>
+    <a href="index.html" class="btn">¡Abrir Escáner AR!</a>
+    <br><br><br>
 </body>
 </html>

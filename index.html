@@ -175,13 +175,14 @@
               this.internalState.previousState = currentState;
             }
             if (gestureContinues) {
+              currentState.startSpread = previousState.startSpread;
               const eventDetail = {
                 positionChange: {
                   x: currentState.position.x - previousState.position.x,
                   y: currentState.position.y - previousState.position.y
                 },
                 spreadChange: currentState.spread - previousState.spread,
-                spread: currentState.spread, // Add absolute spread value
+                spread: currentState.spread,
                 startSpread: currentState.startSpread,
                 originalEvent: event
               };
@@ -219,48 +220,54 @@
           }
         });
 
-        AFRAME.registerComponent('pinch-scale', {
+        AFRAME.registerComponent('model-controller', {
           schema: {
-            min: { default: 0.2 },
-            max: { default: 4 }
+            minScale: { default: 0.2 },
+            maxScale: { default: 4 },
+            rotationSpeed: { default: 2 } // Speed of rotation
           },
           init: function() {
             this.initialScale = this.el.object3D.scale.clone();
             this.scaleFactor = 1;
-            this.baseScaleFactor = 1; // Scale factor at start of gesture
+            this.baseScaleFactor = 1;
             
-            this.handleEvent = this.handleEvent.bind(this);
-            this.handleStart = this.handleStart.bind(this);
+            this.handleTwoFingerMove = this.handleTwoFingerMove.bind(this);
+            this.handleTwoFingerStart = this.handleTwoFingerStart.bind(this);
+            this.handleOneFingerMove = this.handleOneFingerMove.bind(this);
             
-            this.el.sceneEl.addEventListener("twofingermove", this.handleEvent);
-            this.el.sceneEl.addEventListener("twofingerstart", this.handleStart);
+            this.el.sceneEl.addEventListener("twofingermove", this.handleTwoFingerMove);
+            this.el.sceneEl.addEventListener("twofingerstart", this.handleTwoFingerStart);
+            this.el.sceneEl.addEventListener("onefingermove", this.handleOneFingerMove);
           },
           remove: function() {
-            this.el.sceneEl.removeEventListener("twofingermove", this.handleEvent);
-            this.el.sceneEl.removeEventListener("twofingerstart", this.handleStart);
+            this.el.sceneEl.removeEventListener("twofingermove", this.handleTwoFingerMove);
+            this.el.sceneEl.removeEventListener("twofingerstart", this.handleTwoFingerStart);
+            this.el.sceneEl.removeEventListener("onefingermove", this.handleOneFingerMove);
           },
-          handleStart: function(event) {
-             // On gesture start, save the current scale factor as base
+          handleTwoFingerStart: function(event) {
              this.baseScaleFactor = this.scaleFactor;
           },
-          handleEvent: function(event) {
-            // Only scale if this entity is visible (active marker)
+          handleTwoFingerMove: function(event) {
             if (this.el.getAttribute('visible') === false) return;
             if (!event.detail.spread || !event.detail.startSpread) return;
 
-            // Calculate new scale factor based on spread ratio (Linear Zoom)
-            // currentSpread / startSpread gives the ratio of change for THIS gesture
+            // Linear 1:1 Zoom (Natural, not exaggerated)
             const spreadRatio = event.detail.spread / event.detail.startSpread;
-            
-            // Apply to the base factor from when gesture started
             this.scaleFactor = this.baseScaleFactor * spreadRatio;
             
             // Clamp
-            this.scaleFactor = Math.min(Math.max(this.scaleFactor, this.data.min), this.data.max);
+            this.scaleFactor = Math.min(Math.max(this.scaleFactor, this.data.minScale), this.data.maxScale);
 
             this.el.object3D.scale.x = this.initialScale.x * this.scaleFactor;
             this.el.object3D.scale.y = this.initialScale.y * this.scaleFactor;
             this.el.object3D.scale.z = this.initialScale.z * this.scaleFactor;
+          },
+          handleOneFingerMove: function(event) {
+            if (this.el.getAttribute('visible') === false) return;
+            
+            // Rotate on Y axis based on horizontal drag
+            const rotationFactor = event.detail.positionChange.x * this.data.rotationSpeed;
+            this.el.object3D.rotation.y += rotationFactor;
           }
         });
       </script>
@@ -281,7 +288,7 @@
       <!-- Marker 0: Ramen -->
       <a-marker type="barcode" value="0" id="marker-0">
         <!-- Full 3D Model (Active) -->
-        <a-entity id="content-0" visible="false" pinch-scale>
+        <a-entity id="content-0" visible="false" model-controller>
             <a-entity 
               gltf-model="#ramen-model" 
               scale="3.0 3.0 3.0" 
@@ -301,7 +308,7 @@
 
       <!-- Marker 1: Roll -->
       <a-marker type="barcode" value="1" id="marker-1">
-        <a-entity id="content-1" visible="false" pinch-scale>
+        <a-entity id="content-1" visible="false" model-controller>
             <a-entity 
               gltf-model="#roll-model" 
               scale="8.0 8.0 8.0" 
@@ -319,7 +326,7 @@
 
       <!-- Marker 2: Salmon (Nigiri) -->
       <a-marker type="barcode" value="2" id="marker-2">
-        <a-entity id="content-2" visible="false" pinch-scale>
+        <a-entity id="content-2" visible="false" model-controller>
             <a-entity 
               gltf-model="#salmon-model" 
               scale="0.5 0.5 0.5" 
@@ -337,7 +344,7 @@
 
       <!-- Marker 3: Sushi (Makis) -->
       <a-marker type="barcode" value="3" id="marker-3">
-        <a-entity id="content-3" visible="false" pinch-scale>
+        <a-entity id="content-3" visible="false" model-controller>
             <a-entity 
               gltf-model="#sushi-model" 
               scale="8.0 8.0 8.0" 

@@ -137,7 +137,7 @@
     <!-- AR.js Scene Setup for 3x3 Barcodes -->
     <a-scene 
       embedded 
-      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; smoothing: true; smoothingAmount: 0.5;"
+      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; smoothing: true; smoothingAmount: 0.8;"
       renderer="logarithmicDepthBuffer: true; colorManagement: true; precision: medium; preserveDrawingBuffer: true;"
       vr-mode-ui="enabled: false"
       gesture-detector
@@ -145,7 +145,34 @@
       enforce-exclusivity>
 
       <script>
-      // Gesture Detector: Emits 'onefingerstart', 'onefingermove', 'twofingerstart', 'twofingermove'
+      // Global state
+      let activeMarkerId = null;
+      const visibleMarkers = new Set();
+      
+      // Marker Handler Component
+      AFRAME.registerComponent('marker-handler', {
+        init: function() {
+          const markerId = parseInt(this.el.id.split('-')[1]);
+          
+          this.el.addEventListener('markerFound', () => {
+             visibleMarkers.add(markerId);
+             
+             // First marker found becomes active automatically
+             if (activeMarkerId === null) {
+                 activeMarkerId = markerId;
+                 // Force update immediately
+                 updateState();
+             }
+          });
+          
+          this.el.addEventListener('markerLost', () => {
+             visibleMarkers.delete(markerId);
+             // We do NOT reset activeMarkerId here. 
+             // Sticky selection: once active, it stays active until another is tapped.
+          });
+        }
+      });
+      </script>
       AFRAME.registerComponent('gesture-detector', {
         schema: { element: { default: '' } },
         init: function () {
@@ -317,85 +344,54 @@
         <a-entity id="directionaltarget" position="0 0 0"></a-entity>
       </a-light>
 
-    <!-- MARKER 0: Zelva Ramen -->
-    <a-marker type="barcode" value="0" id="marker-0" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
-      <a-entity id="model-0" visible="false">
-        <a-entity 
-          gltf-model="#ramen-model" 
-          scale="3.5 3.5 3.5" 
-          position="0 0 0"
-          rotation="0 0 0"
-          class="ui-element model-entity"
-          model-controller="minScale: 0.5; maxScale: 5; rotationSpeed: 0.25">
-        </a-entity>
-      </a-entity>
-      <!-- Placeholder for selection -->
-      <a-entity id="placeholder-0" visible="false" billboard>
-          <!-- Hit Target (Invisible) -->
-          <a-circle radius="0.8" position="0 0.5 0" material="opacity: 0; transparent: true" class="clickable" click-handler></a-circle>
-          <a-ring class="clickable" click-handler color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0.5 0"></a-ring>
-      </a-entity>
-    </a-marker>
+      <!-- MARKER 0: Zelva Ramen -->
+      <a-marker type="barcode" value="0" id="marker-0" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5" marker-handler>
+          <a-entity class="model-entity" id="model-0" visible="false">
+              <a-entity position="0 0 0" scale="3.5 3.5 3.5" gltf-model="#ramen-model" animation-mixer class="clickable" click-handler model-controller="minScale: 0.5; maxScale: 5; rotationSpeed: 0.25"></a-entity>
+          </a-entity>
+          
+          <!-- Placeholder (Ring) - Flat on marker (no billboard) for stability -->
+          <a-entity id="placeholder-0" visible="false" rotation="-90 0 0">
+              <a-circle radius="0.8" position="0 0 0" material="opacity: 0; transparent: true" class="clickable" click-handler></a-circle>
+              <a-ring class="clickable" click-handler color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0 0"></a-ring>
+          </a-entity>
+      </a-marker>
 
-    <!-- MARKER 1: Volcano Roll -->
-    <a-marker type="barcode" value="1" id="marker-1" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
-      <a-entity id="model-1" visible="false">
-        <a-entity 
-          gltf-model="#roll-model" 
-          scale="5.0 5.0 5.0" 
-          position="0 0 0"
-          rotation="0 0 0"
-          class="ui-element model-entity"
-          model-controller="minScale: 0.5; maxScale: 5; rotationSpeed: 0.25">
-        </a-entity>
-      </a-entity>
-      <!-- Placeholder for selection -->
-      <a-entity id="placeholder-1" visible="false" billboard>
-          <!-- Hit Target (Invisible) -->
-          <a-circle radius="0.8" position="0 0.5 0" material="opacity: 0; transparent: true" class="clickable" click-handler></a-circle>
-          <a-ring class="clickable" click-handler color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0.5 0"></a-ring>
-      </a-entity>
-    </a-marker>
+      <!-- MARKER 1: Roll -->
+      <a-marker type="barcode" value="1" id="marker-1" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5" marker-handler>
+          <a-entity class="model-entity" id="model-1" visible="false">
+              <a-entity position="0 0 0" scale="5.0 5.0 5.0" gltf-model="#roll-model" animation-mixer class="clickable" click-handler model-controller="minScale: 0.5; maxScale: 5; rotationSpeed: 0.25"></a-entity>
+          </a-entity>
+          
+          <a-entity id="placeholder-1" visible="false" rotation="-90 0 0">
+              <a-circle radius="0.8" position="0 0 0" material="opacity: 0; transparent: true" class="clickable" click-handler></a-circle>
+              <a-ring class="clickable" click-handler color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0 0"></a-ring>
+          </a-entity>
+      </a-marker>
 
-    <!-- MARKER 2: Nigiris Especiales -->
-    <a-marker type="barcode" value="2" id="marker-2" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
-      <a-entity id="model-2" visible="false">
-        <a-entity 
-          gltf-model="#salmon-model" 
-          scale="0.2 0.2 0.2" 
-          position="0 0 0"
-          rotation="0 0 0"
-          class="ui-element model-entity"
-          model-controller="minScale: 0.5; maxScale: 5; rotationSpeed: 0.25">
-        </a-entity>
-      </a-entity>
-      <!-- Placeholder for selection -->
-      <a-entity id="placeholder-2" visible="false" billboard>
-          <!-- Hit Target (Invisible) -->
-          <a-circle radius="0.8" position="0 0.5 0" material="opacity: 0; transparent: true" class="clickable" click-handler></a-circle>
-          <a-ring class="clickable" click-handler color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0.5 0"></a-ring>
-      </a-entity>
-    </a-marker>
+      <!-- MARKER 2: Salmon -->
+      <a-marker type="barcode" value="2" id="marker-2" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5" marker-handler>
+          <a-entity class="model-entity" id="model-2" visible="false">
+              <a-entity position="0 0 0" scale="0.2 0.2 0.2" gltf-model="#salmon-model" animation-mixer class="clickable" click-handler model-controller="minScale: 0.5; maxScale: 5; rotationSpeed: 0.25"></a-entity>
+          </a-entity>
+          
+          <a-entity id="placeholder-2" visible="false" rotation="-90 0 0">
+              <a-circle radius="0.8" position="0 0 0" material="opacity: 0; transparent: true" class="clickable" click-handler></a-circle>
+              <a-ring class="clickable" click-handler color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0 0"></a-ring>
+          </a-entity>
+      </a-marker>
 
-    <!-- MARKER 3: Makis New Styles -->
-    <a-marker type="barcode" value="3" id="marker-3" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5">
-      <a-entity id="model-3" visible="false">
-        <a-entity 
-          gltf-model="#sushi-model" 
-          scale="5 5 5" 
-          position="0 0 0"
-          rotation="0 0 0"
-          class="ui-element model-entity"
-          model-controller="minScale: 0.5; maxScale: 5; rotationSpeed: 0.25">
-        </a-entity>
-      </a-entity>
-      <!-- Placeholder for selection -->
-      <a-entity id="placeholder-3" visible="false" billboard>
-          <!-- Hit Target (Invisible) -->
-          <a-circle radius="0.8" position="0 0.5 0" material="opacity: 0; transparent: true" class="clickable" click-handler></a-circle>
-          <a-ring class="clickable" click-handler color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0.5 0"></a-ring>
-      </a-entity>
-    </a-marker>
+      <!-- MARKER 3: Sushi -->
+      <a-marker type="barcode" value="3" id="marker-3" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="5" marker-handler>
+          <a-entity class="model-entity" id="model-3" visible="false">
+              <a-entity position="0 0 0" scale="5.0 5.0 5.0" gltf-model="#sushi-model" animation-mixer class="clickable" click-handler model-controller="minScale: 0.5; maxScale: 5; rotationSpeed: 0.25"></a-entity>
+          </a-entity>
+          
+          <a-entity id="placeholder-3" visible="false" rotation="-90 0 0">
+              <a-circle radius="0.8" position="0 0 0" material="opacity: 0; transparent: true" class="clickable" click-handler></a-circle>
+              <a-ring class="clickable" click-handler color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0 0"></a-ring>
+          </a-entity>
+      </a-marker>
 
       <a-entity camera cursor="rayOrigin: mouse" raycaster="objects: .clickable" near="0.01" far="10000"></a-entity>
     </a-scene>
@@ -839,44 +835,10 @@
       // ---------------------------------------------------------
 
       // Handle marker detection
-      const lostTimeouts = {}; // Store timeouts for debounce
+      // Note: The 'marker-handler' component above handles the logic now.
+      // We keep the lostTimeouts object for compatibility if needed, but the component handles its own state.
+      const lostTimeouts = {}; 
 
-      [0, 1, 2, 3].forEach(id => {
-        const marker = document.getElementById('marker-' + id);
-        if (!marker) return;
-        
-        marker.addEventListener('markerFound', () => {
-          // Clear any pending lost event for this marker
-          if (lostTimeouts[id]) {
-            clearTimeout(lostTimeouts[id]);
-            delete lostTimeouts[id];
-          }
-          
-          visibleMarkers.add(id);
-          
-          // Auto-select ONLY if no marker has ever been selected yet (First detection)
-          // After this, switching requires explicit user tap.
-          if (activeMarkerId === null) {
-              activeMarkerId = id;
-          }
-          
-          updateState();
-        });
-
-        marker.addEventListener('markerLost', () => {
-          // Debounce: Wait 500ms before actually declaring it lost
-          lostTimeouts[id] = setTimeout(() => {
-            visibleMarkers.delete(id);
-            
-            // REMOVED Auto-Switch Logic to enforce "Sticky Selection"
-            // activeMarkerId remains set to the last selected marker.
-            // This ensures that switching only happens via explicit User Interaction (Tap).
-            
-            updateState();
-            delete lostTimeouts[id];
-          }, 500);
-        });
-      });
     </script>
   </body>
 </html>

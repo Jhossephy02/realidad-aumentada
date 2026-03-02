@@ -270,8 +270,9 @@
             this.isScaling = true;
             this.startDistance = this.getDistance(evt.touches);
           } else if (evt.touches.length === 1) {
-            // Only rotate if we are NOT clicking a UI element or another marker
-            // But for now, we just track it.
+            // Only rotate if we are NOT interacting with UI
+            if (evt.target.closest('.ui-element')) return;
+            
             this.isRotating = true;
             this.startX = evt.touches[0].clientX;
           }
@@ -291,7 +292,6 @@
             if (newScale >= this.data.minScale && newScale <= this.data.maxScale) {
                 this.el.object3D.scale.set(newScale, newScale, newScale);
             }
-            // Don't update startDistance to keep it relative to initial pinch
           } else if (this.isRotating && evt.touches.length === 1) {
              // Rotation Logic (1 Finger)
              const currentX = evt.touches[0].clientX;
@@ -320,6 +320,7 @@
         
         // Mouse handlers for desktop
         onMouseDown: function(evt) {
+             if (evt.target.closest('.ui-element')) return;
              this.isRotating = true;
              this.startX = evt.clientX;
         },
@@ -608,6 +609,120 @@
           infoPanel.classList.remove('visible');
         }
       }
+
+      // ---------------------------------------------------------
+      // Screen-Space Interaction Logic (Tap to Select)
+      // ---------------------------------------------------------
+      
+      // Project 3D position to 2D screen coordinates
+      function toScreenPosition(object3D, camera) {
+          const vector = new THREE.Vector3();
+          // Get world position
+          object3D.getWorldPosition(vector);
+          
+          // Project to normalized device coordinates (-1 to +1)
+          vector.project(camera);
+          
+          // Map to screen coordinates
+          const widthHalf = window.innerWidth / 2;
+          const heightHalf = window.innerHeight / 2;
+          
+          return {
+              x: (vector.x * widthHalf) + widthHalf,
+              y: -(vector.y * heightHalf) + heightHalf
+          };
+      }
+
+      // Check if tap is close to any visible marker
+      function checkMarkerTap(clientX, clientY) {
+          console.log("Checking tap at:", clientX, clientY);
+          
+          let closestMarkerId = null;
+          let minDistance = Infinity;
+          const TAP_THRESHOLD = 150; // Pixels radius (generous for mobile)
+
+          // Convert visibleMarkers Set to Array
+          Array.from(visibleMarkers).forEach(id => {
+              const marker = document.getElementById('marker-' + id);
+              if (!marker || !marker.object3D) return;
+
+              const screenPos = toScreenPosition(marker.object3D, scene.camera);
+              
+              // Calculate distance
+              const dx = clientX - screenPos.x;
+              const dy = clientY - screenPos.y;
+              const distance = Math.sqrt(dx*dx + dy*dy);
+              
+              console.log(`Marker ${id} screen pos: ${screenPos.x.toFixed(0)}, ${screenPos.y.toFixed(0)} Dist: ${distance.toFixed(0)}`);
+
+              if (distance < TAP_THRESHOLD && distance < minDistance) {
+                  minDistance = distance;
+                  closestMarkerId = id;
+              }
+          });
+
+          if (closestMarkerId !== null) {
+              console.log("Tap selected marker:", closestMarkerId);
+              
+              // Switch logic immediately
+              activeMarkerId = closestMarkerId;
+              updateState();
+              
+              // Visual feedback on the ring if it exists
+              const placeholder = document.getElementById('placeholder-' + closestMarkerId);
+              if (placeholder) {
+                   const ring = placeholder.querySelector('a-ring');
+                   if(ring) {
+                        ring.setAttribute('animation', 'property: scale; to: 1.5 1.5 1.5; dur: 150; easing: easeOutQuad');
+                        setTimeout(() => ring.removeAttribute('animation'), 150);
+                   }
+              }
+              
+              return true;
+          }
+          return false;
+      }
+
+      // Global Tap Handler
+      // We use 'touchend' to detect taps, but check if it was a drag
+      let touchStartX = 0;
+      let touchStartY = 0;
+      let touchStartTime = 0;
+
+      window.addEventListener('touchstart', (evt) => {
+          if(evt.touches.length === 1) {
+              touchStartX = evt.touches[0].clientX;
+              touchStartY = evt.touches[0].clientY;
+              touchStartTime = Date.now();
+          }
+      }, {passive: false});
+
+      window.addEventListener('touchend', (evt) => {
+          if (evt.changedTouches.length === 0) return;
+          
+          const touchEndX = evt.changedTouches[0].clientX;
+          const touchEndY = evt.changedTouches[0].clientY;
+          const timeDiff = Date.now() - touchStartTime;
+          const distDiff = Math.sqrt(Math.pow(touchEndX - touchStartX, 2) + Math.pow(touchEndY - touchStartY, 2));
+
+          // If tap is short (<300ms) and didn't move much (<20px)
+          if (timeDiff < 300 && distDiff < 20) {
+              // It's a TAP!
+              // Don't trigger if tapping UI
+              if (evt.target.closest('.ui-element')) return;
+              
+              // Pass the touch coordinates to checkMarkerTap
+              checkMarkerTap(touchEndX, touchEndY);
+          }
+      });
+      
+      // Also support mouse click for testing
+      window.addEventListener('click', (evt) => {
+          if (evt.target.closest('.ui-element')) return;
+          checkMarkerTap(evt.clientX, evt.clientY);
+      });
+      
+      // ---------------------------------------------------------
 
       // Handle marker detection
       const lostTimeouts = {}; // Store timeouts for debounce

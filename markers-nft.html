@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Marcadores WebAR - NFT</title>
+    <style>
+        body { 
+            font-family: sans-serif; 
+            text-align: center; 
+            background: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .instructions {
+            background: #fff;
+            padding: 15px;
+            margin: 0 auto 20px;
+            max-width: 600px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .grid { 
+            display: flex; 
+            flex-wrap: wrap; 
+            justify-content: center; 
+            gap: 30px;
+        }
+        .marker { 
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 300px;
+        }
+        .marker img { 
+            width: 100%; 
+            height: auto; 
+            display: block;
+            border: 1px solid #ddd;
+        }
+        .label { 
+            margin-top: 10px; 
+            font-weight: bold; 
+            color: #555;
+            font-size: 1.2em;
+        }
+        .sub-label {
+            color: #888;
+            font-size: 0.9em;
+        }
+        button {
+            background: #e4002b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #c20024;
+        }
+    </style>
+</head>
+<body>
+    <h1>Marcadores para WebAR (Sin Bordes)</h1>
+    
+    <div class="instructions">
+        <p>Estas son las imágenes que debes escanear con la cámara.</p>
+        <p>1. Abre <strong>index-nft.html</strong> en tu celular.</p>
+        <p>2. Apunta a estas imágenes en tu pantalla.</p>
+        <p>3. Mantén el celular estable hasta que aparezca el modelo 3D.</p>
+    </div>
+
+    <div class="grid">
+        <div class="marker">
+            <img src="img/sushi/sushi_roll.png" alt="Roll California">
+            <div class="label">Roll California</div>
+            <div class="sub-label">Apunta aquí para ver el Roll</div>
+        </div>
+        
+        <div class="marker">
+            <img src="img/sushi/sushi_salmon.png" alt="Nigiri Salmón">
+            <div class="label">Nigiri Salmón</div>
+            <div class="sub-label">Apunta aquí para ver el Nigiri</div>
+        </div>
+        
+        <div class="marker">
+            <img src="img/sushi/sushi.png" alt="Makis Variados">
+            <div class="label">Makis Variados</div>
+            <div class="sub-label">Apunta aquí para ver la tabla de Makis</div>
+        </div>
+
+        <div class="marker">
+            <img src="img/sushi/ramen.png" alt="Zelva Ramen">
+            <div class="label">Zelva Ramen</div>
+            <div class="sub-label">Apunta aquí para ver el Ramen</div>
+        </div>
+    </div>
+
+    <script>
+        // Simple script to print
+        function printMarkers() {
+            window.print();
+        }
+    </script>
+</body>
+</html>

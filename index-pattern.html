@@ -122,10 +122,10 @@
     <!-- Hidden Debug Element to prevent JS errors -->
     <div id="debug-text" style="display: none;"></div>
 
-    <!-- AR.js Scene Setup for 3x3 Barcodes -->
+    <!-- AR.js Scene Setup for Pattern Markers -->
     <a-scene 
       embedded 
-      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; smoothing: true; smoothingAmount: 0.5;"
+      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; smoothing: true; smoothingAmount: 0.5;"
       renderer="logarithmicDepthBuffer: true; colorManagement: true; precision: medium; preserveDrawingBuffer: true;"
       vr-mode-ui="enabled: false"
       gesture-detector>
@@ -375,8 +375,8 @@
         <a-entity id="directionaltarget" position="0 0 0"></a-entity>
       </a-light>
 
-    <!-- MARKER 0: Ramen (Ahora Roll California) -->
-    <a-marker type="barcode" value="0" id="marker-0">
+    <!-- MARKER 0: Roll California -->
+    <a-marker type="pattern" url="markers/pattern-roll.patt" id="marker-0">
       <a-entity id="model-0" visible="false">
         <a-entity 
           gltf-model="#roll-model" 
@@ -396,11 +396,11 @@
       </a-entity>
     </a-marker>
 
-    <!-- MARKER 1: Roll (Ahora Nigiri Salmón) -->
-    <a-marker type="barcode" value="1" id="marker-1">
+    <!-- MARKER 1: Nigiri Salmón -->
+    <a-marker type="pattern" url="markers/pattern-salmon.patt" id="marker-1">
       <a-entity id="model-1" visible="false">
         <a-entity 
-          gltf-model="#nigiri-model" 
+          gltf-model="#salmon-model" 
           scale="0.5 0.5 0.5" 
           position="0 0 0"
           rotation="0 0 0"
@@ -414,8 +414,8 @@
       </a-entity>
     </a-marker>
 
-    <!-- MARKER 2: Nigiri (Ahora Sushi Variado) -->
-    <a-marker type="barcode" value="2" id="marker-2">
+    <!-- MARKER 2: Sushi Variado -->
+    <a-marker type="pattern" url="markers/pattern-sushi.patt" id="marker-2">
       <a-entity id="model-2" visible="false">
         <a-entity 
           gltf-model="#sushi-model" 
@@ -432,11 +432,11 @@
       </a-entity>
     </a-marker>
 
-    <!-- MARKER 3: Makis (Ahora Sushi Rolls) -->
-    <a-marker type="barcode" value="3" id="marker-3">
+    <!-- MARKER 3: Sushi Rolls (Makis) -->
+    <a-marker type="pattern" url="markers/pattern-makis.patt" id="marker-3">
       <a-entity id="model-3" visible="false">
         <a-entity 
-          gltf-model="#makis-model" 
+          gltf-model="#ramen-model" 
           scale="3.5 3.5 3.5" 
           position="0 0 0"
           rotation="0 0 0"

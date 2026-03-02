@@ -261,8 +261,8 @@
 
       <!-- Marker 0: Ramen -->
       <a-marker type="barcode" value="0" id="marker-0">
-        <a-entity id="content-0" visible="false" pinch-scale class="clickable" data-id="0">
-            <!-- 3D Model -->
+        <!-- Full 3D Model (Active) -->
+        <a-entity id="content-0" visible="false" pinch-scale>
             <a-entity 
               gltf-model="#ramen-model" 
               scale="3.0 3.0 3.0" 
@@ -270,12 +270,19 @@
               position="0 0 0">
             </a-entity>
         </a-entity>
+        <!-- Placeholder/Target (Inactive) -->
+        <a-entity id="placeholder-0" visible="false" class="clickable" data-id="0">
+            <a-ring color="#FFD700" radius-inner="0.4" radius-outer="0.6" rotation="-90 0 0" opacity="0.8"
+                    animation="property: scale; from: 1 1 1; to: 1.2 1.2 1.2; dir: alternate; dur: 1000; loop: true">
+            </a-ring>
+            <!-- Invisible Hitbox -->
+            <a-circle color="#FFF" opacity="0.01" radius="0.8" rotation="-90 0 0"></a-circle>
+        </a-entity>
       </a-marker>
 
       <!-- Marker 1: Roll -->
       <a-marker type="barcode" value="1" id="marker-1">
-        <a-entity id="content-1" visible="false" pinch-scale class="clickable" data-id="1">
-            <!-- 3D Model -->
+        <a-entity id="content-1" visible="false" pinch-scale>
             <a-entity 
               gltf-model="#roll-model" 
               scale="8.0 8.0 8.0" 
@@ -283,12 +290,17 @@
               position="0 0 0">
             </a-entity>
         </a-entity>
+        <a-entity id="placeholder-1" visible="false" class="clickable" data-id="1">
+            <a-ring color="#FFD700" radius-inner="0.4" radius-outer="0.6" rotation="-90 0 0" opacity="0.8"
+                    animation="property: scale; from: 1 1 1; to: 1.2 1.2 1.2; dir: alternate; dur: 1000; loop: true">
+            </a-ring>
+            <a-circle color="#FFF" opacity="0.01" radius="0.8" rotation="-90 0 0"></a-circle>
+        </a-entity>
       </a-marker>
 
       <!-- Marker 2: Salmon (Nigiri) -->
       <a-marker type="barcode" value="2" id="marker-2">
-        <a-entity id="content-2" visible="false" pinch-scale class="clickable" data-id="2">
-            <!-- 3D Model -->
+        <a-entity id="content-2" visible="false" pinch-scale>
             <a-entity 
               gltf-model="#salmon-model" 
               scale="0.5 0.5 0.5" 
@@ -296,18 +308,29 @@
               position="0 0 0">
             </a-entity>
         </a-entity>
+        <a-entity id="placeholder-2" visible="false" class="clickable" data-id="2">
+            <a-ring color="#FFD700" radius-inner="0.4" radius-outer="0.6" rotation="-90 0 0" opacity="0.8"
+                    animation="property: scale; from: 1 1 1; to: 1.2 1.2 1.2; dir: alternate; dur: 1000; loop: true">
+            </a-ring>
+            <a-circle color="#FFF" opacity="0.01" radius="0.8" rotation="-90 0 0"></a-circle>
+        </a-entity>
       </a-marker>
 
       <!-- Marker 3: Sushi (Makis) -->
       <a-marker type="barcode" value="3" id="marker-3">
-        <a-entity id="content-3" visible="false" pinch-scale class="clickable" data-id="3">
-            <!-- 3D Model -->
+        <a-entity id="content-3" visible="false" pinch-scale>
             <a-entity 
               gltf-model="#sushi-model" 
               scale="8.0 8.0 8.0" 
               rotation="0 0 0"
               position="0 0 0">
             </a-entity>
+        </a-entity>
+        <a-entity id="placeholder-3" visible="false" class="clickable" data-id="3">
+            <a-ring color="#FFD700" radius-inner="0.4" radius-outer="0.6" rotation="-90 0 0" opacity="0.8"
+                    animation="property: scale; from: 1 1 1; to: 1.2 1.2 1.2; dir: alternate; dur: 1000; loop: true">
+            </a-ring>
+            <a-circle color="#FFF" opacity="0.01" radius="0.8" rotation="-90 0 0"></a-circle>
         </a-entity>
       </a-marker>
 
@@ -324,6 +347,7 @@
       const flashOverlay = document.getElementById('flash-overlay');
 
       let activeMarkerId = null;
+      const visibleMarkers = new Set(); // Track which markers are currently detected
 
       // Dish Data
       const dishes = {
@@ -410,49 +434,83 @@
         link.click();
       });
 
-      // Helper to update Info Panel
-      function showInfo(id) {
-        if (dishes[id]) {
-            panelTitle.innerText = dishes[id].name;
-            panelDesc.innerText = dishes[id].desc;
-            panelPrice.innerText = dishes[id].price;
-            infoPanel.style.display = 'block';
-            activeMarkerId = id;
-            debugText.innerText = `Seleccionado: ${dishes[id].name}`;
+      // Helper: Update state of all markers based on activeMarkerId and visibleMarkers
+      function updateState() {
+        // If nothing is visible, hide panel and return
+        if (visibleMarkers.size === 0) {
+            infoPanel.style.display = 'none';
+            activeMarkerId = null;
+            debugText.innerText = "Buscando códigos...";
+            return;
         }
+
+        // If activeMarkerId is no longer visible, pick a new one (e.g., the first available)
+        if (activeMarkerId !== null && !visibleMarkers.has(activeMarkerId)) {
+            activeMarkerId = visibleMarkers.values().next().value;
+        }
+        
+        // If activeMarkerId is null but we have markers, pick one
+        if (activeMarkerId === null && visibleMarkers.size > 0) {
+            activeMarkerId = visibleMarkers.values().next().value;
+        }
+
+        // Apply Visibility Logic
+        [0, 1, 2, 3].forEach(id => {
+            const content = document.getElementById('content-' + id);
+            const placeholder = document.getElementById('placeholder-' + id);
+            
+            if (!visibleMarkers.has(id)) {
+                // Not detected: Hide everything
+                content.setAttribute('visible', 'false');
+                placeholder.setAttribute('visible', 'false');
+            } else if (id === activeMarkerId) {
+                // Active: Show Content, Hide Placeholder
+                content.setAttribute('visible', 'true');
+                placeholder.setAttribute('visible', 'false');
+                
+                // Update Panel
+                if (dishes[id]) {
+                    panelTitle.innerText = dishes[id].name;
+                    panelDesc.innerText = dishes[id].desc;
+                    panelPrice.innerText = dishes[id].price;
+                    infoPanel.style.display = 'block';
+                    debugText.innerText = `Plato: ${dishes[id].name}`;
+                }
+            } else {
+                // Inactive but Detected: Show Placeholder, Hide Content
+                content.setAttribute('visible', 'false');
+                placeholder.setAttribute('visible', 'true');
+            }
+        });
       }
 
       // Handle marker detection
       [0, 1, 2, 3].forEach(id => {
         const marker = document.getElementById('marker-' + id);
-        const contentEntity = document.getElementById('content-' + id);
+        const placeholder = document.getElementById('placeholder-' + id);
         
-        // Marker Found: Show model, and maybe auto-select if nothing is selected
         marker.addEventListener('markerFound', () => {
-          contentEntity.setAttribute('visible', 'true');
-          
-          // Auto-select if no panel is currently showing
-          if (activeMarkerId === null || infoPanel.style.display === 'none') {
-            showInfo(id);
-          }
+          visibleMarkers.add(id);
+          updateState();
         });
 
-        // Marker Lost: Hide model. If it was the selected one, hide panel.
         marker.addEventListener('markerLost', () => {
-          contentEntity.setAttribute('visible', 'false');
-          
-          if (activeMarkerId === id) {
-            infoPanel.style.display = 'none';
-            activeMarkerId = null;
-            debugText.innerText = "Buscando códigos...";
-          }
+          visibleMarkers.delete(id);
+          updateState();
         });
 
-        // Click Interaction: Explicitly select this dish
-        contentEntity.addEventListener('click', (evt) => {
-            // Prevent double-firing if nested
+        // Click on Placeholder: Make this marker active
+        placeholder.addEventListener('click', (evt) => {
+            evt.stopPropagation(); // Prevent bubbling
+            activeMarkerId = id;
+            updateState();
+            console.log("Switched to marker", id);
+        });
+        
+        // Also allow clicking the active content to refresh panel (optional)
+        const content = document.getElementById('content-' + id);
+        content.addEventListener('click', (evt) => {
             evt.stopPropagation();
-            showInfo(id);
         });
       });
     </script>

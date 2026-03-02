@@ -119,21 +119,6 @@
       <p style="font-size: 0.7rem; color: #aaa; margin-top: 5px;">(Pellizca para escalar)</p>
     </div>
     
-    <!-- Hidden Debug Element to prevent JS errors -->
-      <div id="debug-text" style="
-        position: absolute; 
-        top: 10px; 
-        left: 10px; 
-        background: rgba(0,0,0,0.5); 
-        color: lime; 
-        font-family: monospace; 
-        padding: 5px; 
-        z-index: 9999;
-        pointer-events: none;
-        max-width: 300px;
-        font-size: 14px;
-      ">DEBUG: Raycaster Ready</div>
-
     <!-- AR.js Scene Setup for 3x3 Barcodes -->
     <a-scene 
       embedded 
@@ -143,193 +128,6 @@
       gesture-detector
       id="scene"
       enforce-exclusivity>
-
-      <script>
-      // Global state
-      let activeMarkerId = null;
-      const visibleMarkers = new Set();
-      
-      // Marker Handler Component
-      AFRAME.registerComponent('marker-handler', {
-        init: function() {
-          const markerId = parseInt(this.el.id.split('-')[1]);
-          
-          this.el.addEventListener('markerFound', () => {
-             visibleMarkers.add(markerId);
-             
-             // First marker found becomes active automatically
-             if (activeMarkerId === null) {
-                 activeMarkerId = markerId;
-                 // Force update immediately
-                 updateState();
-             }
-          });
-          
-          this.el.addEventListener('markerLost', () => {
-             visibleMarkers.delete(markerId);
-             // We do NOT reset activeMarkerId here. 
-             // Sticky selection: once active, it stays active until another is tapped.
-          });
-        }
-      });
-      </script>
-      AFRAME.registerComponent('gesture-detector', {
-        schema: { element: { default: '' } },
-        init: function () {
-          this.targetElement = this.data.element && document.querySelector(this.data.element);
-          if (!this.targetElement) this.targetElement = this.el;
-
-          this.internalState = {
-            previousState: null
-          };
-
-          this.emitGestureEvent = this.emitGestureEvent.bind(this);
-          this.targetElement.addEventListener('touchstart', this.emitGestureEvent);
-          this.targetElement.addEventListener('touchend', this.emitGestureEvent);
-          this.targetElement.addEventListener('touchmove', this.emitGestureEvent);
-        },
-        remove: function () {
-          this.targetElement.removeEventListener('touchstart', this.emitGestureEvent);
-          this.targetElement.removeEventListener('touchend', this.emitGestureEvent);
-          this.targetElement.removeEventListener('touchmove', this.emitGestureEvent);
-        },
-        emitGestureEvent: function (event) {
-          const currentState = this.getTouchState(event);
-          const previousState = this.internalState.previousState;
-          const gestureContinues = previousState && currentState && currentState.touchCount == previousState.touchCount;
-          const gestureEnded = previousState && !gestureContinues;
-          const gestureStarted = currentState && !gestureContinues;
-
-          if (gestureEnded) {
-            const eventName = previousState.touchCount === 1 ? 'onefingerend' : 'twofingerend';
-            this.el.emit(eventName, { 
-                position: previousState.position, 
-                spread: previousState.spread 
-            });
-            this.internalState.previousState = null;
-          }
-
-          if (gestureStarted) {
-            currentState.startTime = performance.now();
-            currentState.startPosition = currentState.position;
-            currentState.startSpread = currentState.spread;
-            const eventName = currentState.touchCount === 1 ? 'onefingerstart' : 'twofingerstart';
-            this.el.emit(eventName, currentState);
-            this.internalState.previousState = currentState;
-          }
-
-          if (gestureContinues) {
-            const eventElapsed = performance.now() - previousState.startTime;
-            const eventName = currentState.touchCount === 1 ? 'onefingermove' : 'twofingermove';
-            const detail = {
-              position: currentState.position,
-              spread: currentState.spread,
-              startSpread: previousState.startSpread, // Propagate startSpread
-              startPosition: previousState.startPosition,
-              elapsedTime: eventElapsed
-            };
-            this.el.emit(eventName, detail);
-            this.internalState.previousState = { ...currentState, startTime: previousState.startTime, startSpread: previousState.startSpread, startPosition: previousState.startPosition };
-          }
-        },
-        getTouchState: function (event) {
-          if (event.touches.length === 0) return null;
-          if (event.touches.length === 1) {
-            return {
-              touchCount: 1,
-              position: { x: event.touches[0].pageX, y: event.touches[0].pageY },
-              spread: 0
-            };
-          } else if (event.touches.length === 2) {
-            const spread = Math.hypot(
-              event.touches[0].pageX - event.touches[1].pageX,
-              event.touches[0].pageY - event.touches[1].pageY
-            );
-            return {
-              touchCount: 2,
-              position: { x: (event.touches[0].pageX + event.touches[1].pageX) / 2, y: (event.touches[0].pageY + event.touches[1].pageY) / 2 },
-              spread: spread
-            };
-          }
-          return null;
-        }
-      });
-
-      // Billboard component (always look at camera)
-      AFRAME.registerComponent('billboard', {
-          tick: function () {
-              this.el.object3D.lookAt(this.el.sceneEl.camera.el.object3D.position);
-          }
-      });
-
-      // Model Controller: Handles Zoom (Pinch) and Rotation (Drag)
-      AFRAME.registerComponent('model-controller', {
-        schema: {
-          minScale: { default: 0.2 },
-          maxScale: { default: 5.0 },
-          rotationSpeed: { default: 0.25 } // Reduced speed for precision
-        },
-        init: function () {
-          this.sceneEl = document.querySelector('a-scene');
-          this.handleTwoFingerMove = this.handleTwoFingerMove.bind(this);
-          this.handleOneFingerMove = this.handleOneFingerMove.bind(this);
-          this.handleOneFingerStart = this.handleOneFingerStart.bind(this);
-          
-          this.initialScale = null;
-          this.lastX = null;
-
-          this.sceneEl.addEventListener('twofingermove', this.handleTwoFingerMove);
-          this.sceneEl.addEventListener('onefingermove', this.handleOneFingerMove);
-          this.sceneEl.addEventListener('onefingerstart', this.handleOneFingerStart);
-        },
-        remove: function () {
-          this.sceneEl.removeEventListener('twofingermove', this.handleTwoFingerMove);
-          this.sceneEl.removeEventListener('onefingermove', this.handleOneFingerMove);
-          this.sceneEl.removeEventListener('onefingerstart', this.handleOneFingerStart);
-        },
-        handleOneFingerStart: function(event) {
-            this.lastX = event.detail.position.x;
-        },
-        handleOneFingerMove: function(event) {
-            // One-finger Rotation
-            if (this.lastX !== null) {
-                const deltaX = event.detail.position.x - this.lastX;
-                this.lastX = event.detail.position.x;
-                
-                // Rotate active model
-                if (activeMarkerId !== null) {
-                     const marker = document.getElementById('marker-' + activeMarkerId);
-                     const model = marker ? marker.querySelector('.model-entity') : null;
-                     if (model) {
-                         model.object3D.rotation.y += deltaX * (this.data.rotationSpeed * 0.01);
-                     }
-                }
-            }
-        },
-        handleTwoFingerMove: function (event) {
-          // Pinch to Zoom
-          if (activeMarkerId !== null) {
-             const marker = document.getElementById('marker-' + activeMarkerId);
-             const model = marker ? marker.querySelector('.model-entity') : null;
-             
-             if (model && event.detail.spread && event.detail.startSpread) {
-                if (!this.initialScale) {
-                    this.initialScale = model.object3D.scale.clone();
-                }
-                
-                // Linear 1:1 scaling based on spread ratio
-                const scaleFactor = event.detail.spread / event.detail.startSpread;
-                let newScale = this.initialScale.x * scaleFactor;
-                
-                // Clamp scale
-                newScale = Math.min(Math.max(newScale, this.data.minScale), this.data.maxScale);
-                
-                model.object3D.scale.set(newScale, newScale, newScale);
-             }
-          }
-        }
-      });
-      </script>
 
       <a-assets>
         <a-asset-item id="ramen-model" src="models/sushi/shrimp_ramen_bowl.glb"></a-asset-item>
@@ -442,6 +240,172 @@
 
       let activeMarkerId = null;
       const visibleMarkers = new Set(); // Track which markers are currently detected
+
+      // Marker Handler Component
+      AFRAME.registerComponent('marker-handler', {
+        init: function() {
+          const markerId = parseInt(this.el.id.split('-')[1]);
+          
+          this.el.addEventListener('markerFound', () => {
+             visibleMarkers.add(markerId);
+             
+             // First marker found becomes active automatically
+             if (activeMarkerId === null) {
+                 activeMarkerId = markerId;
+                 // Force update immediately
+                 updateState();
+             }
+          });
+          
+          this.el.addEventListener('markerLost', () => {
+             visibleMarkers.delete(markerId);
+             // We do NOT reset activeMarkerId here. 
+             // Sticky selection: once active, it stays active until another is tapped.
+          });
+        }
+      });
+      
+      // Gesture Detector
+      AFRAME.registerComponent('gesture-detector', {
+        schema: { element: { default: '' } },
+        init: function () {
+          this.targetElement = this.data.element && document.querySelector(this.data.element);
+          if (!this.targetElement) this.targetElement = this.el;
+
+          this.internalState = {
+            previousState: null
+          };
+
+          this.emitGestureEvent = this.emitGestureEvent.bind(this);
+          this.targetElement.addEventListener('touchstart', this.emitGestureEvent);
+          this.targetElement.addEventListener('touchend', this.emitGestureEvent);
+          this.targetElement.addEventListener('touchmove', this.emitGestureEvent);
+        },
+        remove: function () {
+          this.targetElement.removeEventListener('touchstart', this.emitGestureEvent);
+          this.targetElement.removeEventListener('touchend', this.emitGestureEvent);
+          this.targetElement.removeEventListener('touchmove', this.emitGestureEvent);
+        },
+        emitGestureEvent: function (event) {
+          const currentState = this.getTouchState(event);
+          const previousState = this.internalState.previousState;
+          const gestureContinues = previousState && currentState && currentState.touchCount == previousState.touchCount;
+          const gestureEnded = previousState && !gestureContinues;
+          const gestureStarted = currentState && !gestureContinues;
+
+          if (gestureEnded) {
+            const eventName = previousState.touchCount === 1 ? 'onefingerend' : 'twofingerend';
+            this.el.emit(eventName, { 
+                position: previousState.position, 
+                spread: previousState.spread 
+            });
+            this.internalState.previousState = null;
+          }
+
+          if (gestureStarted) {
+            currentState.startTime = performance.now();
+            currentState.startPosition = currentState.position;
+            currentState.startSpread = currentState.spread;
+            const eventName = currentState.touchCount === 1 ? 'onefingerstart' : 'twofingerstart';
+            this.el.emit(eventName, currentState);
+            this.internalState.previousState = currentState;
+          }
+
+          if (gestureContinues) {
+            const eventElapsed = performance.now() - previousState.startTime;
+            const eventName = currentState.touchCount === 1 ? 'onefingermove' : 'twofingermove';
+            const detail = {
+              position: currentState.position,
+              spread: currentState.spread,
+              startSpread: previousState.startSpread, // Propagate startSpread
+              startPosition: previousState.startPosition,
+              elapsedTime: eventElapsed
+            };
+            this.el.emit(eventName, detail);
+            this.internalState.previousState = { ...currentState, startTime: previousState.startTime, startSpread: previousState.startSpread, startPosition: previousState.startPosition };
+          }
+        },
+        getTouchState: function (event) {
+          if (event.touches.length === 0) return null;
+          if (event.touches.length === 1) {
+            return {
+              touchCount: 1,
+              position: { x: event.touches[0].pageX, y: event.touches[0].pageY },
+              spread: 0
+            };
+          } else if (event.touches.length === 2) {
+            const spread = Math.hypot(
+              event.touches[0].pageX - event.touches[1].pageX,
+              event.touches[0].pageY - event.touches[1].pageY
+            );
+            return {
+              touchCount: 2,
+              position: { x: (event.touches[0].pageX + event.touches[1].pageX) / 2, y: (event.touches[0].pageY + event.touches[1].pageY) / 2 },
+              spread: spread
+            };
+          }
+          return null;
+        }
+      });
+
+      // Model Controller
+      AFRAME.registerComponent('model-controller', {
+        schema: {
+          minScale: { default: 0.2 },
+          maxScale: { default: 5.0 },
+          rotationSpeed: { default: 0.25 }
+        },
+        init: function () {
+          this.sceneEl = document.querySelector('a-scene');
+          this.handleTwoFingerMove = this.handleTwoFingerMove.bind(this);
+          this.handleOneFingerMove = this.handleOneFingerMove.bind(this);
+          this.handleOneFingerStart = this.handleOneFingerStart.bind(this);
+          
+          this.initialScale = null;
+          this.lastX = null;
+
+          this.sceneEl.addEventListener('twofingermove', this.handleTwoFingerMove);
+          this.sceneEl.addEventListener('onefingermove', this.handleOneFingerMove);
+          this.sceneEl.addEventListener('onefingerstart', this.handleOneFingerStart);
+        },
+        remove: function () {
+          this.sceneEl.removeEventListener('twofingermove', this.handleTwoFingerMove);
+          this.sceneEl.removeEventListener('onefingermove', this.handleOneFingerMove);
+          this.sceneEl.removeEventListener('onefingerstart', this.handleOneFingerStart);
+        },
+        handleOneFingerStart: function(event) {
+            this.lastX = event.detail.position.x;
+        },
+        handleOneFingerMove: function(event) {
+            if (this.lastX !== null) {
+                const deltaX = event.detail.position.x - this.lastX;
+                this.lastX = event.detail.position.x;
+                if (activeMarkerId !== null) {
+                     const marker = document.getElementById('marker-' + activeMarkerId);
+                     const model = marker ? marker.querySelector('.model-entity') : null;
+                     if (model) {
+                         model.object3D.rotation.y += deltaX * (this.data.rotationSpeed * 0.01);
+                     }
+                }
+            }
+        },
+        handleTwoFingerMove: function (event) {
+          if (activeMarkerId !== null) {
+             const marker = document.getElementById('marker-' + activeMarkerId);
+             const model = marker ? marker.querySelector('.model-entity') : null;
+             
+             if (model && event.detail.spread && event.detail.startSpread) {
+                if (!this.initialScale) {
+                    this.initialScale = model.object3D.scale.clone();
+                }
+                const scaleFactor = event.detail.spread / event.detail.startSpread;
+                let newScale = this.initialScale.x * scaleFactor;
+                newScale = Math.min(Math.max(newScale, this.data.minScale), this.data.maxScale);
+                model.object3D.scale.set(newScale, newScale, newScale);
+             }
+          }
+        }
+      });
 
       // Dish Data
       const dishes = {

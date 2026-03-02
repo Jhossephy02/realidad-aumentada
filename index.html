@@ -361,12 +361,6 @@
         <a-asset-item id="roll-model" src="models/sushi/sushi_rolls.glb"></a-asset-item>
         <a-asset-item id="salmon-model" src="models/sushi/salmon_nigiri.glb"></a-asset-item>
         <a-asset-item id="sushi-model" src="models/sushi/sushi.glb"></a-asset-item>
-      <!-- Sushi Assets (Icons for Placeholders) -->
-      <!-- Usamos emojis de Twemoji como placeholders fiables -->
-      <img id="icon-ramen" src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f365.png" crossorigin="anonymous">
-      <img id="icon-roll" src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f363.png" crossorigin="anonymous">
-      <img id="icon-nigiri" src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f359.png" crossorigin="anonymous">
-      <img id="icon-makis" src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f364.png" crossorigin="anonymous">
       </a-assets>
 
       <!-- Lighting to ensure models are visible -->
@@ -376,7 +370,7 @@
       </a-light>
 
     <!-- MARKER 0: Zelva Ramen -->
-    <a-marker type="barcode" value="0" id="marker-0" markerhandler>
+    <a-marker type="barcode" value="0" id="marker-0">
       <a-entity id="model-0" visible="true">
         <a-entity 
           gltf-model="#ramen-model" 
@@ -390,7 +384,7 @@
     </a-marker>
 
     <!-- MARKER 1: Volcano Roll -->
-    <a-marker type="barcode" value="1" id="marker-1" markerhandler>
+    <a-marker type="barcode" value="1" id="marker-1">
       <a-entity id="model-1" visible="true">
         <a-entity 
           gltf-model="#roll-model" 
@@ -404,7 +398,7 @@
     </a-marker>
 
     <!-- MARKER 2: Nigiris Especiales -->
-    <a-marker type="barcode" value="2" id="marker-2" markerhandler>
+    <a-marker type="barcode" value="2" id="marker-2">
       <a-entity id="model-2" visible="true">
         <a-entity 
           gltf-model="#salmon-model" 
@@ -418,7 +412,7 @@
     </a-marker>
 
     <!-- MARKER 3: Makis New Styles -->
-    <a-marker type="barcode" value="3" id="marker-3" markerhandler>
+    <a-marker type="barcode" value="3" id="marker-3">
       <a-entity id="model-3" visible="true">
         <a-entity 
           gltf-model="#sushi-model" 
@@ -436,6 +430,8 @@
 
     <script>
       // Handler for marker detection
+      // Removed redundant markerhandler component as logic is handled by scripts below
+      /*
       AFRAME.registerComponent('markerhandler', {
         init: function () {
           this.el.addEventListener('markerFound', () => {
@@ -450,6 +446,7 @@
           });
         }
       });
+      */
 
       // Global click handler for better touch response
       AFRAME.registerComponent('cursor-listener', {
@@ -574,7 +571,7 @@
       });
 
       // Update Info Panel based on activeMarkerId
-      function updateInfoPanel() {
+      function updateState() {
         if (activeMarkerId !== null && dishes[activeMarkerId]) {
           const dish = dishes[activeMarkerId];
           panelTitle.innerText = dish.name;

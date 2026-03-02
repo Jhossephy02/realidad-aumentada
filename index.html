@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>WebAR - V5 (SOLO UNO)</title>
+    <title>WebAR - V6 (RAYCASTER)</title>
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <!-- A-Frame -->
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
@@ -120,7 +120,19 @@
     </div>
     
     <!-- Hidden Debug Element to prevent JS errors -->
-    <div id="debug-text" style="display: none;"></div>
+      <div id="debug-text" style="
+        position: absolute; 
+        top: 10px; 
+        left: 10px; 
+        background: rgba(0,0,0,0.5); 
+        color: lime; 
+        font-family: monospace; 
+        padding: 5px; 
+        z-index: 9999;
+        pointer-events: none;
+        max-width: 300px;
+        font-size: 14px;
+      ">DEBUG: Raycaster Ready</div>
 
     <!-- AR.js Scene Setup for 3x3 Barcodes -->
     <a-scene 
@@ -385,7 +397,9 @@
       </a-entity>
       <!-- Placeholder for selection -->
       <a-entity id="placeholder-0" visible="false" billboard>
-          <a-ring color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0.5 0"></a-ring>
+          <!-- Hit Target (Invisible) -->
+          <a-circle radius="0.8" position="0 0.5 0" material="opacity: 0; transparent: true" class="clickable" click-handler></a-circle>
+          <a-ring class="clickable" click-handler color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0.5 0"></a-ring>
           <a-text value="TOCA AQUI" align="center" position="0 1.2 0" scale="2 2 2" color="#00FFFF"></a-text>
       </a-entity>
     </a-marker>
@@ -404,7 +418,9 @@
       </a-entity>
       <!-- Placeholder for selection -->
       <a-entity id="placeholder-1" visible="false" billboard>
-          <a-ring color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0.5 0"></a-ring>
+          <!-- Hit Target (Invisible) -->
+          <a-circle radius="0.8" position="0 0.5 0" material="opacity: 0; transparent: true" class="clickable" click-handler></a-circle>
+          <a-ring class="clickable" click-handler color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0.5 0"></a-ring>
           <a-text value="TOCA AQUI" align="center" position="0 1.2 0" scale="2 2 2" color="#00FFFF"></a-text>
       </a-entity>
     </a-marker>
@@ -423,7 +439,9 @@
       </a-entity>
       <!-- Placeholder for selection -->
       <a-entity id="placeholder-2" visible="false" billboard>
-          <a-ring color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0.5 0"></a-ring>
+          <!-- Hit Target (Invisible) -->
+          <a-circle radius="0.8" position="0 0.5 0" material="opacity: 0; transparent: true" class="clickable" click-handler></a-circle>
+          <a-ring class="clickable" click-handler color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0.5 0"></a-ring>
           <a-text value="TOCA AQUI" align="center" position="0 1.2 0" scale="2 2 2" color="#00FFFF"></a-text>
       </a-entity>
     </a-marker>
@@ -442,7 +460,9 @@
       </a-entity>
       <!-- Placeholder for selection -->
       <a-entity id="placeholder-3" visible="false" billboard>
-          <a-ring color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0.5 0"></a-ring>
+          <!-- Hit Target (Invisible) -->
+          <a-circle radius="0.8" position="0 0.5 0" material="opacity: 0; transparent: true" class="clickable" click-handler></a-circle>
+          <a-ring class="clickable" click-handler color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0.5 0"></a-ring>
           <a-text value="TOCA AQUI" align="center" position="0 1.2 0" scale="2 2 2" color="#00FFFF"></a-text>
       </a-entity>
     </a-marker>
@@ -646,6 +666,41 @@
         }
       });
 
+      // Component to handle clicks on specific entities (Raycaster)
+      AFRAME.registerComponent('click-handler', {
+        init: function () {
+          this.el.addEventListener('click', (evt) => {
+             const marker = this.el.closest('a-marker');
+             if (marker) {
+                 const id = parseInt(marker.id.split('-')[1]);
+                 console.log("Raycaster clicked marker:", id);
+                 
+                 // Visual feedback for the click
+                 const debugEl = document.getElementById('debug-text');
+                 if (debugEl) debugEl.innerHTML = `CLICKED: M${id}`;
+
+                 if (activeMarkerId !== id) {
+                    activeMarkerId = id;
+                    updateState();
+                 }
+             }
+          });
+          
+          // Also listen for touchstart directly on the entity for faster response
+          this.el.addEventListener('touchstart', (evt) => {
+             const marker = this.el.closest('a-marker');
+             if (marker) {
+                 const id = parseInt(marker.id.split('-')[1]);
+                 console.log("Raycaster touchstart marker:", id);
+                 if (activeMarkerId !== id) {
+                    activeMarkerId = id;
+                    updateState();
+                 }
+             }
+          });
+        }
+      });
+
       // Update Info Panel based on activeMarkerId
       function updateState() {
         // Models are handled by 'enforce-exclusivity' component now
@@ -696,11 +751,26 @@
 
       // 3. Check for Tap Selection (Priority 1)
       function checkMarkerTap(x, y) {
+          const debugEl = document.getElementById('debug-text');
           let closestDist = Infinity;
           let closestId = null;
+          
+          let debugMsg = `Tap: ${x.toFixed(0)},${y.toFixed(0)}<br>`;
 
-          // Only check visible markers
-          visibleMarkers.forEach(id => {
+          // IMPORTANT: Check ALL markers, not just visible ones?
+          // If markerLost fired, it's removed from visibleMarkers.
+          // BUT, sometimes AR.js loses tracking for a split second.
+          // Let's check ALL markers if visibleMarkers is empty, just in case?
+          // No, if not tracked, matrixWorld is invalid.
+          
+          if (visibleMarkers.size === 0) {
+             debugMsg += "No markers tracked";
+             if(debugEl) debugEl.innerHTML = debugMsg;
+             return false;
+          }
+
+          // Convert Set to Array to avoid issues
+          Array.from(visibleMarkers).forEach(id => {
               const marker = document.getElementById('marker-' + id);
               if (!marker) return;
 
@@ -709,24 +779,32 @@
               const camera = scene.camera; 
               if (!camera) return;
 
-              vector.setFromMatrixPosition(marker.object3D.matrixWorld);
-              vector.project(camera);
-              
-              const screenX = (vector.x * .5 + .5) * window.innerWidth;
-              const screenY = -(vector.y * .5 - .5) * window.innerHeight;
-              
-              const dx = x - screenX;
-              const dy = y - screenY;
-              const dist = Math.sqrt(dx*dx + dy*dy);
-              
-              // Threshold: Half of the screen size (very generous)
-              const limit = Math.min(window.innerWidth, window.innerHeight) * 0.5;
-              
-              if (dist < limit && dist < closestDist) {
-                  closestDist = dist;
-                  closestId = id;
+              // Make sure matrixWorld is updated
+              if (marker.object3D) {
+                  vector.setFromMatrixPosition(marker.object3D.matrixWorld);
+                  vector.project(camera);
+                  
+                  const screenX = (vector.x * .5 + .5) * window.innerWidth;
+                  const screenY = -(vector.y * .5 - .5) * window.innerHeight;
+                  
+                  const dx = x - screenX;
+                  const dy = y - screenY;
+                  const dist = Math.sqrt(dx*dx + dy*dy);
+                  
+                  debugMsg += `M${id}: ${dist.toFixed(0)}px<br>`;
+    
+                  // Threshold: Half of the screen size (very generous)
+                  const limit = Math.min(window.innerWidth, window.innerHeight) * 0.5;
+                  
+                  if (dist < limit && dist < closestDist) {
+                      closestDist = dist;
+                      closestId = id;
+                  }
               }
           });
+          
+          debugMsg += `Select: ${closestId}`;
+          if(debugEl) debugEl.innerHTML = debugMsg;
 
           if (closestId !== null && closestId !== activeMarkerId) {
               console.log("Tap detected on marker:", closestId);

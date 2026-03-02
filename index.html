@@ -383,6 +383,11 @@
           model-controller="minScale: 0.5; maxScale: 5; rotationSpeed: 0.25">
         </a-entity>
       </a-entity>
+      <!-- Placeholder for selection -->
+      <a-entity id="placeholder-0" visible="false" billboard>
+          <a-ring color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0.5 0"></a-ring>
+          <a-text value="TOCA AQUI" align="center" position="0 1.2 0" scale="2 2 2" color="#00FFFF"></a-text>
+      </a-entity>
     </a-marker>
 
     <!-- MARKER 1: Volcano Roll -->
@@ -396,6 +401,11 @@
           class="ui-element"
           model-controller="minScale: 0.5; maxScale: 5; rotationSpeed: 0.25">
         </a-entity>
+      </a-entity>
+      <!-- Placeholder for selection -->
+      <a-entity id="placeholder-1" visible="false" billboard>
+          <a-ring color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0.5 0"></a-ring>
+          <a-text value="TOCA AQUI" align="center" position="0 1.2 0" scale="2 2 2" color="#00FFFF"></a-text>
       </a-entity>
     </a-marker>
 
@@ -411,6 +421,11 @@
           model-controller="minScale: 0.5; maxScale: 5; rotationSpeed: 0.25">
         </a-entity>
       </a-entity>
+      <!-- Placeholder for selection -->
+      <a-entity id="placeholder-2" visible="false" billboard>
+          <a-ring color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0.5 0"></a-ring>
+          <a-text value="TOCA AQUI" align="center" position="0 1.2 0" scale="2 2 2" color="#00FFFF"></a-text>
+      </a-entity>
     </a-marker>
 
     <!-- MARKER 3: Makis New Styles -->
@@ -424,6 +439,11 @@
           class="ui-element"
           model-controller="minScale: 0.5; maxScale: 5; rotationSpeed: 0.25">
         </a-entity>
+      </a-entity>
+      <!-- Placeholder for selection -->
+      <a-entity id="placeholder-3" visible="false" billboard>
+          <a-ring color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0.5 0"></a-ring>
+          <a-text value="TOCA AQUI" align="center" position="0 1.2 0" scale="2 2 2" color="#00FFFF"></a-text>
       </a-entity>
     </a-marker>
 
@@ -570,29 +590,47 @@
           if (activeMarkerId === null) {
              [0, 1, 2, 3].forEach(id => {
                  const model = document.getElementById('model-' + id);
+                 const placeholder = document.getElementById('placeholder-' + id);
                  if (model) {
                      model.setAttribute('visible', false);
                      if(model.object3D) model.object3D.visible = false;
+                 }
+                 if (placeholder) {
+                     // Optionally show placeholders initially if marker is found? 
+                     // No, let them be hidden until tracking starts.
+                     placeholder.setAttribute('visible', true); 
+                     if(placeholder.object3D) placeholder.object3D.visible = true;
                  }
              });
              return;
           }
 
-          // If we have an active marker, ensure ONLY that one is visible
+          // If we have an active marker, ensure ONLY that one shows MODEL
+          // The others show PLACEHOLDER
           [0, 1, 2, 3].forEach(id => {
              const model = document.getElementById('model-' + id);
+             const placeholder = document.getElementById('placeholder-' + id);
+             
+             const isModelActive = (id == activeMarkerId);
+             
              if (model) {
-                 const shouldBeVisible = (id == activeMarkerId);
-                 
-                 // Only update if changed to avoid performance hit
-                 if (model.getAttribute('visible') !== shouldBeVisible) {
-                     model.setAttribute('visible', shouldBeVisible);
-                     if(model.object3D) model.object3D.visible = shouldBeVisible;
+                 if (model.getAttribute('visible') !== isModelActive) {
+                     model.setAttribute('visible', isModelActive);
+                     if(model.object3D) model.object3D.visible = isModelActive;
                  }
-                 
-                 // Double check object3D property just in case
-                 if(model.object3D && model.object3D.visible !== shouldBeVisible) {
-                    model.object3D.visible = shouldBeVisible;
+                 if(model.object3D && model.object3D.visible !== isModelActive) {
+                    model.object3D.visible = isModelActive;
+                 }
+             }
+             
+             if (placeholder) {
+                 const isPlaceholderActive = !isModelActive;
+                 if (placeholder.getAttribute('visible') !== isPlaceholderActive) {
+                     placeholder.setAttribute('visible', isPlaceholderActive);
+                     if(placeholder.object3D) placeholder.object3D.visible = isPlaceholderActive;
+                 }
+                 if(placeholder.object3D && placeholder.object3D.visible !== isPlaceholderActive) {
+                    placeholder.object3D.visible = isPlaceholderActive;
                  }
              }
           });
@@ -646,55 +684,43 @@
           };
       }
 
-      // Check if tap is close to any visible marker
-      function checkMarkerTap(clientX, clientY) {
-          console.log("Checking tap at:", clientX, clientY);
-          
-          let closestMarkerId = null;
-          let minDistance = Infinity;
-          const TAP_THRESHOLD = 150; // Pixels radius (generous for mobile)
+      // 3. Check for Tap Selection (Priority 1)
+      function checkMarkerTap(x, y) {
+          let closestDist = Infinity;
+          let closestId = null;
 
-          // Convert visibleMarkers Set to Array
-          Array.from(visibleMarkers).forEach(id => {
+          // Only check visible markers
+          visibleMarkers.forEach(id => {
               const marker = document.getElementById('marker-' + id);
-              if (!marker || !marker.object3D) return;
+              if (!marker) return;
 
-              const screenPos = toScreenPosition(marker.object3D, scene.camera);
-              
-              // Calculate distance
-              const dx = clientX - screenPos.x;
-              const dy = clientY - screenPos.y;
-              const distance = Math.sqrt(dx*dx + dy*dy);
-              
-              console.log(`Marker ${id} screen pos: ${screenPos.x.toFixed(0)}, ${screenPos.y.toFixed(0)} Dist: ${distance.toFixed(0)}`);
+              // Project marker position to screen coordinates
+              const vector = new THREE.Vector3();
+              const camera = scene.camera; 
+              if (!camera) return;
 
-              if (distance < TAP_THRESHOLD && distance < minDistance) {
-                  minDistance = distance;
-                  closestMarkerId = id;
+              vector.setFromMatrixPosition(marker.object3D.matrixWorld);
+              vector.project(camera);
+              
+              const screenX = (vector.x * .5 + .5) * window.innerWidth;
+              const screenY = -(vector.y * .5 - .5) * window.innerHeight;
+              
+              const dx = x - screenX;
+              const dy = y - screenY;
+              const dist = Math.sqrt(dx*dx + dy*dy);
+              
+              // Threshold: 100px radius
+              if (dist < 100 && dist < closestDist) {
+                  closestDist = dist;
+                  closestId = id;
               }
           });
 
-          if (closestMarkerId !== null) {
-              console.log("Tap selected marker:", closestMarkerId);
-              
-              // Switch logic immediately
-              activeMarkerId = closestMarkerId;
+          if (closestId !== null && closestId !== activeMarkerId) {
+              console.log("Tap detected on marker:", closestId);
+              activeMarkerId = closestId;
               updateState();
-              
-              // Visual feedback on the ring if it exists
-              const placeholder = document.getElementById('placeholder-' + closestMarkerId);
-              if (placeholder) {
-                   const ring = placeholder.querySelector('a-image');
-                   if(ring) {
-                        ring.setAttribute('animation', 'property: scale; to: 2 2 2; dur: 150; easing: easeOutQuad');
-                        setTimeout(() => {
-                            ring.removeAttribute('animation');
-                            ring.setAttribute('scale', '1.5 1.5 1.5');
-                        }, 150);
-                   }
-              }
-              
-              return true;
+              return true; // Handled
           }
           return false;
       }

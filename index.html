@@ -220,57 +220,132 @@
           }
         });
 
-        AFRAME.registerComponent('model-controller', {
-          schema: {
-            minScale: { default: 0.2 },
-            maxScale: { default: 4 },
-            rotationSpeed: { default: 0.25 } // Slower: 4 swipes for full 360 rotation
-          },
-          init: function() {
-            this.initialScale = this.el.object3D.scale.clone();
-            this.scaleFactor = 1;
-            this.baseScaleFactor = 1;
-            
-            this.handleTwoFingerMove = this.handleTwoFingerMove.bind(this);
-            this.handleTwoFingerStart = this.handleTwoFingerStart.bind(this);
-            this.handleOneFingerMove = this.handleOneFingerMove.bind(this);
-            
-            this.el.sceneEl.addEventListener("twofingermove", this.handleTwoFingerMove);
-            this.el.sceneEl.addEventListener("twofingerstart", this.handleTwoFingerStart);
-            this.el.sceneEl.addEventListener("onefingermove", this.handleOneFingerMove);
-          },
-          remove: function() {
-            this.el.sceneEl.removeEventListener("twofingermove", this.handleTwoFingerMove);
-            this.el.sceneEl.removeEventListener("twofingerstart", this.handleTwoFingerStart);
-            this.el.sceneEl.removeEventListener("onefingermove", this.handleOneFingerMove);
-          },
-          handleTwoFingerStart: function(event) {
-             this.baseScaleFactor = this.scaleFactor;
-          },
-          handleTwoFingerMove: function(event) {
-            if (this.el.getAttribute('visible') === false) return;
-            if (!event.detail.spread || !event.detail.startSpread) return;
+      // Model Controller Component (Zoom + Rotation)
+      AFRAME.registerComponent('model-controller', {
+        schema: {
+          minScale: { default: 0.1 },
+          maxScale: { default: 10.0 },
+          rotationSpeed: { default: 2.0 } // Reduced sensitivity
+        },
+        init: function () {
+          this.initialScale = this.el.object3D.scale.clone();
+          this.isScaling = false;
+          this.isRotating = false;
+          this.startDistance = 0;
+          this.startX = 0;
+          
+          // Bind methods
+          this.onTouchStart = this.onTouchStart.bind(this);
+          this.onTouchMove = this.onTouchMove.bind(this);
+          this.onTouchEnd = this.onTouchEnd.bind(this);
+          
+          // Add event listeners to scene (global input)
+          this.sceneEl = this.el.sceneEl;
+          this.sceneEl.canvas.addEventListener('touchstart', this.onTouchStart);
+          this.sceneEl.canvas.addEventListener('touchmove', this.onTouchMove);
+          this.sceneEl.canvas.addEventListener('touchend', this.onTouchEnd);
+          
+          // Mouse support for desktop testing
+          this.onMouseDown = this.onMouseDown.bind(this);
+          this.onMouseMove = this.onMouseMove.bind(this);
+          this.onMouseUp = this.onMouseUp.bind(this);
+          
+          this.sceneEl.canvas.addEventListener('mousedown', this.onMouseDown);
+          this.sceneEl.canvas.addEventListener('mousemove', this.onMouseMove);
+          this.sceneEl.canvas.addEventListener('mouseup', this.onMouseUp);
+        },
+        
+        remove: function() {
+           // Cleanup
+           this.sceneEl.canvas.removeEventListener('touchstart', this.onTouchStart);
+           this.sceneEl.canvas.removeEventListener('touchmove', this.onTouchMove);
+           this.sceneEl.canvas.removeEventListener('touchend', this.onTouchEnd);
+           this.sceneEl.canvas.removeEventListener('mousedown', this.onMouseDown);
+           this.sceneEl.canvas.removeEventListener('mousemove', this.onMouseMove);
+           this.sceneEl.canvas.removeEventListener('mouseup', this.onMouseUp);
+        },
 
-            // Linear 1:1 Zoom (Natural, not exaggerated)
-            const spreadRatio = event.detail.spread / event.detail.startSpread;
-            this.scaleFactor = this.baseScaleFactor * spreadRatio;
-            
-            // Clamp
-            this.scaleFactor = Math.min(Math.max(this.scaleFactor, this.data.minScale), this.data.maxScale);
-
-            this.el.object3D.scale.x = this.initialScale.x * this.scaleFactor;
-            this.el.object3D.scale.y = this.initialScale.y * this.scaleFactor;
-            this.el.object3D.scale.z = this.initialScale.z * this.scaleFactor;
-          },
-          handleOneFingerMove: function(event) {
-            if (this.el.getAttribute('visible') === false) return;
-            
-            // Rotate on Y axis based on horizontal drag
-            // Normalize by screen width so 1 full swipe = 1 full rotation (2*PI)
-            const rotationFactor = (event.detail.positionChange.x / window.innerWidth) * this.data.rotationSpeed * 2 * Math.PI;
-            this.el.object3D.rotation.y += rotationFactor;
+        onTouchStart: function (evt) {
+          if (evt.touches.length === 2) {
+            this.isScaling = true;
+            this.startDistance = this.getDistance(evt.touches);
+          } else if (evt.touches.length === 1) {
+            // Only rotate if we are NOT clicking a UI element or another marker
+            // But for now, we just track it.
+            this.isRotating = true;
+            this.startX = evt.touches[0].clientX;
           }
-        });
+        },
+
+        onTouchMove: function (evt) {
+          if (!this.el.getAttribute('visible')) return;
+
+          if (this.isScaling && evt.touches.length === 2) {
+            // Zoom Logic (Pinch)
+            const currentDistance = this.getDistance(evt.touches);
+            const scaleFactor = currentDistance / this.startDistance;
+            
+            // Linear Zoom 1:1
+            const newScale = this.initialScale.x * scaleFactor;
+
+            if (newScale >= this.data.minScale && newScale <= this.data.maxScale) {
+                this.el.object3D.scale.set(newScale, newScale, newScale);
+            }
+            // Don't update startDistance to keep it relative to initial pinch
+          } else if (this.isRotating && evt.touches.length === 1) {
+             // Rotation Logic (1 Finger)
+             const currentX = evt.touches[0].clientX;
+             const deltaX = currentX - this.startX;
+             
+             // Normalize by screen width for consistency
+             const screenWidth = window.innerWidth;
+             const rotationAmount = (deltaX / screenWidth) * Math.PI * 2 * this.data.rotationSpeed;
+             
+             this.el.object3D.rotation.y += rotationAmount;
+             
+             this.startX = currentX;
+          }
+        },
+
+        onTouchEnd: function (evt) {
+          if (evt.touches.length < 2) {
+            this.isScaling = false;
+            // Reset initial scale reference for next pinch
+            this.initialScale = this.el.object3D.scale.clone();
+          }
+          if (evt.touches.length === 0) {
+             this.isRotating = false;
+          }
+        },
+        
+        // Mouse handlers for desktop
+        onMouseDown: function(evt) {
+             this.isRotating = true;
+             this.startX = evt.clientX;
+        },
+        
+        onMouseMove: function(evt) {
+             if (!this.el.getAttribute('visible')) return;
+             if(this.isRotating) {
+                 const currentX = evt.clientX;
+                 const deltaX = currentX - this.startX;
+                 const screenWidth = window.innerWidth;
+                 const rotationAmount = (deltaX / screenWidth) * Math.PI * 2 * this.data.rotationSpeed;
+                 this.el.object3D.rotation.y += rotationAmount;
+                 this.startX = currentX;
+             }
+        },
+        
+        onMouseUp: function() {
+             this.isRotating = false;
+        },
+
+        getDistance: function (touches) {
+          const dx = touches[0].clientX - touches[1].clientX;
+          const dy = touches[0].clientY - touches[1].clientY;
+          return Math.sqrt(dx * dx + dy * dy);
+        }
+      });
       </script>
 
       <a-assets>
@@ -362,6 +437,22 @@
     </a-scene>
 
     <script>
+      // Global click handler for better touch response
+      AFRAME.registerComponent('cursor-listener', {
+        init: function () {
+          this.el.addEventListener('click', function (evt) {
+            // This is a backup listener in case the individual ones fail
+            // It just logs for now
+             console.log('Global click on', evt.detail.intersection.object.el.id);
+          });
+          
+          // Also listen for mousedown/touchstart
+          this.el.addEventListener('mousedown', function (evt) {
+             console.log('Global mousedown on', evt.detail.intersection.object.el.id);
+          });
+        }
+      });
+      
       const debugText = document.getElementById('debug-text');
       const captureBtn = document.getElementById('capture-btn');
       const infoPanel = document.getElementById('info-panel');
@@ -399,9 +490,10 @@
 
       const scene = document.querySelector('a-scene');
 
-      scene.addEventListener('loaded', () => {
-        debugText.innerText = "Cámara lista. Apunta a un código.";
-        console.log("Scene loaded");
+      // Debug: Log all clicks on scene to see what's being hit
+      scene.addEventListener('click', (evt) => {
+        // Only log if not stopped
+        console.log("Scene click", evt.target);
       });
 
       // Capture Button Logic
@@ -467,53 +559,54 @@
         }
       });
 
-      // Helper: Update state of all markers based on activeMarkerId and visibleMarkers
+      // Update Scene State based on activeMarkerId
       function updateState() {
-        // If nothing is visible, hide panel and return
-        if (visibleMarkers.size === 0) {
-            infoPanel.style.display = 'none';
-            // We do NOT clear activeMarkerId here anymore, so it "remembers" the last selection
-            // activeMarkerId = null; 
-            debugText.innerText = "Buscando códigos...";
-            return;
-        }
-
-        // AUTO-SWITCH REMOVED: We only switch if activeMarkerId is null (first detection)
-        // or if the user explicitly clicks another marker.
+        console.log("Updating State. Active:", activeMarkerId, "Visible:", Array.from(visibleMarkers));
         
-        // If no marker is currently selected, pick the first visible one
-        if (activeMarkerId === null && visibleMarkers.size > 0) {
-            activeMarkerId = visibleMarkers.values().next().value;
-        }
-
-        // Apply Visibility Logic
+        // Update 3D Scene Visibility
         [0, 1, 2, 3].forEach(id => {
-            const content = document.getElementById('content-' + id);
-            const placeholder = document.getElementById('placeholder-' + id);
-            
-            if (!visibleMarkers.has(id)) {
-                // Not detected: Hide everything
-                content.setAttribute('visible', 'false');
-                placeholder.setAttribute('visible', 'false');
-            } else if (id === activeMarkerId) {
-                // Active: Show Content, Hide Placeholder
-                content.setAttribute('visible', 'true');
+          const content = document.getElementById('content-' + id);
+          const placeholder = document.getElementById('placeholder-' + id);
+          
+          if (visibleMarkers.has(id)) {
+            // If this marker is the ACTIVE one, show content, hide placeholder
+            if (activeMarkerId === id) {
+                if (!content.getAttribute('visible')) {
+                    content.setAttribute('visible', 'true');
+                    // Reset scale if needed or animate in
+                }
                 placeholder.setAttribute('visible', 'false');
                 
-                // Update Panel
-                if (dishes[id]) {
-                    panelTitle.innerText = dishes[id].name;
-                    panelDesc.innerText = dishes[id].desc;
-                    panelPrice.innerText = dishes[id].price;
-                    infoPanel.style.display = 'block';
-                    debugText.innerText = `Plato: ${dishes[id].name}`;
-                }
-            } else {
-                // Inactive but Detected: Show Placeholder, Hide Content
+                // Ensure content is clickable so it blocks clicks to background
+                content.classList.add('clickable');
+            } 
+            // If this marker is visible but NOT active, show placeholder
+            else {
                 content.setAttribute('visible', 'false');
                 placeholder.setAttribute('visible', 'true');
+                
+                // Ensure placeholder parts are clickable
+                placeholder.classList.add('clickable');
             }
+          } else {
+            // Not visible, hide everything
+            content.setAttribute('visible', 'false');
+            placeholder.setAttribute('visible', 'false');
+            content.classList.remove('clickable');
+            placeholder.classList.remove('clickable');
+          }
         });
+
+        // Update Info Panel
+        if (activeMarkerId !== null && dishes[activeMarkerId]) {
+          const dish = dishes[activeMarkerId];
+          panelTitle.innerText = dish.name;
+          panelDesc.innerText = dish.desc;
+          panelPrice.innerText = dish.price;
+          infoPanel.classList.add('visible');
+        } else {
+          infoPanel.classList.remove('visible');
+        }
       }
 
       // Handle marker detection
@@ -554,12 +647,16 @@
         });
 
         // Click on Placeholder: Make this marker active
-        placeholder.addEventListener('click', (evt) => {
+        // Using 'click' AND 'touchstart' to ensure responsiveness
+        const handlePlaceholderClick = (evt) => {
+            // Prevent double triggering if both fire
+            if (activeMarkerId === id) return; 
+
             console.log("Clicked placeholder", id); 
-            evt.stopPropagation();
+            // Stop propagation to prevent hitting things behind
+            if(evt.stopPropagation) evt.stopPropagation();
             
             // Visual feedback: brief scale up
-            // Note: We animate the RING inside, not the whole placeholder group, to avoid scaling the hitbox oddly
             const ring = placeholder.querySelector('a-ring');
             if(ring) {
                 ring.setAttribute('animation', 'property: scale; to: 1.5 1.5 1.5; dur: 150; easing: easeOutQuad');
@@ -572,18 +669,22 @@
             // Switch logic immediately
             activeMarkerId = id;
             updateState();
-        });
+        };
+
+        // Attach to placeholder entity (which contains the ring and hitbox)
+        placeholder.addEventListener('click', handlePlaceholderClick);
+        // Also listen for touchstart directly for faster response on mobile
+        // Note: raycaster usually translates touch to click, but sometimes it lags or misses small taps
         
         // Ensure the hitbox itself triggers the click on the parent placeholder
         const hitbox = placeholder.querySelector('a-circle');
         if(hitbox) {
-            hitbox.addEventListener('click', (evt) => {
-                console.log("Clicked hitbox", id);
-                evt.stopPropagation();
-                // Trigger the same logic as above
-                activeMarkerId = id;
-                updateState();
-            });
+            // Make sure hitbox is interactable
+            hitbox.classList.add('clickable');
+            hitbox.addEventListener('click', handlePlaceholderClick);
+            
+            // Experimental: Add direct touch listener for raycaster bypass if needed
+            // But usually 'click' via cursor component is safer for 3D scene
         }
         
         // Also allow clicking the active content to refresh panel

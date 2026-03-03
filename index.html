@@ -134,6 +134,7 @@
         <a-asset-item id="roll-model" src="models/sushi/sushi_rolls.glb"></a-asset-item>
         <a-asset-item id="salmon-model" src="models/sushi/salmon_nigiri.glb"></a-asset-item>
         <a-asset-item id="sushi-model" src="models/sushi/sushi.glb"></a-asset-item>
+        <a-asset-item id="test-model" src="models/test_model.glb"></a-asset-item>
       </a-assets>
 
       <!-- Lighting to ensure models are visible -->
@@ -195,7 +196,7 @@
       <a-marker type="barcode" value="4" id="marker-4" smooth="true" smoothCount="100" smoothTolerance="0.5" smoothThreshold="20" marker-handler>
           <a-entity class="model-entity" id="model-4" visible="false">
               <!-- Escala inicial tentativa, ajusta según el tamaño real del GLB -->
-              <a-entity position="0 0 0" scale="0.5 0.5 0.5" gltf-model="models/test_model.glb" animation-mixer class="clickable" click-handler model-controller="minScale: 0.1; maxScale: 5; rotationSpeed: 0.25"></a-entity>
+              <a-entity position="0 0 0" scale="0.5 0.5 0.5" gltf-model="#test-model" animation-mixer class="clickable" click-handler model-controller="minScale: 0.1; maxScale: 5; rotationSpeed: 0.25"></a-entity>
           </a-entity>
           
           <a-entity id="placeholder-4" visible="false" rotation="-90 0 0">

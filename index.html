@@ -191,6 +191,19 @@
           </a-entity>
       </a-marker>
 
+      <!-- MARKER 4: TEST MODEL (NUEVO) -->
+      <a-marker type="barcode" value="4" id="marker-4" smooth="true" smoothCount="100" smoothTolerance="0.5" smoothThreshold="20" marker-handler>
+          <a-entity class="model-entity" id="model-4" visible="false">
+              <!-- Escala inicial tentativa, ajusta según el tamaño real del GLB -->
+              <a-entity position="0 0 0" scale="0.5 0.5 0.5" gltf-model="models/test_model.glb" animation-mixer class="clickable" click-handler model-controller="minScale: 0.1; maxScale: 5; rotationSpeed: 0.25"></a-entity>
+          </a-entity>
+          
+          <a-entity id="placeholder-4" visible="false" rotation="-90 0 0">
+              <a-circle radius="0.8" position="0 0 0" material="opacity: 0; transparent: true" class="clickable" click-handler></a-circle>
+              <a-ring class="clickable" click-handler color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0 0"></a-ring>
+          </a-entity>
+      </a-marker>
+
       <a-entity camera cursor="rayOrigin: mouse" raycaster="objects: .clickable" near="0.01" far="10000"></a-entity>
     </a-scene>
 
@@ -428,6 +441,11 @@
           name: "Makis New Styles",
           desc: "Makis New Styles de Zelva Nikkei (Amazon, Anticuchero, Banzai, Kaminaki, Parrillero, Pulpo al Olivo, Jalea).",
           price: "S/ 25.00"
+        },
+        4: {
+          name: "Modelo de Prueba",
+          desc: "Modelo 3D integrado para pruebas de estabilidad y visualización.",
+          price: "S/ 0.00"
         }
       };
 
@@ -511,7 +529,7 @@
         tick: function() {
           // If no marker is active yet, hide all
           if (activeMarkerId === null) {
-             [0, 1, 2, 3].forEach(id => {
+             [0, 1, 2, 3, 4].forEach(id => {
                  const model = document.getElementById('model-' + id);
                  const placeholder = document.getElementById('placeholder-' + id);
                  if (model) {
@@ -530,7 +548,7 @@
 
           // If we have an active marker, ensure ONLY that one shows MODEL
           // The others show PLACEHOLDER
-          [0, 1, 2, 3].forEach(id => {
+          [0, 1, 2, 3, 4].forEach(id => {
              const model = document.getElementById('model-' + id);
              const placeholder = document.getElementById('placeholder-' + id);
              

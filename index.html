@@ -127,7 +127,7 @@
       vr-mode-ui="enabled: false"
       gesture-detector
       id="scene"
-      enforce-exclusivity>
+      marker-follower-system>
 
       <a-assets>
         <a-asset-item id="ramen-model" src="models/sushi/shrimp_ramen_bowl.glb"></a-asset-item>
@@ -144,10 +144,6 @@
 
       <!-- MARKER 0: Zelva Ramen -->
       <a-marker type="barcode" value="0" id="marker-0" smooth="true" smoothCount="100" smoothTolerance="0.5" smoothThreshold="20" marker-handler>
-          <a-entity class="model-entity" id="model-0" visible="false">
-              <a-entity position="0 0 0" scale="3.5 3.5 3.5" gltf-model="#ramen-model" animation-mixer class="clickable" click-handler model-controller="minScale: 0.5; maxScale: 8; rotationSpeed: 0.25"></a-entity>
-          </a-entity>
-          
           <!-- Placeholder (Ring) - Flat on marker (no billboard) for stability -->
           <a-entity id="placeholder-0" visible="false" rotation="-90 0 0">
               <a-circle radius="0.8" position="0 0 0" material="opacity: 0; transparent: true" class="clickable" click-handler></a-circle>
@@ -157,10 +153,6 @@
 
       <!-- MARKER 1: Roll -->
       <a-marker type="barcode" value="1" id="marker-1" smooth="true" smoothCount="100" smoothTolerance="0.5" smoothThreshold="20" marker-handler>
-          <a-entity class="model-entity" id="model-1" visible="false">
-              <a-entity position="0 0 0" scale="6.0 6.0 6.0" gltf-model="#roll-model" animation-mixer class="clickable" click-handler model-controller="minScale: 0.5; maxScale: 8; rotationSpeed: 0.25"></a-entity>
-          </a-entity>
-          
           <a-entity id="placeholder-1" visible="false" rotation="-90 0 0">
               <a-circle radius="0.8" position="0 0 0" material="opacity: 0; transparent: true" class="clickable" click-handler></a-circle>
               <a-ring class="clickable" click-handler color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0 0"></a-ring>
@@ -169,10 +161,6 @@
 
       <!-- MARKER 2: Salmon -->
       <a-marker type="barcode" value="2" id="marker-2" smooth="true" smoothCount="100" smoothTolerance="0.5" smoothThreshold="20" marker-handler>
-          <a-entity class="model-entity" id="model-2" visible="false">
-              <a-entity position="0 0 0" scale="0.35 0.35 0.35" gltf-model="#salmon-model" animation-mixer class="clickable" click-handler model-controller="minScale: 0.1; maxScale: 5; rotationSpeed: 0.25"></a-entity>
-          </a-entity>
-          
           <a-entity id="placeholder-2" visible="false" rotation="-90 0 0">
               <a-circle radius="0.8" position="0 0 0" material="opacity: 0; transparent: true" class="clickable" click-handler></a-circle>
               <a-ring class="clickable" click-handler color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0 0"></a-ring>
@@ -181,15 +169,42 @@
 
       <!-- MARKER 3: Sushi -->
       <a-marker type="barcode" value="3" id="marker-3" smooth="true" smoothCount="100" smoothTolerance="0.5" smoothThreshold="20" marker-handler>
-          <a-entity class="model-entity" id="model-3" visible="false">
-              <a-entity position="0 0 0" scale="6.0 6.0 6.0" gltf-model="#sushi-model" animation-mixer class="clickable" click-handler model-controller="minScale: 0.5; maxScale: 8; rotationSpeed: 0.25"></a-entity>
-          </a-entity>
-          
           <a-entity id="placeholder-3" visible="false" rotation="-90 0 0">
               <a-circle radius="0.8" position="0 0 0" material="opacity: 0; transparent: true" class="clickable" click-handler></a-circle>
               <a-ring class="clickable" click-handler color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0 0"></a-ring>
           </a-entity>
       </a-marker>
+
+      <!-- WORLD CONTAINER FOR MODELS (PERSISTENT) -->
+      <a-entity id="world-container">
+          <!-- Model 0 Wrapper -->
+          <a-entity id="model-wrapper-0" visible="false">
+              <a-entity class="model-entity" id="model-0">
+                  <a-entity position="0 0 0" scale="3.5 3.5 3.5" gltf-model="#ramen-model" animation-mixer class="clickable" click-handler model-controller="minScale: 0.5; maxScale: 8; rotationSpeed: 0.25"></a-entity>
+              </a-entity>
+          </a-entity>
+
+          <!-- Model 1 Wrapper -->
+          <a-entity id="model-wrapper-1" visible="false">
+              <a-entity class="model-entity" id="model-1">
+                  <a-entity position="0 0 0" scale="6.0 6.0 6.0" gltf-model="#roll-model" animation-mixer class="clickable" click-handler model-controller="minScale: 0.5; maxScale: 8; rotationSpeed: 0.25"></a-entity>
+              </a-entity>
+          </a-entity>
+
+          <!-- Model 2 Wrapper -->
+          <a-entity id="model-wrapper-2" visible="false">
+              <a-entity class="model-entity" id="model-2">
+                  <a-entity position="0 0 0" scale="0.35 0.35 0.35" gltf-model="#salmon-model" animation-mixer class="clickable" click-handler model-controller="minScale: 0.1; maxScale: 5; rotationSpeed: 0.25"></a-entity>
+              </a-entity>
+          </a-entity>
+
+          <!-- Model 3 Wrapper -->
+          <a-entity id="model-wrapper-3" visible="false">
+              <a-entity class="model-entity" id="model-3">
+                  <a-entity position="0 0 0" scale="6.0 6.0 6.0" gltf-model="#sushi-model" animation-mixer class="clickable" click-handler model-controller="minScale: 0.5; maxScale: 8; rotationSpeed: 0.25"></a-entity>
+              </a-entity>
+          </a-entity>
+      </a-entity>
 
       <a-entity camera cursor="rayOrigin: mouse" raycaster="objects: .clickable" near="0.01" far="10000"></a-entity>
     </a-scene>
@@ -381,8 +396,8 @@
                 const deltaX = event.detail.position.x - this.lastX;
                 this.lastX = event.detail.position.x;
                 if (activeMarkerId !== null) {
-                     const marker = document.getElementById('marker-' + activeMarkerId);
-                     const model = marker ? marker.querySelector('.model-entity') : null;
+                     // Updated: Find model by ID directly since it's no longer inside marker
+                     const model = document.getElementById('model-' + activeMarkerId);
                      if (model) {
                          model.object3D.rotation.y += deltaX * (this.data.rotationSpeed * 0.01);
                      }
@@ -391,8 +406,8 @@
         },
         handleTwoFingerMove: function (event) {
           if (activeMarkerId !== null) {
-             const marker = document.getElementById('marker-' + activeMarkerId);
-             const model = marker ? marker.querySelector('.model-entity') : null;
+             // Updated: Find model by ID directly since it's no longer inside marker
+             const model = document.getElementById('model-' + activeMarkerId);
              
              if (model && event.detail.spread && event.detail.startSpread) {
                 if (!this.initialScale) {
@@ -506,54 +521,58 @@
         link.click();
       });
 
-      // Component to enforce single model visibility every frame (Nuclear Option)
-      AFRAME.registerComponent('enforce-exclusivity', {
+      // Component to handle marker tracking and model persistence
+      AFRAME.registerComponent('marker-follower-system', {
         tick: function() {
-          // If no marker is active yet, hide all
-          if (activeMarkerId === null) {
-             [0, 1, 2, 3].forEach(id => {
-                 const model = document.getElementById('model-' + id);
-                 const placeholder = document.getElementById('placeholder-' + id);
-                 if (model) {
-                     model.setAttribute('visible', false);
-                     if(model.object3D) model.object3D.visible = false;
-                 }
-                 if (placeholder) {
-                     // Optionally show placeholders initially if marker is found? 
-                     // No, let them be hidden until tracking starts.
-                     placeholder.setAttribute('visible', true); 
-                     if(placeholder.object3D) placeholder.object3D.visible = true;
-                 }
-             });
-             return;
-          }
-
-          // If we have an active marker, ensure ONLY that one shows MODEL
-          // The others show PLACEHOLDER
+          // Iterate through all possible markers/models
           [0, 1, 2, 3].forEach(id => {
-             const model = document.getElementById('model-' + id);
+             const marker = document.getElementById('marker-' + id);
+             const wrapper = document.getElementById('model-wrapper-' + id);
              const placeholder = document.getElementById('placeholder-' + id);
              
-             const isModelActive = (id == activeMarkerId);
-             
-             if (model) {
-                 if (model.getAttribute('visible') !== isModelActive) {
-                     model.setAttribute('visible', isModelActive);
-                     if(model.object3D) model.object3D.visible = isModelActive;
+             if (!marker || !wrapper) return;
+
+             const isMarkerVisible = marker.object3D.visible;
+             const isActive = (id === activeMarkerId);
+
+             // 1. MODEL VISIBILITY & TRACKING
+             if (isActive) {
+                 // Active model is ALWAYS visible (even if marker lost)
+                 wrapper.setAttribute('visible', true);
+                 if(wrapper.object3D) wrapper.object3D.visible = true;
+                 
+                 // If marker is tracked, follow it
+                 if (isMarkerVisible) {
+                     // Ensure marker matrix is up to date
+                     marker.object3D.updateMatrixWorld();
+                     
+                     // Decompose marker world matrix
+                     const pos = new THREE.Vector3();
+                     const quat = new THREE.Quaternion();
+                     const scale = new THREE.Vector3();
+                     
+                     marker.object3D.matrixWorld.decompose(pos, quat, scale);
+                     
+                     // Apply position and rotation to wrapper
+                     wrapper.object3D.position.copy(pos);
+                     wrapper.object3D.quaternion.copy(quat);
+                     
+                     // We DO NOT copy scale to wrapper, as models have their own internal scale.
                  }
-                 if(model.object3D && model.object3D.visible !== isModelActive) {
-                    model.object3D.visible = isModelActive;
-                 }
+                 // If marker NOT visible, do nothing -> Wrapper stays in last known position (FROZEN)
+             } else {
+                 // Not active -> Hide it
+                 wrapper.setAttribute('visible', false);
+                 if(wrapper.object3D) wrapper.object3D.visible = false;
              }
              
+             // 2. PLACEHOLDER VISIBILITY
+             // Show placeholder only if marker is visible AND NOT active (so user knows they can scan it)
              if (placeholder) {
-                 const isPlaceholderActive = !isModelActive;
-                 if (placeholder.getAttribute('visible') !== isPlaceholderActive) {
-                     placeholder.setAttribute('visible', isPlaceholderActive);
-                     if(placeholder.object3D) placeholder.object3D.visible = isPlaceholderActive;
-                 }
-                 if(placeholder.object3D && placeholder.object3D.visible !== isPlaceholderActive) {
-                    placeholder.object3D.visible = isPlaceholderActive;
+                 const showPlaceholder = isMarkerVisible && !isActive;
+                 if (placeholder.getAttribute('visible') !== String(showPlaceholder)) { // cast to string for setAttribute comparison safety
+                     placeholder.setAttribute('visible', showPlaceholder);
+                     if(placeholder.object3D) placeholder.object3D.visible = showPlaceholder;
                  }
              }
           });
@@ -625,7 +644,7 @@
 
       // Update Info Panel based on activeMarkerId
       function updateState() {
-        // Models are handled by 'enforce-exclusivity' component now
+        // Models are handled by 'marker-follower-system' component now
         // Just update the info panel
         if (activeMarkerId !== null && dishes[activeMarkerId]) {
           const dish = dishes[activeMarkerId];

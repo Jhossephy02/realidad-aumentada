@@ -465,8 +465,16 @@
           
           this.el.addEventListener('markerLost', () => {
              visibleMarkers.delete(markerId);
-             // We do NOT reset activeMarkerId here. 
-             // Sticky selection: once active, it stays active until another is tapped.
+             
+             // If the lost marker was the active one, deselect it
+             if (activeMarkerId === markerId) {
+                 activeMarkerId = null;
+                 updateState();
+                 
+                 // Debug
+                 const debugEl = document.getElementById('debug-text');
+                 if(debugEl) debugEl.innerText = `Lost: ${markerId}`;
+             }
           });
         }
       });
@@ -861,9 +869,10 @@
 
              // 1. MODEL VISIBILITY & TRACKING
              if (isActive) {
-                 // Active model is ALWAYS visible (even if marker lost)
-                 wrapper.setAttribute('visible', true);
-                 if(wrapper.object3D) wrapper.object3D.visible = true;
+                 // Active model follows marker visibility
+                 const shouldBeVisible = isMarkerVisible;
+                 wrapper.setAttribute('visible', shouldBeVisible);
+                 if(wrapper.object3D) wrapper.object3D.visible = shouldBeVisible;
                  
                  // Update Status Indicator (Only update DOM if state changes to avoid reflows)
                  if (statusIndicator) {
@@ -879,7 +888,7 @@
                             statusText.innerText = 'En Vivo';
                         } else {
                             statusDot.className = 'status-dot status-frozen';
-                            statusText.innerText = 'Congelado';
+                            statusText.innerText = 'Perdido'; // Changed from 'Congelado' to indicate loss
                         }
                     }
                  }

@@ -9,7 +9,7 @@
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     
     <style>
-      body { margin: 0; overflow: hidden; font-family: sans-serif; }
+      body { margin: 0; overflow: hidden; font-family: sans-serif; touch-action: none; }
       
       .capture-button {
         position: fixed;
@@ -234,6 +234,9 @@
       <div class="status-dot" id="status-dot"></div>
       <span id="status-text">Esperando...</span>
     </div>
+
+    <!-- Debug Text (Hidden by default, used for troubleshooting) -->
+    <div id="debug-text" style="position: fixed; top: 10px; left: 10px; color: lime; background: rgba(0,0,0,0.5); z-index: 9999; font-family: monospace; font-size: 12px; pointer-events: none;"></div>
     
     <!-- Info Button -->
     <div class="info-btn" id="info-btn">i</div>
@@ -435,6 +438,8 @@
                  activeMarkerId = markerId;
                  // Force update immediately
                  updateState();
+                 const debugEl = document.getElementById('debug-text');
+                 if(debugEl) debugEl.innerText = `Active: ${markerId}`;
              }
           });
           
@@ -535,7 +540,6 @@
           minScale: { default: 0.1 },
           maxScale: { default: 20.0 },
           rotationSpeed: { default: 0.25 },
-          zoomSensitivity: { default: 0.002 } // Balanced sensitivity
         },
         init: function () {
           this.sceneEl = document.querySelector('a-scene');
@@ -576,18 +580,23 @@
                 return;
             }
 
-            // Simple Ratio-based zoom with damping
-            const ratio = currentSpread / this.lastSpread;
-            const damping = 0.5; // 50% damping for smoothness
-            const scaleFactor = 1 + (ratio - 1) * damping;
-
-            const currentScale = this.el.object3D.scale.x;
-            const newScale = currentScale * scaleFactor;
-            const clampedScale = Math.min(Math.max(newScale, this.data.minScale), this.data.maxScale);
+            const delta = currentSpread - this.lastSpread;
             
-            this.el.object3D.scale.set(clampedScale, clampedScale, clampedScale);
+            // Linear Zoom: Scale based on delta * factor
+            // Using current scale as a factor makes it feel proportional but controlled
+            const factor = 0.005 * this.el.object3D.scale.x;
+            let newScale = this.el.object3D.scale.x + (delta * factor);
+
+            // Safety clamp
+            newScale = Math.min(Math.max(newScale, this.data.minScale), this.data.maxScale);
+            
+            this.el.object3D.scale.set(newScale, newScale, newScale);
             
             this.lastSpread = currentSpread;
+
+            // Debug
+            const debugEl = document.getElementById('debug-text');
+            if(debugEl) debugEl.innerText = `Zoom: ${newScale.toFixed(2)}`;
         },
         handleTwoFingerEnd: function () {
             this.lastSpread = null;
@@ -609,6 +618,10 @@
             if (activeMarkerId === null || this.el.id !== 'model-' + activeMarkerId) return;
             
             this.el.object3D.rotation.y += deltaX * (this.data.rotationSpeed * 0.01);
+
+            // Debug
+            const debugEl = document.getElementById('debug-text');
+            if(debugEl) debugEl.innerText = `Rot: ${this.el.object3D.rotation.y.toFixed(2)}`;
         }
       });
 

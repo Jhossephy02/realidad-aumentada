@@ -534,7 +534,8 @@
         schema: {
           minScale: { default: 0.1 },
           maxScale: { default: 20.0 },
-          rotationSpeed: { default: 0.25 }
+          rotationSpeed: { default: 0.25 },
+          zoomSensitivity: { default: 0.004 } // Reduced sensitivity for smoother zoom
         },
         init: function () {
           this.sceneEl = document.querySelector('a-scene');
@@ -572,11 +573,15 @@
                 return;
             }
 
-            const scaleFactor = currentSpread / this.lastSpread;
+            // Calculate delta (difference in spread)
+            const delta = currentSpread - this.lastSpread;
             
-            // Apply scale incrementally
-            const currentScale = this.el.object3D.scale.x; // Uniform scale assumed
-            const newScale = currentScale * scaleFactor;
+            // Linear scaling: smoother and less "jumpy" than ratio-based
+            // factor > 1 for zoom in, < 1 for zoom out
+            const scaleMultiplier = 1 + (delta * this.data.zoomSensitivity);
+            
+            const currentScale = this.el.object3D.scale.x;
+            const newScale = currentScale * scaleMultiplier;
             const clampedScale = Math.min(Math.max(newScale, this.data.minScale), this.data.maxScale);
             
             this.el.object3D.scale.set(clampedScale, clampedScale, clampedScale);

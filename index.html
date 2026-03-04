@@ -535,7 +535,6 @@
           minScale: { default: 0.1 },
           maxScale: { default: 20.0 },
           rotationSpeed: { default: 0.25 },
-          zoomSensitivity: { default: 0.001 } // Reduced drastically for control
         },
         init: function () {
           this.sceneEl = document.querySelector('a-scene');
@@ -568,24 +567,28 @@
             if (activeMarkerId === null || this.el.id !== 'model-' + activeMarkerId) return;
             
             const currentSpread = event.detail.spread;
+            // Ignore if fingers are too close (noise)
+            if (currentSpread < 20) return;
+
             if (this.lastSpread === null || this.lastSpread === 0) {
                 this.lastSpread = currentSpread;
                 return;
             }
 
-            // Calculate delta (difference in spread)
-            const delta = currentSpread - this.lastSpread;
+            // Ratio-based zoom (Natural feel)
+            // scaleFactor = 1 means no change
+            let scaleFactor = currentSpread / this.lastSpread;
             
-            // Linear scaling with clamping to prevent jumps
-            // Multiplier > 1 for zoom in, < 1 for zoom out
-            let scaleMultiplier = 1 + (delta * this.data.zoomSensitivity);
-            
-            // Safety clamp: Prevent scale from changing more than 5% per frame
-            // This stops "giant jumps" if the touch tracking glitches
-            scaleMultiplier = Math.min(Math.max(scaleMultiplier, 0.95), 1.05);
+            // Damping: 0.5 makes it feel "heavier" and more precise
+            // Formula: 1 + (ratio - 1) * damping
+            // Example: Ratio 1.2 (20% growth) * 0.5 -> 1.1 (10% growth)
+            scaleFactor = 1 + (scaleFactor - 1) * 0.5;
+
+            // Safety clamp: Prevent spikes > 5% per frame
+            scaleFactor = Math.min(Math.max(scaleFactor, 0.95), 1.05);
 
             const currentScale = this.el.object3D.scale.x;
-            const newScale = currentScale * scaleMultiplier;
+            const newScale = currentScale * scaleFactor;
             const clampedScale = Math.min(Math.max(newScale, this.data.minScale), this.data.maxScale);
             
             this.el.object3D.scale.set(clampedScale, clampedScale, clampedScale);

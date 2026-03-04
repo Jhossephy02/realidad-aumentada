@@ -235,8 +235,8 @@
       <span id="status-text">Esperando...</span>
     </div>
 
-    <!-- Debug Text (Hidden by default, used for troubleshooting) -->
-    <div id="debug-text" style="position: fixed; top: 10px; left: 10px; color: lime; background: rgba(0,0,0,0.5); z-index: 9999; font-family: monospace; font-size: 12px; pointer-events: none;"></div>
+      // Debug Text (Hidden by default, used for troubleshooting)
+    <div id="debug-text" style="position: fixed; top: 10px; left: 10px; color: yellow; background: rgba(0,0,0,0.6); z-index: 9999; font-family: monospace; font-size: 14px; pointer-events: none; padding: 5px; border-radius: 4px;">Debug: Esperando touch...</div>
     
     <!-- Info Button -->
     <div class="info-btn" id="info-btn">i</div>
@@ -346,7 +346,7 @@
           <!-- Model 0 Wrapper: Ramen -->
           <a-entity id="model-wrapper-0" visible="false">
               <a-entity class="model-entity" id="model-0">
-                  <a-entity position="0 0 0" scale="3.5 3.5 3.5" gltf-model="#ramen-model" class="clickable" click-handler model-controller="minScale: 0.5; maxScale: 8; rotationSpeed: 0.25"></a-entity>
+                  <a-entity position="0 0 0" scale="3.5 3.5 3.5" gltf-model="#ramen-model" class="clickable" click-handler model-controller="minScale: 0.5; maxScale: 8; rotationSpeed: 1.5"></a-entity>
                   <!-- Fake Shadow -->
                   <a-circle rotation="-90 0 0" radius="1.2" color="#000" material="opacity: 0.4; transparent: true; shader: flat" position="0 -0.05 0"></a-circle>
               </a-entity>
@@ -355,7 +355,7 @@
           <!-- Model 1 Wrapper: Rolls -->
           <a-entity id="model-wrapper-1" visible="false">
               <a-entity class="model-entity" id="model-1">
-                  <a-entity position="0 0 0" scale="12.0 12.0 12.0" gltf-model="#roll-model" class="clickable" click-handler model-controller="minScale: 1.0; maxScale: 20; rotationSpeed: 0.25"></a-entity>
+                  <a-entity position="0 0 0" scale="12.0 12.0 12.0" gltf-model="#roll-model" class="clickable" click-handler model-controller="minScale: 1.0; maxScale: 20; rotationSpeed: 1.5"></a-entity>
                   <!-- Fake Shadow -->
                   <a-circle rotation="-90 0 0" radius="1.5" color="#000" material="opacity: 0.4; transparent: true; shader: flat" position="0 -0.05 0"></a-circle>
               </a-entity>
@@ -364,7 +364,7 @@
           <!-- Model 2 Wrapper: Salmon -->
           <a-entity id="model-wrapper-2" visible="false">
               <a-entity class="model-entity" id="model-2">
-                  <a-entity position="0 0 0" scale="0.8 0.8 0.8" gltf-model="#salmon-model" class="clickable" click-handler model-controller="minScale: 0.1; maxScale: 4; rotationSpeed: 0.25"></a-entity>
+                  <a-entity position="0 0 0" scale="0.8 0.8 0.8" gltf-model="#salmon-model" class="clickable" click-handler model-controller="minScale: 0.1; maxScale: 4; rotationSpeed: 1.5"></a-entity>
                   <!-- Fake Shadow -->
                   <a-circle rotation="-90 0 0" radius="0.3" color="#000" material="opacity: 0.4; transparent: true; shader: flat" position="0 -0.05 0"></a-circle>
               </a-entity>
@@ -373,7 +373,7 @@
           <!-- Model 3 Wrapper: Sushi Set -->
           <a-entity id="model-wrapper-3" visible="false">
               <a-entity class="model-entity" id="model-3">
-                  <a-entity position="0 0 0" scale="15.0 15.0 15.0" gltf-model="#sushi-model" class="clickable" click-handler model-controller="minScale: 2.0; maxScale: 30; rotationSpeed: 0.25"></a-entity>
+                  <a-entity position="0 0 0" scale="15.0 15.0 15.0" gltf-model="#sushi-model" class="clickable" click-handler model-controller="minScale: 2.0; maxScale: 30; rotationSpeed: 1.5"></a-entity>
                   <!-- Fake Shadow -->
                   <a-circle rotation="-90 0 0" radius="2.5" color="#000" material="opacity: 0.4; transparent: true; shader: flat" position="0 -0.05 0"></a-circle>
               </a-entity>
@@ -455,17 +455,17 @@
       AFRAME.registerComponent('gesture-detector', {
         schema: { element: { default: '' } },
         init: function () {
-          this.targetElement = this.data.element && document.querySelector(this.data.element);
-          if (!this.targetElement) this.targetElement = this.el;
-
+          // Force listening on document.body to ensure we catch all touches
+          this.targetElement = document.body;
+          
           this.internalState = {
             previousState: null
           };
 
           this.emitGestureEvent = this.emitGestureEvent.bind(this);
-          this.targetElement.addEventListener('touchstart', this.emitGestureEvent);
-          this.targetElement.addEventListener('touchend', this.emitGestureEvent);
-          this.targetElement.addEventListener('touchmove', this.emitGestureEvent);
+          this.targetElement.addEventListener('touchstart', this.emitGestureEvent, {passive: false});
+          this.targetElement.addEventListener('touchend', this.emitGestureEvent, {passive: false});
+          this.targetElement.addEventListener('touchmove', this.emitGestureEvent, {passive: false});
         },
         remove: function () {
           this.targetElement.removeEventListener('touchstart', this.emitGestureEvent);
@@ -539,7 +539,7 @@
         schema: {
           minScale: { default: 0.1 },
           maxScale: { default: 20.0 },
-          rotationSpeed: { default: 0.25 },
+          rotationSpeed: { default: 1.5 }, // Increased sensitivity
         },
         init: function () {
           this.sceneEl = document.querySelector('a-scene');
@@ -567,6 +567,8 @@
         },
         handleTwoFingerStart: function(event) {
             this.lastSpread = event.detail.spread;
+            const debugEl = document.getElementById('debug-text');
+            if(debugEl) debugEl.innerText = `Zoom Start: ${this.lastSpread.toFixed(1)}`;
         },
         handleTwoFingerMove: function (event) {
             // Check if this model is the active one
@@ -596,13 +598,17 @@
 
             // Debug
             const debugEl = document.getElementById('debug-text');
-            if(debugEl) debugEl.innerText = `Zoom: ${newScale.toFixed(2)}`;
+            if(debugEl) debugEl.innerText = `Zoom: ${newScale.toFixed(2)} (M${activeMarkerId})`;
         },
         handleTwoFingerEnd: function () {
             this.lastSpread = null;
+            const debugEl = document.getElementById('debug-text');
+            if(debugEl) debugEl.innerText = `Zoom End`;
         },
         handleOneFingerStart: function(event) {
             this.lastX = event.detail.position.x;
+            const debugEl = document.getElementById('debug-text');
+            if(debugEl) debugEl.innerText = `Rot Start: ${this.lastX.toFixed(1)}`;
         },
         handleOneFingerMove: function(event) {
             // Robust initialization
@@ -621,7 +627,7 @@
 
             // Debug
             const debugEl = document.getElementById('debug-text');
-            if(debugEl) debugEl.innerText = `Rot: ${this.el.object3D.rotation.y.toFixed(2)}`;
+            if(debugEl) debugEl.innerText = `Rot: ${this.el.object3D.rotation.y.toFixed(2)} (M${activeMarkerId})`;
         }
       });
 

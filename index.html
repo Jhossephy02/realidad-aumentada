@@ -290,8 +290,7 @@
       vr-mode-ui="enabled: false"
       gesture-detector
       id="scene"
-      marker-follower-system
-      gltf-model="">
+      marker-follower-system>
 
       <a-assets>
         <a-asset-item id="ramen-model" src="models/sushi/shrimp_ramen_bowl.glb"></a-asset-item>
@@ -770,14 +769,6 @@
       AFRAME.registerComponent('marker-follower-system', {
         init: function() {
           this.tickCount = 0;
-          
-          // CRITICAL PERFORMANCE FIX: Clamp pixel ratio on mobile
-          const renderer = this.el.sceneEl.renderer;
-          if (renderer) {
-              const pixelRatio = Math.min(window.devicePixelRatio, 1.5); // Increase slightly for better quality
-              renderer.setPixelRatio(pixelRatio);
-              console.log("Renderer Pixel Ratio clamped to:", pixelRatio);
-          }
         },
         tick: function(t, dt) {
           // Optimization: Skip every other frame to reduce CPU load (15fps target for logic)
@@ -1106,49 +1097,6 @@
       // Note: The 'marker-handler' component above handles the logic now.
       // We keep the lostTimeouts object for compatibility if needed, but the component handles its own state.
       const lostTimeouts = {}; 
-
-      // 5. Model Optimizer Component (Reduces Material Cost)
-      AFRAME.registerComponent('model-optimizer', {
-        init: function () {
-          this.el.addEventListener('model-loaded', (e) => {
-            const mesh = this.el.getObject3D('mesh');
-            if (!mesh) return;
-
-            mesh.traverse((node) => {
-              if (node.isMesh) {
-                // Optimization: Stop matrix updates for static parts
-                node.matrixAutoUpdate = false;
-                node.updateMatrix();
-
-                // Force low precision materials
-                  if (node.material) {
-                    // node.material.precision = 'lowp'; // REMOVED: Causes pixelation
-                    node.material.flatShading = false; // Keep smooth look
-                    
-                    // OPTIMIZATION: Only update when necessary
-                    // node.material.needsUpdate = true; // Removed, let THREE handle it
-
-                    // Make food look fresh (shiny/oily) - Subtle
-                    // node.material.roughness = 0.5; // RESTORED: Use original material settings
-                    // node.material.metalness = 0.1; // RESTORED: Use original material settings
-                    
-                    // Disable expensive features
-                    if (node.material.map) {
-                      // OPTIMIZATION: 4x Anisotropy is enough for mobile AR
-                      node.material.map.anisotropy = 4; 
-                      node.material.map.minFilter = THREE.LinearMipmapLinearFilter;
-                    }
-                  
-                  // Dispose geometry attributes if not needed
-                  node.geometry.computeBoundingSphere(); 
-                  node.frustumCulled = true; // Ensure culling works
-                }
-              }
-            });
-            console.log('Model optimized (Balanced Quality): ' + this.el.id);
-          });
-        }
-      });
     </script>
   </body>
 </html>

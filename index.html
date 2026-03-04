@@ -286,7 +286,7 @@
       <a-scene 
       embedded 
       arjs="sourceType: webcam; sourceWidth:640; sourceHeight:480; displayWidth: 640; displayHeight: 480; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; smoothing: true; smoothingAmount: 0.8; maxDetectionRate: 20;"
-      renderer="logarithmicDepthBuffer: false; colorManagement: true; precision: high; antialias: true; powerPreference: default; sortObjects: true; physicallyCorrectLights: true;"
+      renderer="logarithmicDepthBuffer: true; colorManagement: true; precision: high; antialias: true; powerPreference: default; sortObjects: true; physicallyCorrectLights: true;"
       vr-mode-ui="enabled: false"
       gesture-detector
       id="scene"
@@ -361,7 +361,7 @@
           <!-- Model 2 Wrapper: Salmon -->
           <a-entity id="model-wrapper-2" visible="false">
               <a-entity class="model-entity" id="model-2">
-                  <a-entity position="0 0 0" scale="0.6 0.6 0.6" gltf-model="#salmon-model" class="clickable" click-handler model-controller="minScale: 0.2; maxScale: 4; rotationSpeed: 0.25"></a-entity>
+                  <a-entity position="0 0 0" scale="0.8 0.8 0.8" gltf-model="#salmon-model" class="clickable" click-handler model-controller="minScale: 0.2; maxScale: 4; rotationSpeed: 0.25"></a-entity>
                   <!-- Fake Shadow -->
                   <a-circle rotation="-90 0 0" radius="0.3" color="#000" material="opacity: 0.4; transparent: true; shader: flat" position="0 -0.05 0"></a-circle>
               </a-entity>
@@ -377,7 +377,7 @@
           </a-entity>
       </a-entity>
 
-      <a-entity camera cursor="rayOrigin: mouse" raycaster="objects: .clickable" near="0.01" far="10000"></a-entity>
+      <a-entity camera cursor="rayOrigin: mouse" raycaster="objects: .clickable" near="0.05" far="500"></a-entity>
     </a-scene>
 
     <script>

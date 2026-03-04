@@ -343,7 +343,7 @@
           <!-- Model 0 Wrapper: Ramen -->
           <a-entity id="model-wrapper-0" visible="false">
               <a-entity class="model-entity" id="model-0">
-                  <a-entity position="0 0 0" scale="3.5 3.5 3.5" gltf-model="#ramen-model" class="clickable" click-handler model-controller="minScale: 1.0; maxScale: 8; rotationSpeed: 0.25"></a-entity>
+                  <a-entity position="0 0 0" scale="3.5 3.5 3.5" gltf-model="#ramen-model" class="clickable" click-handler model-controller="minScale: 0.5; maxScale: 8; rotationSpeed: 0.25"></a-entity>
                   <!-- Fake Shadow -->
                   <a-circle rotation="-90 0 0" radius="1.2" color="#000" material="opacity: 0.4; transparent: true; shader: flat" position="0 -0.05 0"></a-circle>
               </a-entity>
@@ -352,7 +352,7 @@
           <!-- Model 1 Wrapper: Rolls -->
           <a-entity id="model-wrapper-1" visible="false">
               <a-entity class="model-entity" id="model-1">
-                  <a-entity position="0 0 0" scale="12.0 12.0 12.0" gltf-model="#roll-model" class="clickable" click-handler model-controller="minScale: 3.0; maxScale: 20; rotationSpeed: 0.25"></a-entity>
+                  <a-entity position="0 0 0" scale="12.0 12.0 12.0" gltf-model="#roll-model" class="clickable" click-handler model-controller="minScale: 1.0; maxScale: 20; rotationSpeed: 0.25"></a-entity>
                   <!-- Fake Shadow -->
                   <a-circle rotation="-90 0 0" radius="1.5" color="#000" material="opacity: 0.4; transparent: true; shader: flat" position="0 -0.05 0"></a-circle>
               </a-entity>
@@ -361,7 +361,7 @@
           <!-- Model 2 Wrapper: Salmon -->
           <a-entity id="model-wrapper-2" visible="false">
               <a-entity class="model-entity" id="model-2">
-                  <a-entity position="0 0 0" scale="0.8 0.8 0.8" gltf-model="#salmon-model" class="clickable" click-handler model-controller="minScale: 0.2; maxScale: 4; rotationSpeed: 0.25"></a-entity>
+                  <a-entity position="0 0 0" scale="0.8 0.8 0.8" gltf-model="#salmon-model" class="clickable" click-handler model-controller="minScale: 0.1; maxScale: 4; rotationSpeed: 0.25"></a-entity>
                   <!-- Fake Shadow -->
                   <a-circle rotation="-90 0 0" radius="0.3" color="#000" material="opacity: 0.4; transparent: true; shader: flat" position="0 -0.05 0"></a-circle>
               </a-entity>
@@ -370,7 +370,7 @@
           <!-- Model 3 Wrapper: Sushi Set -->
           <a-entity id="model-wrapper-3" visible="false">
               <a-entity class="model-entity" id="model-3">
-                  <a-entity position="0 0 0" scale="15.0 15.0 15.0" gltf-model="#sushi-model" class="clickable" click-handler model-controller="minScale: 5.0; maxScale: 30; rotationSpeed: 0.25"></a-entity>
+                  <a-entity position="0 0 0" scale="15.0 15.0 15.0" gltf-model="#sushi-model" class="clickable" click-handler model-controller="minScale: 2.0; maxScale: 30; rotationSpeed: 0.25"></a-entity>
                   <!-- Fake Shadow -->
                   <a-circle rotation="-90 0 0" radius="2.5" color="#000" material="opacity: 0.4; transparent: true; shader: flat" position="0 -0.05 0"></a-circle>
               </a-entity>
@@ -532,51 +532,59 @@
       // Model Controller
       AFRAME.registerComponent('model-controller', {
         schema: {
-          minScale: { default: 0.2 },
-          maxScale: { default: 5.0 },
+          minScale: { default: 0.1 },
+          maxScale: { default: 20.0 },
           rotationSpeed: { default: 0.25 }
         },
         init: function () {
           this.sceneEl = document.querySelector('a-scene');
           this.handleTwoFingerStart = this.handleTwoFingerStart.bind(this);
           this.handleTwoFingerMove = this.handleTwoFingerMove.bind(this);
+          this.handleTwoFingerEnd = this.handleTwoFingerEnd.bind(this);
           this.handleOneFingerMove = this.handleOneFingerMove.bind(this);
           this.handleOneFingerStart = this.handleOneFingerStart.bind(this);
           
-          this.scaleStart = null;
+          this.lastSpread = null;
           this.lastX = null;
 
           this.sceneEl.addEventListener('twofingerstart', this.handleTwoFingerStart);
           this.sceneEl.addEventListener('twofingermove', this.handleTwoFingerMove);
+          this.sceneEl.addEventListener('twofingerend', this.handleTwoFingerEnd);
           this.sceneEl.addEventListener('onefingermove', this.handleOneFingerMove);
           this.sceneEl.addEventListener('onefingerstart', this.handleOneFingerStart);
         },
         remove: function () {
           this.sceneEl.removeEventListener('twofingerstart', this.handleTwoFingerStart);
           this.sceneEl.removeEventListener('twofingermove', this.handleTwoFingerMove);
+          this.sceneEl.removeEventListener('twofingerend', this.handleTwoFingerEnd);
           this.sceneEl.removeEventListener('onefingermove', this.handleOneFingerMove);
           this.sceneEl.removeEventListener('onefingerstart', this.handleOneFingerStart);
         },
         handleTwoFingerStart: function(event) {
-            // Only capture scale for the active model
-            if (activeMarkerId === null || this.el.id !== 'model-' + activeMarkerId) return;
-            this.scaleStart = this.el.object3D.scale.clone();
+            this.lastSpread = event.detail.spread;
         },
         handleTwoFingerMove: function (event) {
-            // Only update the active model
             if (activeMarkerId === null || this.el.id !== 'model-' + activeMarkerId) return;
             
-            if (!this.scaleStart) {
-                // Fallback if start wasn't captured (shouldn't happen with gesture-detector)
-                this.scaleStart = this.el.object3D.scale.clone();
+            const currentSpread = event.detail.spread;
+            if (this.lastSpread === null || this.lastSpread === 0) {
+                this.lastSpread = currentSpread;
+                return;
             }
 
-            if (event.detail.spread && event.detail.startSpread) {
-                const scaleFactor = event.detail.spread / event.detail.startSpread;
-                const newScale = this.scaleStart.x * scaleFactor;
-                const clampedScale = Math.min(Math.max(newScale, this.data.minScale), this.data.maxScale);
-                this.el.object3D.scale.set(clampedScale, clampedScale, clampedScale);
-            }
+            const scaleFactor = currentSpread / this.lastSpread;
+            
+            // Apply scale incrementally
+            const currentScale = this.el.object3D.scale.x; // Uniform scale assumed
+            const newScale = currentScale * scaleFactor;
+            const clampedScale = Math.min(Math.max(newScale, this.data.minScale), this.data.maxScale);
+            
+            this.el.object3D.scale.set(clampedScale, clampedScale, clampedScale);
+            
+            this.lastSpread = currentSpread;
+        },
+        handleTwoFingerEnd: function () {
+            this.lastSpread = null;
         },
         handleOneFingerStart: function(event) {
             this.lastX = event.detail.position.x;

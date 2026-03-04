@@ -345,8 +345,12 @@
       <a-entity id="world-container">
           <!-- Model 0 Wrapper: Ramen -->
           <a-entity id="model-wrapper-0" visible="false">
-              <a-entity class="model-entity" id="model-0">
-                  <a-entity position="0 0 0" scale="3.5 3.5 3.5" gltf-model="#ramen-model" class="clickable" click-handler model-controller="minScale: 0.5; maxScale: 8; rotationSpeed: 1.5"></a-entity>
+              <a-entity class="model-entity clickable" id="model-0"
+                  position="0 0 0" 
+                  scale="3.5 3.5 3.5" 
+                  gltf-model="#ramen-model" 
+                  click-handler 
+                  model-controller="minScale: 0.5; maxScale: 8; rotationSpeed: 1.5">
                   <!-- Fake Shadow -->
                   <a-circle rotation="-90 0 0" radius="1.2" color="#000" material="opacity: 0.4; transparent: true; shader: flat" position="0 -0.05 0"></a-circle>
               </a-entity>
@@ -354,8 +358,12 @@
 
           <!-- Model 1 Wrapper: Rolls -->
           <a-entity id="model-wrapper-1" visible="false">
-              <a-entity class="model-entity" id="model-1">
-                  <a-entity position="0 0 0" scale="12.0 12.0 12.0" gltf-model="#roll-model" class="clickable" click-handler model-controller="minScale: 1.0; maxScale: 20; rotationSpeed: 1.5"></a-entity>
+              <a-entity class="model-entity clickable" id="model-1"
+                  position="0 0 0" 
+                  scale="12.0 12.0 12.0" 
+                  gltf-model="#roll-model" 
+                  click-handler 
+                  model-controller="minScale: 1.0; maxScale: 20; rotationSpeed: 1.5">
                   <!-- Fake Shadow -->
                   <a-circle rotation="-90 0 0" radius="1.5" color="#000" material="opacity: 0.4; transparent: true; shader: flat" position="0 -0.05 0"></a-circle>
               </a-entity>
@@ -363,8 +371,12 @@
 
           <!-- Model 2 Wrapper: Salmon -->
           <a-entity id="model-wrapper-2" visible="false">
-              <a-entity class="model-entity" id="model-2">
-                  <a-entity position="0 0 0" scale="0.8 0.8 0.8" gltf-model="#salmon-model" class="clickable" click-handler model-controller="minScale: 0.1; maxScale: 4; rotationSpeed: 1.5"></a-entity>
+              <a-entity class="model-entity clickable" id="model-2"
+                  position="0 0 0" 
+                  scale="0.8 0.8 0.8" 
+                  gltf-model="#salmon-model" 
+                  click-handler 
+                  model-controller="minScale: 0.1; maxScale: 4; rotationSpeed: 1.5">
                   <!-- Fake Shadow -->
                   <a-circle rotation="-90 0 0" radius="0.3" color="#000" material="opacity: 0.4; transparent: true; shader: flat" position="0 -0.05 0"></a-circle>
               </a-entity>
@@ -372,8 +384,12 @@
 
           <!-- Model 3 Wrapper: Sushi Set -->
           <a-entity id="model-wrapper-3" visible="false">
-              <a-entity class="model-entity" id="model-3">
-                  <a-entity position="0 0 0" scale="15.0 15.0 15.0" gltf-model="#sushi-model" class="clickable" click-handler model-controller="minScale: 2.0; maxScale: 30; rotationSpeed: 1.5"></a-entity>
+              <a-entity class="model-entity clickable" id="model-3"
+                  position="0 0 0" 
+                  scale="15.0 15.0 15.0" 
+                  gltf-model="#sushi-model" 
+                  click-handler 
+                  model-controller="minScale: 2.0; maxScale: 30; rotationSpeed: 1.5">
                   <!-- Fake Shadow -->
                   <a-circle rotation="-90 0 0" radius="2.5" color="#000" material="opacity: 0.4; transparent: true; shader: flat" position="0 -0.05 0"></a-circle>
               </a-entity>
@@ -473,8 +489,14 @@
           this.targetElement.removeEventListener('touchmove', this.emitGestureEvent);
         },
         emitGestureEvent: function (event) {
+          // Prevent default browser behavior (scroll/zoom)
+          if (event.type === 'touchmove') {
+            event.preventDefault();
+          }
+
           const currentState = this.getTouchState(event);
           const previousState = this.internalState.previousState;
+          
           const gestureContinues = previousState && currentState && currentState.touchCount == previousState.touchCount;
           const gestureEnded = previousState && !gestureContinues;
           const gestureStarted = currentState && !gestureContinues;
@@ -571,9 +593,6 @@
             if(debugEl) debugEl.innerText = `Zoom Start: ${this.lastSpread.toFixed(1)}`;
         },
         handleTwoFingerMove: function (event) {
-            // Check if this model is the active one
-            if (activeMarkerId === null || this.el.id !== 'model-' + activeMarkerId) return;
-            
             const currentSpread = event.detail.spread;
 
             // Robust initialization if start event was missed
@@ -584,6 +603,21 @@
 
             const delta = currentSpread - this.lastSpread;
             
+            // Check for active marker, BUT also allow if there's only one model visible to be safe
+            let targetId = activeMarkerId;
+            if (targetId === null) {
+               // Fallback: try to find a visible model wrapper
+               for(let i=0; i<4; i++) {
+                   const wrapper = document.getElementById('model-wrapper-' + i);
+                   if (wrapper && wrapper.getAttribute('visible')) {
+                       targetId = i;
+                       break;
+                   }
+               }
+            }
+            
+            if (targetId === null || this.el.id !== 'model-' + targetId) return;
+
             // Linear Zoom: Scale based on delta * factor
             // Using current scale as a factor makes it feel proportional but controlled
             const factor = 0.005 * this.el.object3D.scale.x;
@@ -598,7 +632,7 @@
 
             // Debug
             const debugEl = document.getElementById('debug-text');
-            if(debugEl) debugEl.innerText = `Zoom: ${newScale.toFixed(2)} (M${activeMarkerId})`;
+            if(debugEl) debugEl.innerText = `Zoom: ${newScale.toFixed(2)} (M${targetId})`;
         },
         handleTwoFingerEnd: function () {
             this.lastSpread = null;
@@ -620,14 +654,26 @@
             const deltaX = event.detail.position.x - this.lastX;
             this.lastX = event.detail.position.x;
             
-            // Only rotate the active model
-            if (activeMarkerId === null || this.el.id !== 'model-' + activeMarkerId) return;
+            // Check for active marker, BUT also allow if there's only one model visible to be safe
+            let targetId = activeMarkerId;
+            if (targetId === null) {
+               // Fallback: try to find a visible model wrapper
+               for(let i=0; i<4; i++) {
+                   const wrapper = document.getElementById('model-wrapper-' + i);
+                   if (wrapper && wrapper.getAttribute('visible')) {
+                       targetId = i;
+                       break;
+                   }
+               }
+            }
+
+            if (targetId === null || this.el.id !== 'model-' + targetId) return;
             
             this.el.object3D.rotation.y += deltaX * (this.data.rotationSpeed * 0.01);
 
             // Debug
             const debugEl = document.getElementById('debug-text');
-            if(debugEl) debugEl.innerText = `Rot: ${this.el.object3D.rotation.y.toFixed(2)} (M${activeMarkerId})`;
+            if(debugEl) debugEl.innerText = `Rot: ${this.el.object3D.rotation.y.toFixed(2)} (M${targetId})`;
         }
       });
 
@@ -885,23 +931,35 @@
       AFRAME.registerComponent('click-handler', {
         init: function () {
           this.el.addEventListener('click', (evt) => {
-             const marker = this.el.closest('a-marker');
-             if (marker) {
-                 const id = parseInt(marker.id.split('-')[1]);
-                 console.log("Raycaster clicked marker:", id);
-                 
+             let id = null;
+             
+             // 1. Check if clicking on a model directly
+             if (this.el.id && this.el.id.startsWith('model-')) {
+                 id = parseInt(this.el.id.split('-')[1]);
+                 console.log("Raycaster clicked model:", id);
+             } 
+             // 2. Check if clicking on a marker/placeholder
+             else {
+                 const marker = this.el.closest('a-marker');
+                 if (marker) {
+                     id = parseInt(marker.id.split('-')[1]);
+                     console.log("Raycaster clicked marker:", id);
+                     
+                     // Animation Feedback on the Ring
+                     const ring = marker.querySelector('a-ring');
+                     if (ring) {
+                         ring.setAttribute('animation__click', 'property: scale; from: 1 1 1; to: 1.5 1.5 1.5; dur: 150; easing: easeInOutQuad; dir: alternate; loop: 2');
+                         setTimeout(() => {
+                             ring.removeAttribute('animation__click');
+                         }, 400);
+                     }
+                 }
+             }
+
+             if (id !== null) {
                  // Visual feedback for the click
                  const debugEl = document.getElementById('debug-text');
                  if (debugEl) debugEl.innerHTML = `CLICKED: M${id}`;
-                 
-                 // Animation Feedback on the Ring
-                 const ring = marker.querySelector('a-ring');
-                 if (ring) {
-                     ring.setAttribute('animation__click', 'property: scale; from: 1 1 1; to: 1.5 1.5 1.5; dur: 150; easing: easeInOutQuad; dir: alternate; loop: 2');
-                     setTimeout(() => {
-                         ring.removeAttribute('animation__click');
-                     }, 400);
-                 }
 
                  if (activeMarkerId !== id) {
                     activeMarkerId = id;
@@ -912,19 +970,32 @@
           
           // Also listen for touchstart directly on the entity for faster response
           this.el.addEventListener('touchstart', (evt) => {
-             const marker = this.el.closest('a-marker');
-             if (marker) {
-                 const id = parseInt(marker.id.split('-')[1]);
-                 console.log("Raycaster touchstart marker:", id);
-                 
-                 // Visual feedback for the click
-                 const ring = marker.querySelector('a-ring');
-                 if (ring) {
-                     ring.setAttribute('animation__click', 'property: scale; from: 1 1 1; to: 1.5 1.5 1.5; dur: 150; easing: easeInOutQuad; dir: alternate; loop: 2');
-                     setTimeout(() => {
-                         ring.removeAttribute('animation__click');
-                     }, 400);
+             let id = null;
+             
+             if (this.el.id && this.el.id.startsWith('model-')) {
+                 id = parseInt(this.el.id.split('-')[1]);
+                 console.log("Raycaster touchstart model:", id);
+             } else {
+                 const marker = this.el.closest('a-marker');
+                 if (marker) {
+                     id = parseInt(marker.id.split('-')[1]);
+                     console.log("Raycaster touchstart marker:", id);
+                     
+                     // Animation Feedback
+                     const ring = marker.querySelector('a-ring');
+                     if (ring) {
+                         ring.setAttribute('animation__click', 'property: scale; from: 1 1 1; to: 1.5 1.5 1.5; dur: 150; easing: easeInOutQuad; dir: alternate; loop: 2');
+                         setTimeout(() => {
+                             ring.removeAttribute('animation__click');
+                         }, 400);
+                     }
                  }
+             }
+
+             if (id !== null) {
+                 // Visual feedback
+                 const debugEl = document.getElementById('debug-text');
+                 if (debugEl) debugEl.innerText = `TOUCH: M${id}`;
                  
                  if (activeMarkerId !== id) {
                     activeMarkerId = id;

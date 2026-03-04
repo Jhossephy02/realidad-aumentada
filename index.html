@@ -285,8 +285,8 @@
       <!-- OPTIMIZATION: Force 640x480 (VGA) resolution to save GPU/CPU -->
       <a-scene 
       embedded 
-      arjs="sourceType: webcam; sourceWidth:640; sourceHeight:480; displayWidth: 640; displayHeight: 480; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; smoothing: true; smoothingAmount: 0.8; maxDetectionRate: 20;"
-      renderer="logarithmicDepthBuffer: true; colorManagement: true; precision: high; antialias: true; powerPreference: default; sortObjects: true; physicallyCorrectLights: true;"
+      arjs="sourceType: webcam; sourceWidth:640; sourceHeight:480; displayWidth: 640; displayHeight: 480; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; smoothing: true; smoothingAmount: 0.8; maxDetectionRate: 30;"
+      renderer="logarithmicDepthBuffer: true; colorManagement: true; precision: mediump; antialias: false; powerPreference: default; sortObjects: true; physicallyCorrectLights: false;"
       vr-mode-ui="enabled: false"
       gesture-detector
       id="scene"
@@ -306,7 +306,7 @@
       <a-light type="directional" position="1 4 2" intensity="1.2" color="#FFF"></a-light>
 
       <!-- MARKER 0: Zelva Ramen -->
-      <a-marker type="barcode" value="0" id="marker-0" smooth="true" smoothCount="100" smoothTolerance="0.5" smoothThreshold="20" marker-handler>
+      <a-marker type="barcode" value="0" id="marker-0" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2" marker-handler>
           <!-- Placeholder (Ring) - Flat on marker (no billboard) for stability -->
           <a-entity id="placeholder-0" visible="false" rotation="-90 0 0">
               <a-circle radius="0.8" position="0 0 0" material="opacity: 0; transparent: true" class="clickable" click-handler></a-circle>
@@ -315,7 +315,7 @@
       </a-marker>
 
       <!-- MARKER 1: Roll -->
-      <a-marker type="barcode" value="1" id="marker-1" smooth="true" smoothCount="100" smoothTolerance="0.5" smoothThreshold="20" marker-handler>
+      <a-marker type="barcode" value="1" id="marker-1" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2" marker-handler>
           <a-entity id="placeholder-1" visible="false" rotation="-90 0 0">
               <a-circle radius="0.8" position="0 0 0" material="opacity: 0; transparent: true" class="clickable" click-handler></a-circle>
               <a-ring class="clickable" click-handler color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0 0"></a-ring>
@@ -323,7 +323,7 @@
       </a-marker>
 
       <!-- MARKER 2: Salmon -->
-      <a-marker type="barcode" value="2" id="marker-2" smooth="true" smoothCount="100" smoothTolerance="0.5" smoothThreshold="20" marker-handler>
+      <a-marker type="barcode" value="2" id="marker-2" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2" marker-handler>
           <a-entity id="placeholder-2" visible="false" rotation="-90 0 0">
               <a-circle radius="0.8" position="0 0 0" material="opacity: 0; transparent: true" class="clickable" click-handler></a-circle>
               <a-ring class="clickable" click-handler color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0 0"></a-ring>
@@ -331,7 +331,7 @@
       </a-marker>
 
       <!-- MARKER 3: Sushi -->
-      <a-marker type="barcode" value="3" id="marker-3" smooth="true" smoothCount="100" smoothTolerance="0.5" smoothThreshold="20" marker-handler>
+      <a-marker type="barcode" value="3" id="marker-3" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2" marker-handler>
           <a-entity id="placeholder-3" visible="false" rotation="-90 0 0">
               <a-circle radius="0.8" position="0 0 0" material="opacity: 0; transparent: true" class="clickable" click-handler></a-circle>
               <a-ring class="clickable" click-handler color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0 0"></a-ring>
@@ -343,7 +343,7 @@
           <!-- Model 0 Wrapper: Ramen -->
           <a-entity id="model-wrapper-0" visible="false">
               <a-entity class="model-entity" id="model-0">
-                  <a-entity position="0 0 0" rotation="90 0 0" scale="3.5 3.5 3.5" gltf-model="#ramen-model" class="clickable" click-handler model-controller="minScale: 1.0; maxScale: 8; rotationSpeed: 0.25"></a-entity>
+                  <a-entity position="0 0 0" scale="3.5 3.5 3.5" gltf-model="#ramen-model" class="clickable" click-handler model-controller="minScale: 1.0; maxScale: 8; rotationSpeed: 0.25"></a-entity>
                   <!-- Fake Shadow -->
                   <a-circle rotation="-90 0 0" radius="1.2" color="#000" material="opacity: 0.4; transparent: true; shader: flat" position="0 -0.05 0"></a-circle>
               </a-entity>
@@ -352,7 +352,7 @@
           <!-- Model 1 Wrapper: Rolls -->
           <a-entity id="model-wrapper-1" visible="false">
               <a-entity class="model-entity" id="model-1">
-                  <a-entity position="0 0 0" rotation="90 0 0" scale="12.0 12.0 12.0" gltf-model="#roll-model" class="clickable" click-handler model-controller="minScale: 3.0; maxScale: 20; rotationSpeed: 0.25"></a-entity>
+                  <a-entity position="0 0 0" scale="12.0 12.0 12.0" gltf-model="#roll-model" class="clickable" click-handler model-controller="minScale: 3.0; maxScale: 20; rotationSpeed: 0.25"></a-entity>
                   <!-- Fake Shadow -->
                   <a-circle rotation="-90 0 0" radius="1.5" color="#000" material="opacity: 0.4; transparent: true; shader: flat" position="0 -0.05 0"></a-circle>
               </a-entity>
@@ -361,7 +361,7 @@
           <!-- Model 2 Wrapper: Salmon -->
           <a-entity id="model-wrapper-2" visible="false">
               <a-entity class="model-entity" id="model-2">
-                  <a-entity position="0 0 0" rotation="90 0 0" scale="0.8 0.8 0.8" gltf-model="#salmon-model" class="clickable" click-handler model-controller="minScale: 0.2; maxScale: 4; rotationSpeed: 0.25"></a-entity>
+                  <a-entity position="0 0 0" scale="0.8 0.8 0.8" gltf-model="#salmon-model" class="clickable" click-handler model-controller="minScale: 0.2; maxScale: 4; rotationSpeed: 0.25"></a-entity>
                   <!-- Fake Shadow -->
                   <a-circle rotation="-90 0 0" radius="0.3" color="#000" material="opacity: 0.4; transparent: true; shader: flat" position="0 -0.05 0"></a-circle>
               </a-entity>
@@ -370,7 +370,7 @@
           <!-- Model 3 Wrapper: Sushi Set -->
           <a-entity id="model-wrapper-3" visible="false">
               <a-entity class="model-entity" id="model-3">
-                  <a-entity position="0 0 0" rotation="90 0 0" scale="15.0 15.0 15.0" gltf-model="#sushi-model" class="clickable" click-handler model-controller="minScale: 5.0; maxScale: 30; rotationSpeed: 0.25"></a-entity>
+                  <a-entity position="0 0 0" scale="15.0 15.0 15.0" gltf-model="#sushi-model" class="clickable" click-handler model-controller="minScale: 5.0; maxScale: 30; rotationSpeed: 0.25"></a-entity>
                   <!-- Fake Shadow -->
                   <a-circle rotation="-90 0 0" radius="2.5" color="#000" material="opacity: 0.4; transparent: true; shader: flat" position="0 -0.05 0"></a-circle>
               </a-entity>

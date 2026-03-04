@@ -538,21 +538,45 @@
         },
         init: function () {
           this.sceneEl = document.querySelector('a-scene');
+          this.handleTwoFingerStart = this.handleTwoFingerStart.bind(this);
           this.handleTwoFingerMove = this.handleTwoFingerMove.bind(this);
           this.handleOneFingerMove = this.handleOneFingerMove.bind(this);
           this.handleOneFingerStart = this.handleOneFingerStart.bind(this);
           
-          this.initialScale = null;
+          this.scaleStart = null;
           this.lastX = null;
 
+          this.sceneEl.addEventListener('twofingerstart', this.handleTwoFingerStart);
           this.sceneEl.addEventListener('twofingermove', this.handleTwoFingerMove);
           this.sceneEl.addEventListener('onefingermove', this.handleOneFingerMove);
           this.sceneEl.addEventListener('onefingerstart', this.handleOneFingerStart);
         },
         remove: function () {
+          this.sceneEl.removeEventListener('twofingerstart', this.handleTwoFingerStart);
           this.sceneEl.removeEventListener('twofingermove', this.handleTwoFingerMove);
           this.sceneEl.removeEventListener('onefingermove', this.handleOneFingerMove);
           this.sceneEl.removeEventListener('onefingerstart', this.handleOneFingerStart);
+        },
+        handleTwoFingerStart: function(event) {
+            // Only capture scale for the active model
+            if (activeMarkerId === null || this.el.id !== 'model-' + activeMarkerId) return;
+            this.scaleStart = this.el.object3D.scale.clone();
+        },
+        handleTwoFingerMove: function (event) {
+            // Only update the active model
+            if (activeMarkerId === null || this.el.id !== 'model-' + activeMarkerId) return;
+            
+            if (!this.scaleStart) {
+                // Fallback if start wasn't captured (shouldn't happen with gesture-detector)
+                this.scaleStart = this.el.object3D.scale.clone();
+            }
+
+            if (event.detail.spread && event.detail.startSpread) {
+                const scaleFactor = event.detail.spread / event.detail.startSpread;
+                const newScale = this.scaleStart.x * scaleFactor;
+                const clampedScale = Math.min(Math.max(newScale, this.data.minScale), this.data.maxScale);
+                this.el.object3D.scale.set(clampedScale, clampedScale, clampedScale);
+            }
         },
         handleOneFingerStart: function(event) {
             this.lastX = event.detail.position.x;
@@ -561,30 +585,12 @@
             if (this.lastX !== null) {
                 const deltaX = event.detail.position.x - this.lastX;
                 this.lastX = event.detail.position.x;
-                if (activeMarkerId !== null) {
-                     // Updated: Find model by ID directly since it's no longer inside marker
-                     const model = document.getElementById('model-' + activeMarkerId);
-                     if (model) {
-                         model.object3D.rotation.y += deltaX * (this.data.rotationSpeed * 0.01);
-                     }
-                }
+                
+                // Only rotate the active model
+                if (activeMarkerId === null || this.el.id !== 'model-' + activeMarkerId) return;
+                
+                this.el.object3D.rotation.y += deltaX * (this.data.rotationSpeed * 0.01);
             }
-        },
-        handleTwoFingerMove: function (event) {
-          if (activeMarkerId !== null) {
-             // Updated: Find model by ID directly since it's no longer inside marker
-             const model = document.getElementById('model-' + activeMarkerId);
-             
-             if (model && event.detail.spread && event.detail.startSpread) {
-                if (!this.initialScale) {
-                    this.initialScale = model.object3D.scale.clone();
-                }
-                const scaleFactor = event.detail.spread / event.detail.startSpread;
-                let newScale = this.initialScale.x * scaleFactor;
-                newScale = Math.min(Math.max(newScale, this.data.minScale), this.data.maxScale);
-                model.object3D.scale.set(newScale, newScale, newScale);
-             }
-          }
         }
       });
 

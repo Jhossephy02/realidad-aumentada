@@ -282,11 +282,11 @@
     </div>
     
     <!-- AR.js Scene Setup for 3x3 Barcodes -->
-      <!-- OPTIMIZATION: maxDetectionRate: 30 (cap at 30fps) -->
+      <!-- OPTIMIZATION: Force 640x480 (VGA) resolution to save GPU/CPU -->
       <a-scene 
       embedded 
-      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; smoothing: true; smoothingAmount: 0.8; maxDetectionRate: 30;"
-      renderer="logarithmicDepthBuffer: true; colorManagement: true; precision: medium; preserveDrawingBuffer: true; antialias: false; powerPreference: default;"
+      arjs="sourceType: webcam; sourceWidth:640; sourceHeight:480; displayWidth: 640; displayHeight: 480; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; smoothing: true; smoothingAmount: 0.8; maxDetectionRate: 30;"
+      renderer="logarithmicDepthBuffer: false; colorManagement: false; precision: low; antialias: false; powerPreference: low-power; sortObjects: true; physicallyCorrectLights: false;"
       vr-mode-ui="enabled: false"
       gesture-detector
       id="scene"
@@ -342,28 +342,28 @@
           <!-- Model 0 Wrapper -->
           <a-entity id="model-wrapper-0" visible="false">
               <a-entity class="model-entity" id="model-0">
-                  <a-entity position="0 0 0" scale="3.5 3.5 3.5" gltf-model="#ramen-model" animation-mixer class="clickable" click-handler model-controller="minScale: 0.5; maxScale: 8; rotationSpeed: 0.25"></a-entity>
+                  <a-entity position="0 0 0" scale="3.5 3.5 3.5" gltf-model="#ramen-model" class="clickable" click-handler model-controller="minScale: 0.5; maxScale: 8; rotationSpeed: 0.25" model-optimizer></a-entity>
               </a-entity>
           </a-entity>
 
           <!-- Model 1 Wrapper -->
           <a-entity id="model-wrapper-1" visible="false">
               <a-entity class="model-entity" id="model-1">
-                  <a-entity position="0 0 0" scale="6.0 6.0 6.0" gltf-model="#roll-model" animation-mixer class="clickable" click-handler model-controller="minScale: 0.5; maxScale: 8; rotationSpeed: 0.25"></a-entity>
+                  <a-entity position="0 0 0" scale="6.0 6.0 6.0" gltf-model="#roll-model" class="clickable" click-handler model-controller="minScale: 0.5; maxScale: 8; rotationSpeed: 0.25" model-optimizer></a-entity>
               </a-entity>
           </a-entity>
 
           <!-- Model 2 Wrapper -->
           <a-entity id="model-wrapper-2" visible="false">
               <a-entity class="model-entity" id="model-2">
-                  <a-entity position="0 0 0" scale="0.35 0.35 0.35" gltf-model="#salmon-model" animation-mixer class="clickable" click-handler model-controller="minScale: 0.1; maxScale: 5; rotationSpeed: 0.25"></a-entity>
+                  <a-entity position="0 0 0" scale="0.35 0.35 0.35" gltf-model="#salmon-model" class="clickable" click-handler model-controller="minScale: 0.1; maxScale: 5; rotationSpeed: 0.25" model-optimizer></a-entity>
               </a-entity>
           </a-entity>
 
           <!-- Model 3 Wrapper -->
           <a-entity id="model-wrapper-3" visible="false">
               <a-entity class="model-entity" id="model-3">
-                  <a-entity position="0 0 0" scale="6.0 6.0 6.0" gltf-model="#sushi-model" animation-mixer class="clickable" click-handler model-controller="minScale: 0.5; maxScale: 8; rotationSpeed: 0.25"></a-entity>
+                  <a-entity position="0 0 0" scale="6.0 6.0 6.0" gltf-model="#sushi-model" class="clickable" click-handler model-controller="minScale: 0.5; maxScale: 8; rotationSpeed: 0.25" model-optimizer></a-entity>
               </a-entity>
           </a-entity>
       </a-entity>
@@ -760,6 +760,14 @@
       AFRAME.registerComponent('marker-follower-system', {
         init: function() {
           this.tickCount = 0;
+          
+          // CRITICAL PERFORMANCE FIX: Clamp pixel ratio on mobile
+          const renderer = this.el.sceneEl.renderer;
+          if (renderer) {
+              const pixelRatio = Math.min(window.devicePixelRatio, 1.5); // Cap at 1.5x for crispness/perf balance
+              renderer.setPixelRatio(pixelRatio);
+              console.log("Renderer Pixel Ratio clamped to:", pixelRatio);
+          }
         },
         tick: function(t, dt) {
           // Optimization: Skip every other frame to reduce CPU load (30fps target)
@@ -1089,6 +1097,37 @@
       // We keep the lostTimeouts object for compatibility if needed, but the component handles its own state.
       const lostTimeouts = {}; 
 
+      // 5. Model Optimizer Component (Reduces Material Cost)
+      AFRAME.registerComponent('model-optimizer', {
+        init: function () {
+          this.el.addEventListener('model-loaded', (e) => {
+            const mesh = this.el.getObject3D('mesh');
+            if (!mesh) return;
+
+            mesh.traverse((node) => {
+              if (node.isMesh) {
+                // Force low precision materials
+                if (node.material) {
+                  node.material.precision = 'lowp'; // Lowest precision
+                  node.material.flatShading = false; // Keep smooth look
+                  
+                  // Disable expensive features
+                  if (node.material.map) {
+                    node.material.map.anisotropy = 1; // Disable anisotropic filtering
+                    node.material.map.minFilter = THREE.LinearFilter; // Faster filtering
+                  }
+                  
+                  // Dispose geometry attributes if not needed (e.g. vertex colors)
+                  // This saves VRAM
+                  node.geometry.computeBoundingSphere(); 
+                  node.frustumCulled = true; // Ensure culling works
+                }
+              }
+            });
+            console.log('Model optimized: ' + this.el.id);
+          });
+        }
+      });
     </script>
   </body>
 </html>

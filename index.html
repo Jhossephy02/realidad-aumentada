@@ -285,8 +285,8 @@
       <!-- OPTIMIZATION: Force 640x480 (VGA) resolution to save GPU/CPU -->
       <a-scene 
       embedded 
-      arjs="sourceType: webcam; sourceWidth:640; sourceHeight:480; displayWidth: 640; displayHeight: 480; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; smoothing: true; smoothingAmount: 0.8; maxDetectionRate: 30;"
-      renderer="logarithmicDepthBuffer: false; colorManagement: false; precision: low; antialias: false; powerPreference: low-power; sortObjects: true; physicallyCorrectLights: false;"
+      arjs="sourceType: webcam; sourceWidth:640; sourceHeight:480; displayWidth: 640; displayHeight: 480; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; smoothing: true; smoothingAmount: 0.8; maxDetectionRate: 20;"
+      renderer="logarithmicDepthBuffer: false; colorManagement: true; precision: high; antialias: true; powerPreference: default; sortObjects: true; physicallyCorrectLights: true;"
       vr-mode-ui="enabled: false"
       gesture-detector
       id="scene"
@@ -295,15 +295,16 @@
 
       <a-assets>
         <a-asset-item id="ramen-model" src="models/sushi/shrimp_ramen_bowl_draco.glb"></a-asset-item>
-        <a-asset-item id="roll-model" src="models/sushi/sushi_rolls.glb"></a-asset-item>
+        <a-asset-item id="roll-model" src="models/sushi/sushi_rolls_draco.glb"></a-asset-item>
         <a-asset-item id="salmon-model" src="models/sushi/salmon_nigiri_draco.glb"></a-asset-item>
         <a-asset-item id="sushi-model" src="models/sushi/sushi_draco.glb"></a-asset-item>
       </a-assets>
 
-      <!-- Lighting (Optimized: No dynamic shadows) -->
-      <a-light type="ambient" color="#BBB" intensity="0.8"></a-light>
-      <a-light type="directional" position="1 4 2" intensity="1.2"></a-light>
-      <a-light type="point" position="-2 2 2" intensity="0.5" color="#FFD700"></a-light> <!-- Warm fill -->
+      <!-- Lighting (Optimized: No dynamic shadows, 2 Lights Only for Speed) -->
+      <!-- 1. Ambient + Fill (Hemisphere): Simulates Sky/Ground reflection -->
+      <a-light type="hemisphere" groundColor="#443333" color="#FFFAFA" intensity="1.8"></a-light>
+      <!-- 2. Key Light (Directional): Simulates Sun/Ceiling Light -->
+      <a-light type="directional" position="1 4 2" intensity="1.2" color="#FFF"></a-light>
 
       <!-- MARKER 0: Zelva Ramen -->
       <a-marker type="barcode" value="0" id="marker-0" smooth="true" smoothCount="100" smoothTolerance="0.5" smoothThreshold="20" marker-handler>
@@ -340,31 +341,39 @@
 
       <!-- WORLD CONTAINER FOR MODELS (PERSISTENT) -->
       <a-entity id="world-container">
-          <!-- Model 0 Wrapper -->
+          <!-- Model 0 Wrapper: Ramen -->
           <a-entity id="model-wrapper-0" visible="false">
               <a-entity class="model-entity" id="model-0">
-                  <a-entity position="0 0 0" scale="3.5 3.5 3.5" gltf-model="#ramen-model" class="clickable" click-handler model-controller="minScale: 0.5; maxScale: 8; rotationSpeed: 0.25" model-optimizer></a-entity>
+                  <a-entity position="0 0 0" rotation="90 0 0" scale="3.5 3.5 3.5" gltf-model="#ramen-model" class="clickable" click-handler model-controller="minScale: 0.5; maxScale: 8; rotationSpeed: 0.25" model-optimizer></a-entity>
+                  <!-- Fake Shadow -->
+                  <a-circle rotation="-90 0 0" radius="1.2" color="#000" material="opacity: 0.4; transparent: true; shader: flat" position="0 -0.05 0"></a-circle>
               </a-entity>
           </a-entity>
 
-          <!-- Model 1 Wrapper -->
+          <!-- Model 1 Wrapper: Rolls -->
           <a-entity id="model-wrapper-1" visible="false">
               <a-entity class="model-entity" id="model-1">
                   <a-entity position="0 0 0" scale="12.0 12.0 12.0" gltf-model="#roll-model" class="clickable" click-handler model-controller="minScale: 1.0; maxScale: 20; rotationSpeed: 0.25" model-optimizer></a-entity>
+                  <!-- Fake Shadow -->
+                  <a-circle rotation="-90 0 0" radius="1.5" color="#000" material="opacity: 0.4; transparent: true; shader: flat" position="0 -0.05 0"></a-circle>
               </a-entity>
           </a-entity>
 
-          <!-- Model 2 Wrapper -->
+          <!-- Model 2 Wrapper: Salmon -->
           <a-entity id="model-wrapper-2" visible="false">
               <a-entity class="model-entity" id="model-2">
-                  <a-entity position="0 0 0" scale="3.5 3.5 3.5" gltf-model="#salmon-model" class="clickable" click-handler model-controller="minScale: 0.5; maxScale: 10; rotationSpeed: 0.25" model-optimizer></a-entity>
+                  <a-entity position="0 0 0" scale="0.5 0.5 0.5" gltf-model="#salmon-model" class="clickable" click-handler model-controller="minScale: 0.1; maxScale: 3; rotationSpeed: 0.25" model-optimizer></a-entity>
+                  <!-- Fake Shadow -->
+                  <a-circle rotation="-90 0 0" radius="0.3" color="#000" material="opacity: 0.4; transparent: true; shader: flat" position="0 -0.05 0"></a-circle>
               </a-entity>
           </a-entity>
 
-          <!-- Model 3 Wrapper -->
+          <!-- Model 3 Wrapper: Sushi Set -->
           <a-entity id="model-wrapper-3" visible="false">
               <a-entity class="model-entity" id="model-3">
-                  <a-entity position="0 0 0" scale="15.0 15.0 15.0" gltf-model="#sushi-model" class="clickable" click-handler model-controller="minScale: 1.0; maxScale: 25; rotationSpeed: 0.25" model-optimizer></a-entity>
+                  <a-entity position="0 0 0" rotation="90 0 0" scale="15.0 15.0 15.0" gltf-model="#sushi-model" class="clickable" click-handler model-controller="minScale: 1.0; maxScale: 25; rotationSpeed: 0.25" model-optimizer></a-entity>
+                  <!-- Fake Shadow -->
+                  <a-circle rotation="-90 0 0" radius="2.5" color="#000" material="opacity: 0.4; transparent: true; shader: flat" position="0 -0.05 0"></a-circle>
               </a-entity>
           </a-entity>
       </a-entity>
@@ -765,13 +774,13 @@
           // CRITICAL PERFORMANCE FIX: Clamp pixel ratio on mobile
           const renderer = this.el.sceneEl.renderer;
           if (renderer) {
-              const pixelRatio = Math.min(window.devicePixelRatio, 1.5); // Cap at 1.5x for crispness/perf balance
+              const pixelRatio = Math.min(window.devicePixelRatio, 1.5); // Increase slightly for better quality
               renderer.setPixelRatio(pixelRatio);
               console.log("Renderer Pixel Ratio clamped to:", pixelRatio);
           }
         },
         tick: function(t, dt) {
-          // Optimization: Skip every other frame to reduce CPU load (30fps target)
+          // Optimization: Skip every other frame to reduce CPU load (15fps target for logic)
           if (this.tickCount++ % 2 !== 0) return;
 
           [0, 1, 2, 3].forEach(id => {
@@ -1107,25 +1116,36 @@
 
             mesh.traverse((node) => {
               if (node.isMesh) {
+                // Optimization: Stop matrix updates for static parts
+                node.matrixAutoUpdate = false;
+                node.updateMatrix();
+
                 // Force low precision materials
-                if (node.material) {
-                  node.material.precision = 'lowp'; // Lowest precision
-                  node.material.flatShading = false; // Keep smooth look
+                  if (node.material) {
+                    // node.material.precision = 'lowp'; // REMOVED: Causes pixelation
+                    node.material.flatShading = false; // Keep smooth look
+                    
+                    // OPTIMIZATION: Only update when necessary
+                    // node.material.needsUpdate = true; // Removed, let THREE handle it
+
+                    // Make food look fresh (shiny/oily) - Subtle
+                    // node.material.roughness = 0.5; // RESTORED: Use original material settings
+                    // node.material.metalness = 0.1; // RESTORED: Use original material settings
+                    
+                    // Disable expensive features
+                    if (node.material.map) {
+                      // OPTIMIZATION: 4x Anisotropy is enough for mobile AR
+                      node.material.map.anisotropy = 4; 
+                      node.material.map.minFilter = THREE.LinearMipmapLinearFilter;
+                    }
                   
-                  // Disable expensive features
-                  if (node.material.map) {
-                    node.material.map.anisotropy = 1; // Disable anisotropic filtering
-                    node.material.map.minFilter = THREE.LinearFilter; // Faster filtering
-                  }
-                  
-                  // Dispose geometry attributes if not needed (e.g. vertex colors)
-                  // This saves VRAM
+                  // Dispose geometry attributes if not needed
                   node.geometry.computeBoundingSphere(); 
                   node.frustumCulled = true; // Ensure culling works
                 }
               }
             });
-            console.log('Model optimized: ' + this.el.id);
+            console.log('Model optimized (Balanced Quality): ' + this.el.id);
           });
         }
       });

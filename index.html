@@ -535,7 +535,7 @@
           minScale: { default: 0.1 },
           maxScale: { default: 20.0 },
           rotationSpeed: { default: 0.25 },
-          zoomSensitivity: { default: 0.004 } // Reduced sensitivity for smoother zoom
+          zoomSensitivity: { default: 0.001 } // Reduced drastically for control
         },
         init: function () {
           this.sceneEl = document.querySelector('a-scene');
@@ -576,10 +576,14 @@
             // Calculate delta (difference in spread)
             const delta = currentSpread - this.lastSpread;
             
-            // Linear scaling: smoother and less "jumpy" than ratio-based
-            // factor > 1 for zoom in, < 1 for zoom out
-            const scaleMultiplier = 1 + (delta * this.data.zoomSensitivity);
+            // Linear scaling with clamping to prevent jumps
+            // Multiplier > 1 for zoom in, < 1 for zoom out
+            let scaleMultiplier = 1 + (delta * this.data.zoomSensitivity);
             
+            // Safety clamp: Prevent scale from changing more than 5% per frame
+            // This stops "giant jumps" if the touch tracking glitches
+            scaleMultiplier = Math.min(Math.max(scaleMultiplier, 0.95), 1.05);
+
             const currentScale = this.el.object3D.scale.x;
             const newScale = currentScale * scaleMultiplier;
             const clampedScale = Math.min(Math.max(newScale, this.data.minScale), this.data.maxScale);

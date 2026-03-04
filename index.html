@@ -282,10 +282,10 @@
     </div>
     
     <!-- AR.js Scene Setup for 3x3 Barcodes -->
-      <!-- OPTIMIZATION: Force 640x480 (VGA) resolution to save GPU/CPU -->
+      <!-- OPTIMIZATION: Resolution increased to 1280x960 to detect small markers, but kept renderer optimized -->
       <a-scene 
       embedded 
-      arjs="sourceType: webcam; sourceWidth:640; sourceHeight:480; displayWidth: 640; displayHeight: 480; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; smoothing: true; smoothingAmount: 0.8; maxDetectionRate: 30;"
+      arjs="sourceType: webcam; sourceWidth:1280; sourceHeight:960; displayWidth: 1280; displayHeight: 960; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; smoothing: true; smoothingAmount: 0.8; maxDetectionRate: 30;"
       renderer="logarithmicDepthBuffer: true; colorManagement: true; precision: mediump; antialias: false; powerPreference: default; sortObjects: true; physicallyCorrectLights: false;"
       vr-mode-ui="enabled: false"
       gesture-detector

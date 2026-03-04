@@ -535,6 +535,7 @@
           minScale: { default: 0.1 },
           maxScale: { default: 20.0 },
           rotationSpeed: { default: 0.25 },
+          zoomSensitivity: { default: 0.002 } // Balanced sensitivity
         },
         init: function () {
           this.sceneEl = document.querySelector('a-scene');
@@ -564,28 +565,21 @@
             this.lastSpread = event.detail.spread;
         },
         handleTwoFingerMove: function (event) {
+            // Check if this model is the active one
             if (activeMarkerId === null || this.el.id !== 'model-' + activeMarkerId) return;
             
             const currentSpread = event.detail.spread;
-            // Ignore if fingers are too close (noise)
-            if (currentSpread < 20) return;
 
+            // Robust initialization if start event was missed
             if (this.lastSpread === null || this.lastSpread === 0) {
                 this.lastSpread = currentSpread;
                 return;
             }
 
-            // Ratio-based zoom (Natural feel)
-            // scaleFactor = 1 means no change
-            let scaleFactor = currentSpread / this.lastSpread;
-            
-            // Damping: 0.5 makes it feel "heavier" and more precise
-            // Formula: 1 + (ratio - 1) * damping
-            // Example: Ratio 1.2 (20% growth) * 0.5 -> 1.1 (10% growth)
-            scaleFactor = 1 + (scaleFactor - 1) * 0.5;
-
-            // Safety clamp: Prevent spikes > 5% per frame
-            scaleFactor = Math.min(Math.max(scaleFactor, 0.95), 1.05);
+            // Simple Ratio-based zoom with damping
+            const ratio = currentSpread / this.lastSpread;
+            const damping = 0.5; // 50% damping for smoothness
+            const scaleFactor = 1 + (ratio - 1) * damping;
 
             const currentScale = this.el.object3D.scale.x;
             const newScale = currentScale * scaleFactor;
@@ -602,17 +596,22 @@
             this.lastX = event.detail.position.x;
         },
         handleOneFingerMove: function(event) {
-            if (this.lastX !== null) {
-                const deltaX = event.detail.position.x - this.lastX;
+            // Robust initialization
+            if (this.lastX === null) {
                 this.lastX = event.detail.position.x;
-                
-                // Only rotate the active model
-                if (activeMarkerId === null || this.el.id !== 'model-' + activeMarkerId) return;
-                
-                this.el.object3D.rotation.y += deltaX * (this.data.rotationSpeed * 0.01);
+                return;
             }
+
+            const deltaX = event.detail.position.x - this.lastX;
+            this.lastX = event.detail.position.x;
+            
+            // Only rotate the active model
+            if (activeMarkerId === null || this.el.id !== 'model-' + activeMarkerId) return;
+            
+            this.el.object3D.rotation.y += deltaX * (this.data.rotationSpeed * 0.01);
         }
       });
+
 
       // Dish Data
       const dishes = {

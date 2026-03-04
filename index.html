@@ -282,10 +282,11 @@
     </div>
     
     <!-- AR.js Scene Setup for 3x3 Barcodes -->
-    <a-scene 
+      <!-- OPTIMIZATION: maxDetectionRate: 30 (cap at 30fps) -->
+      <a-scene 
       embedded 
-      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; smoothing: true; smoothingAmount: 0.8;"
-      renderer="logarithmicDepthBuffer: true; colorManagement: true; precision: medium; preserveDrawingBuffer: true;"
+      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; smoothing: true; smoothingAmount: 0.8; maxDetectionRate: 30;"
+      renderer="logarithmicDepthBuffer: true; colorManagement: true; precision: medium; preserveDrawingBuffer: true; antialias: false; powerPreference: default;"
       vr-mode-ui="enabled: false"
       gesture-detector
       id="scene"
@@ -298,9 +299,9 @@
         <a-asset-item id="sushi-model" src="models/sushi/sushi.glb"></a-asset-item>
       </a-assets>
 
-      <!-- Lighting to ensure models are visible (3-Point Setup) -->
+      <!-- Lighting (Optimized: No dynamic shadows) -->
       <a-light type="ambient" color="#BBB" intensity="0.8"></a-light>
-      <a-light type="directional" position="1 4 2" intensity="1.2" castShadow="true" shadow-bias="-0.0001"></a-light>
+      <a-light type="directional" position="1 4 2" intensity="1.2"></a-light>
       <a-light type="point" position="-2 2 2" intensity="0.5" color="#FFD700"></a-light> <!-- Warm fill -->
 
       <!-- MARKER 0: Zelva Ramen -->
@@ -754,10 +755,16 @@
         link.click();
       });
 
-      // Component to handle marker tracking and model persistence
+      // Marker Follower System (Persistent World)
+      // Optimized for performance: Throttled updates (30fps cap)
       AFRAME.registerComponent('marker-follower-system', {
-        tick: function() {
-          // Iterate through all possible markers/models
+        init: function() {
+          this.tickCount = 0;
+        },
+        tick: function(t, dt) {
+          // Optimization: Skip every other frame to reduce CPU load (30fps target)
+          if (this.tickCount++ % 2 !== 0) return;
+
           [0, 1, 2, 3].forEach(id => {
              const marker = document.getElementById('marker-' + id);
              const wrapper = document.getElementById('model-wrapper-' + id);
@@ -774,15 +781,22 @@
                  wrapper.setAttribute('visible', true);
                  if(wrapper.object3D) wrapper.object3D.visible = true;
                  
-                 // Update Status Indicator
+                 // Update Status Indicator (Only update DOM if state changes to avoid reflows)
                  if (statusIndicator) {
-                    statusIndicator.style.opacity = '1';
-                    if (isMarkerVisible) {
-                        statusDot.className = 'status-dot status-live';
-                        statusText.innerText = 'En Vivo';
-                    } else {
-                        statusDot.className = 'status-dot status-frozen';
-                        statusText.innerText = 'Congelado';
+                    const isLive = isMarkerVisible;
+                    const currentStatus = statusIndicator.getAttribute('data-status');
+                    const newStatus = isLive ? 'live' : 'frozen';
+                    
+                    if (currentStatus !== newStatus) {
+                        statusIndicator.style.opacity = '1';
+                        statusIndicator.setAttribute('data-status', newStatus);
+                        if (isLive) {
+                            statusDot.className = 'status-dot status-live';
+                            statusText.innerText = 'En Vivo';
+                        } else {
+                            statusDot.className = 'status-dot status-frozen';
+                            statusText.innerText = 'Congelado';
+                        }
                     }
                  }
                  
@@ -798,15 +812,14 @@
                      
                      marker.object3D.matrixWorld.decompose(pos, quat, scale);
                      
-                     // Apply position and rotation to wrapper
+                     // Apply to wrapper (world space)
+                     // Use direct object3D access for performance
                      wrapper.object3D.position.copy(pos);
                      wrapper.object3D.quaternion.copy(quat);
-                     
-                     // We DO NOT copy scale to wrapper, as models have their own internal scale.
+                     // We don't copy scale because the model has its own scale
                  }
-                 // If marker NOT visible, do nothing -> Wrapper stays in last known position (FROZEN)
              } else {
-                 // Not active -> Hide it
+                 // Inactive models are hidden
                  wrapper.setAttribute('visible', false);
                  if(wrapper.object3D) wrapper.object3D.visible = false;
              }
@@ -815,9 +828,10 @@
              // Show placeholder only if marker is visible AND NOT active (so user knows they can scan it)
              if (placeholder) {
                  const showPlaceholder = isMarkerVisible && !isActive;
-                 if (placeholder.getAttribute('visible') !== String(showPlaceholder)) { // cast to string for setAttribute comparison safety
+                 // Optimization: Only touch DOM if visibility changes
+                 if (placeholder.object3D.visible !== showPlaceholder) {
                      placeholder.setAttribute('visible', showPlaceholder);
-                     if(placeholder.object3D) placeholder.object3D.visible = showPlaceholder;
+                     placeholder.object3D.visible = showPlaceholder;
                  }
              }
           });

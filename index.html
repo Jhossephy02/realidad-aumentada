@@ -100,9 +100,171 @@
       .flash-active {
         opacity: 0.8 !important;
       }
+
+      /* Loading Screen */
+      #loader-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.9);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        transition: opacity 0.5s ease;
+      }
+      .loader-spinner {
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid #ff9800;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin-bottom: 20px;
+      }
+      .loader-text {
+        color: white;
+        font-size: 1.2rem;
+        font-weight: bold;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      /* Info Button (i) */
+      .info-btn {
+        position: fixed;
+        bottom: 110px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        border: 2px solid white;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+        z-index: 950;
+        cursor: pointer;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: auto;
+      }
+      .info-btn.visible {
+        opacity: 1;
+      }
+
+      /* Detailed Info Modal */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.85);
+        z-index: 10000;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        box-sizing: border-box;
+      }
+      .modal-content {
+        background-color: #fff;
+        color: #333;
+        width: 100%;
+        max-width: 400px;
+        border-radius: 15px;
+        padding: 25px;
+        position: relative;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        animation: slideUp 0.3s ease-out;
+      }
+      @keyframes slideUp {
+        from { transform: translateY(50px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+      .close-modal {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #888;
+      }
+      .modal-title {
+        color: #ff9800;
+        margin-top: 0;
+        font-size: 1.5rem;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+      }
+      .modal-detail-row {
+        display: flex;
+        margin-bottom: 10px;
+        font-size: 0.95rem;
+      }
+      .modal-label {
+        font-weight: bold;
+        min-width: 100px;
+        color: #555;
+      }
+      .modal-value {
+        flex: 1;
+      }
     </style>
   </head>
   <body>
+    <!-- Loader -->
+    <div id="loader-overlay">
+      <div class="loader-spinner"></div>
+      <div class="loader-text">Cargando Experiencia AR...</div>
+    </div>
+
+    <!-- Status Indicator -->
+    <div id="status-indicator">
+      <div class="status-dot" id="status-dot"></div>
+      <span id="status-text">Esperando...</span>
+    </div>
+    
+    <!-- Info Button -->
+    <div class="info-btn" id="info-btn">i</div>
+
+    <!-- Detailed Modal -->
+    <div class="modal-overlay" id="detail-modal">
+      <div class="modal-content">
+        <span class="close-modal" id="close-modal">&times;</span>
+        <h2 class="modal-title" id="modal-title">Nombre del Plato</h2>
+        
+        <div class="modal-detail-row">
+          <div class="modal-label">Ingredientes:</div>
+          <div class="modal-value" id="modal-ingredients">Lista de ingredientes...</div>
+        </div>
+        
+        <div class="modal-detail-row">
+          <div class="modal-label">Calorías:</div>
+          <div class="modal-value" id="modal-calories">000 kcal</div>
+        </div>
+
+        <div class="modal-detail-row">
+          <div class="modal-label">Tiempo:</div>
+          <div class="modal-value" id="modal-time">15 min</div>
+        </div>
+
+        <div class="modal-detail-row" style="margin-top: 20px; font-style: italic; color: #666;">
+          <div class="modal-value" id="modal-chef-note">"Nota del chef aquí..."</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Flash Overlay -->
     <div id="flash-overlay"></div>
 
@@ -136,11 +298,10 @@
         <a-asset-item id="sushi-model" src="models/sushi/sushi.glb"></a-asset-item>
       </a-assets>
 
-      <!-- Lighting to ensure models are visible -->
-      <a-light type="ambient" color="#ffffff" intensity="1"></a-light>
-      <a-light type="directional" position="0 1 0" intensity="1.5" target="#directionaltarget">
-        <a-entity id="directionaltarget" position="0 0 0"></a-entity>
-      </a-light>
+      <!-- Lighting to ensure models are visible (3-Point Setup) -->
+      <a-light type="ambient" color="#BBB" intensity="0.8"></a-light>
+      <a-light type="directional" position="1 4 2" intensity="1.2" castShadow="true" shadow-bias="-0.0001"></a-light>
+      <a-light type="point" position="-2 2 2" intensity="0.5" color="#FFD700"></a-light> <!-- Warm fill -->
 
       <!-- MARKER 0: Zelva Ramen -->
       <a-marker type="barcode" value="0" id="marker-0" smooth="true" smoothCount="100" smoothTolerance="0.5" smoothThreshold="20" marker-handler>
@@ -252,6 +413,20 @@
       const panelDesc = document.getElementById('panel-desc');
       const panelPrice = document.getElementById('panel-price');
       const flashOverlay = document.getElementById('flash-overlay');
+      const statusIndicator = document.getElementById('status-indicator');
+      const statusDot = document.getElementById('status-dot');
+      const statusText = document.getElementById('status-text');
+
+      // Hide Loader when scene is ready
+      const sceneEl = document.querySelector('a-scene');
+      sceneEl.addEventListener('loaded', () => {
+          console.log("Scene loaded");
+          const loader = document.getElementById('loader-overlay');
+          if(loader) {
+              loader.style.opacity = '0';
+              setTimeout(() => loader.style.display = 'none', 500);
+          }
+      });
 
       let activeMarkerId = null;
       const visibleMarkers = new Set(); // Track which markers are currently detected
@@ -426,25 +601,83 @@
       const dishes = {
         0: {
           name: "Zelva Ramen",
-          desc: "Ramen de la casa, ideal para el frío y para experiencias AR inmersivas.",
-          price: "S/ 32.00"
+          desc: "Ramen especial de la casa con camarones frescos, huevo y vegetales.",
+          price: "$12.99",
+          details: {
+            ingredients: "Caldo tonkotsu, fideos artesanos, camarones tigre, huevo marinado, nori, cebollín.",
+            calories: "650 kcal",
+            time: "15-20 min",
+            chefNote: "Nuestro caldo se cocina a fuego lento durante 12 horas para lograr ese sabor umami profundo."
+          }
         },
         1: {
-          name: "Volcano Roll",
-          desc: "Delicioso rollo con salsa volcánica y relleno especial.",
-          price: "S/ 25.00"
+          name: "Sushi Roll",
+          desc: "Roll clásico de salmón y aguacate con semillas de sésamo.",
+          price: "$8.50",
+          details: {
+            ingredients: "Arroz de sushi, salmón fresco, aguacate, alga nori, sésamo tostado.",
+            calories: "320 kcal",
+            time: "10 min",
+            chefNote: "Perfecto para compartir o como entrada ligera."
+          }
         },
         2: {
-          name: "Nigiris Especiales",
-          desc: "Selección de nigiris con salmón fresco y toques cítricos.",
-          price: "S/ 15.00"
+          name: "Nigiri Salmón",
+          desc: "Nigiri tradicional con corte premium de salmón noruego.",
+          price: "$5.00",
+          details: {
+            ingredients: "Arroz avinagrado, lomo de salmón premium, toque de wasabi.",
+            calories: "180 kcal (2 piezas)",
+            time: "5 min",
+            chefNote: "El corte del pescado es la clave, realizado por nuestros maestros sushiman."
+          }
         },
         3: {
-          name: "Makis New Styles",
-          desc: "Makis New Styles de Zelva Nikkei (Amazon, Anticuchero, Banzai, Kaminaki, Parrillero, Pulpo al Olivo, Jalea).",
-          price: "S/ 25.00"
+          name: "Bento Box",
+          desc: "Caja completa con variedad de sushi y acompañamientos.",
+          price: "$15.00",
+          details: {
+            ingredients: "Surtido de nigiris y makis, ensalada de algas, edamame, fruta de temporada.",
+            calories: "850 kcal",
+            time: "20 min",
+            chefNote: "La experiencia completa de la cocina japonesa en una sola caja."
+          }
         }
       };
+
+      // Info Modal Elements
+      const infoBtn = document.getElementById('info-btn');
+      const detailModal = document.getElementById('detail-modal');
+      const closeModal = document.getElementById('close-modal');
+      const modalTitle = document.getElementById('modal-title');
+      const modalIngredients = document.getElementById('modal-ingredients');
+      const modalCalories = document.getElementById('modal-calories');
+      const modalTime = document.getElementById('modal-time');
+      const modalChefNote = document.getElementById('modal-chef-note');
+
+      // Modal Logic
+      infoBtn.addEventListener('click', () => {
+        if (activeMarkerId !== null && dishes[activeMarkerId]) {
+          const dish = dishes[activeMarkerId];
+          modalTitle.innerText = dish.name;
+          modalIngredients.innerText = dish.details.ingredients;
+          modalCalories.innerText = dish.details.calories;
+          modalTime.innerText = dish.details.time;
+          modalChefNote.innerText = `"${dish.details.chefNote}"`;
+          
+          detailModal.style.display = 'flex';
+        }
+      });
+
+      closeModal.addEventListener('click', () => {
+        detailModal.style.display = 'none';
+      });
+
+      detailModal.addEventListener('click', (e) => {
+        if (e.target === detailModal) {
+          detailModal.style.display = 'none';
+        }
+      });
 
       const scene = document.querySelector('a-scene');
 
@@ -540,6 +773,18 @@
                  // Active model is ALWAYS visible (even if marker lost)
                  wrapper.setAttribute('visible', true);
                  if(wrapper.object3D) wrapper.object3D.visible = true;
+                 
+                 // Update Status Indicator
+                 if (statusIndicator) {
+                    statusIndicator.style.opacity = '1';
+                    if (isMarkerVisible) {
+                        statusDot.className = 'status-dot status-live';
+                        statusText.innerText = 'En Vivo';
+                    } else {
+                        statusDot.className = 'status-dot status-frozen';
+                        statusText.innerText = 'Congelado';
+                    }
+                 }
                  
                  // If marker is tracked, follow it
                  if (isMarkerVisible) {
@@ -652,8 +897,16 @@
           panelDesc.innerText = dish.desc;
           panelPrice.innerText = dish.price;
           infoPanel.classList.add('visible');
+          
+          // Show Info Button
+          const infoBtn = document.getElementById('info-btn');
+          if(infoBtn) infoBtn.classList.add('visible');
         } else {
           infoPanel.classList.remove('visible');
+          
+          // Hide Info Button
+          const infoBtn = document.getElementById('info-btn');
+          if(infoBtn) infoBtn.classList.remove('visible');
         }
       }
 

@@ -291,13 +291,13 @@
       gesture-detector
       id="scene"
       marker-follower-system
-      gltf-model="dracoDecoderPath: https://www.gstatic.com/draco/versioned/decoders/1.5.6/;">
+      gltf-model="">
 
       <a-assets>
-        <a-asset-item id="ramen-model" src="models/sushi/shrimp_ramen_bowl_draco.glb"></a-asset-item>
-        <a-asset-item id="roll-model" src="models/sushi/sushi_rolls_draco.glb"></a-asset-item>
-        <a-asset-item id="salmon-model" src="models/sushi/salmon_nigiri_draco.glb"></a-asset-item>
-        <a-asset-item id="sushi-model" src="models/sushi/sushi_draco.glb"></a-asset-item>
+        <a-asset-item id="ramen-model" src="models/sushi/shrimp_ramen_bowl.glb"></a-asset-item>
+        <a-asset-item id="roll-model" src="models/sushi/sushi_rolls.glb"></a-asset-item>
+        <a-asset-item id="salmon-model" src="models/sushi/salmon_nigiri.glb"></a-asset-item>
+        <a-asset-item id="sushi-model" src="models/sushi/sushi.glb"></a-asset-item>
       </a-assets>
 
       <!-- Lighting (Optimized: No dynamic shadows, 2 Lights Only for Speed) -->
@@ -344,7 +344,7 @@
           <!-- Model 0 Wrapper: Ramen -->
           <a-entity id="model-wrapper-0" visible="false">
               <a-entity class="model-entity" id="model-0">
-                  <a-entity position="0 0 0" rotation="90 0 0" scale="3.5 3.5 3.5" gltf-model="#ramen-model" class="clickable" click-handler model-controller="minScale: 0.5; maxScale: 8; rotationSpeed: 0.25" model-optimizer></a-entity>
+                  <a-entity position="0 0 0" scale="3.5 3.5 3.5" gltf-model="#ramen-model" class="clickable" click-handler model-controller="minScale: 1.0; maxScale: 8; rotationSpeed: 0.25"></a-entity>
                   <!-- Fake Shadow -->
                   <a-circle rotation="-90 0 0" radius="1.2" color="#000" material="opacity: 0.4; transparent: true; shader: flat" position="0 -0.05 0"></a-circle>
               </a-entity>
@@ -353,7 +353,7 @@
           <!-- Model 1 Wrapper: Rolls -->
           <a-entity id="model-wrapper-1" visible="false">
               <a-entity class="model-entity" id="model-1">
-                  <a-entity position="0 0 0" scale="12.0 12.0 12.0" gltf-model="#roll-model" class="clickable" click-handler model-controller="minScale: 1.0; maxScale: 20; rotationSpeed: 0.25" model-optimizer></a-entity>
+                  <a-entity position="0 0 0" scale="12.0 12.0 12.0" gltf-model="#roll-model" class="clickable" click-handler model-controller="minScale: 3.0; maxScale: 20; rotationSpeed: 0.25"></a-entity>
                   <!-- Fake Shadow -->
                   <a-circle rotation="-90 0 0" radius="1.5" color="#000" material="opacity: 0.4; transparent: true; shader: flat" position="0 -0.05 0"></a-circle>
               </a-entity>
@@ -362,16 +362,16 @@
           <!-- Model 2 Wrapper: Salmon -->
           <a-entity id="model-wrapper-2" visible="false">
               <a-entity class="model-entity" id="model-2">
-                  <a-entity position="0 0 0" scale="0.5 0.5 0.5" gltf-model="#salmon-model" class="clickable" click-handler model-controller="minScale: 0.1; maxScale: 3; rotationSpeed: 0.25" model-optimizer></a-entity>
+                  <a-entity position="0 0 0" scale="3.5 3.5 3.5" gltf-model="#salmon-model" class="clickable" click-handler model-controller="minScale: 0.5; maxScale: 8; rotationSpeed: 0.25"></a-entity>
                   <!-- Fake Shadow -->
-                  <a-circle rotation="-90 0 0" radius="0.3" color="#000" material="opacity: 0.4; transparent: true; shader: flat" position="0 -0.05 0"></a-circle>
+                  <a-circle rotation="-90 0 0" radius="0.8" color="#000" material="opacity: 0.4; transparent: true; shader: flat" position="0 -0.05 0"></a-circle>
               </a-entity>
           </a-entity>
 
           <!-- Model 3 Wrapper: Sushi Set -->
           <a-entity id="model-wrapper-3" visible="false">
               <a-entity class="model-entity" id="model-3">
-                  <a-entity position="0 0 0" rotation="90 0 0" scale="15.0 15.0 15.0" gltf-model="#sushi-model" class="clickable" click-handler model-controller="minScale: 1.0; maxScale: 25; rotationSpeed: 0.25" model-optimizer></a-entity>
+                  <a-entity position="0 0 0" scale="15.0 15.0 15.0" gltf-model="#sushi-model" class="clickable" click-handler model-controller="minScale: 5.0; maxScale: 30; rotationSpeed: 0.25"></a-entity>
                   <!-- Fake Shadow -->
                   <a-circle rotation="-90 0 0" radius="2.5" color="#000" material="opacity: 0.4; transparent: true; shader: flat" position="0 -0.05 0"></a-circle>
               </a-entity>

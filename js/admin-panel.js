@@ -91,6 +91,7 @@ const UI = {
         prodIndex: document.getElementById('prod-index'),
         prodName: document.getElementById('prod-name'),
         prodBarcode: document.getElementById('prod-barcode'),
+        prodTargetIndex: document.getElementById('prod-target-index'),
         prodId: document.getElementById('prod-id'),
         prodPrice: document.getElementById('prod-price'),
         prodDesc: document.getElementById('prod-desc'),
@@ -102,9 +103,16 @@ const UI = {
         
         fileModel: document.getElementById('file-model'),
         fileMarker: document.getElementById('file-marker'),
+
+        fileMarkersBulk: document.getElementById('file-markers-bulk'),
+        fileModelsBulk: document.getElementById('file-models-bulk'),
+        btnCreateDemo4: document.getElementById('btn-create-demo-4'),
+        demoStatus: document.getElementById('demo-status'),
         
         btnAdd: document.getElementById('btn-add-new'),
         btnDelete: document.getElementById('btn-delete'),
+        btnBuildTargets: document.getElementById('btn-build-targets'),
+        targetsStatus: document.getElementById('targets-status'),
         btnLogout: document.getElementById('btn-logout')
     },
 
@@ -144,6 +152,12 @@ const UI = {
 
         this.elements.btnAdd.addEventListener('click', () => this.addNew());
         this.elements.btnDelete.addEventListener('click', () => this.deleteCurrent());
+        if (this.elements.btnBuildTargets) {
+            this.elements.btnBuildTargets.addEventListener('click', () => this.buildAndUploadTargetsMind());
+        }
+        if (this.elements.btnCreateDemo4) {
+            this.elements.btnCreateDemo4.addEventListener('click', () => this.createDemo4());
+        }
         this.elements.btnLogout.addEventListener('click', () => {
             sessionStorage.removeItem('webar_session');
             location.reload();
@@ -219,6 +233,7 @@ const UI = {
         this.elements.prodName.value = item.name || '';
         this.elements.prodId.value = item.id || '';
         this.elements.prodBarcode.value = item.barcodeValue !== undefined ? item.barcodeValue : index;
+        this.elements.prodTargetIndex.value = Number.isFinite(item.targetIndex) ? item.targetIndex : '';
         this.elements.prodPrice.value = item.price || '';
         this.elements.prodDesc.value = item.description || ''; // Note: JSON uses 'description', app uses 'desc'. Catalog.json should be source of truth.
         this.elements.prodModelUrl.value = item.model || '';
@@ -242,6 +257,7 @@ const UI = {
         const newItem = {
             id: `item-${Date.now()}`,
             barcodeValue: newId,
+            targetIndex: null,
             name: "Nuevo Producto",
             price: 0,
             description: "",
@@ -263,6 +279,7 @@ const UI = {
         this.showLoading('Subiendo archivos y guardando...');
 
         const item = this.state.catalog[this.state.selectedIndex];
+        let shouldRebuildTargets = false;
         
         // Update basic fields
         item.name = this.elements.prodName.value;
@@ -272,6 +289,7 @@ const UI = {
         item.scale = this.elements.prodScale.value;
         item.rotation = this.elements.prodRotation.value;
         item.position = this.elements.prodPosition.value;
+        item.targetIndex = Number.isFinite(item.targetIndex) ? item.targetIndex : null;
 
         try {
             // 1. Upload Model if selected
@@ -293,6 +311,7 @@ const UI = {
                      item.model = item.model.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
                 }
                 this.elements.prodModelUrl.value = item.model;
+                shouldRebuildTargets = true;
             }
 
             // 2. Upload Marker if selected
@@ -311,6 +330,7 @@ const UI = {
                      item.marker = item.marker.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
                 }
                 this.elements.prodMarkerUrl.value = item.marker;
+                shouldRebuildTargets = true;
             }
 
             // 3. Update Catalog JSON in ASSETS repo
@@ -327,12 +347,211 @@ const UI = {
             // Save to LocalStorage for instant preview on this device
             localStorage.setItem('ar_catalog_data', JSON.stringify(this.state.catalog));
 
+            if (shouldRebuildTargets) {
+                await this.buildAndUploadTargetsMind({ silent: true });
+            }
+
             alert('Guardado correctamente en GitHub!');
             this.renderList();
 
         } catch (error) {
             console.error(error);
             alert('Error guardando: ' + error.message);
+        } finally {
+            this.hideLoading();
+        }
+    },
+
+    async createDemo4() {
+        if (!this.state.github) {
+            alert('Primero inicia sesión y conecta el repo de assets.');
+            return;
+        }
+
+        const markerFiles = Array.from(this.elements.fileMarkersBulk?.files || []);
+        const modelFiles = Array.from(this.elements.fileModelsBulk?.files || []);
+
+        if (markerFiles.length !== 4 || modelFiles.length !== 4) {
+            alert('Selecciona exactamente 4 imágenes y 4 modelos (.glb).');
+            return;
+        }
+
+        const normalizeFileName = (name) => String(name || 'file')
+            .replace(/\\/g, '/')
+            .split('/')
+            .pop()
+            .replace(/\s+/g, '_')
+            .replace(/[^a-zA-Z0-9._-]/g, '');
+
+        const stripExt = (name) => String(name || '').replace(/\.[^.]+$/, '');
+
+        this.showLoading('Creando demo (subiendo archivos)...');
+        if (this.elements.demoStatus) this.elements.demoStatus.innerText = '';
+
+        try {
+            const stamp = Date.now();
+            const newCatalog = [];
+
+            for (let i = 0; i < 4; i++) {
+                if (this.elements.demoStatus) this.elements.demoStatus.innerText = `Subiendo ${i + 1}/4...`;
+
+                const markerFile = markerFiles[i];
+                const modelFile = modelFiles[i];
+
+                const markerBase64 = await this.toBase64(markerFile);
+                const modelBase64 = await this.toBase64(modelFile);
+
+                const markerPath = `markers/zelva_${stamp}_${i}_${normalizeFileName(markerFile.name)}`;
+                const modelPath = `models/zelva_${stamp}_${i}_${normalizeFileName(modelFile.name)}`;
+
+                const markerExisting = await this.state.github.getFile(markerPath, false);
+                const modelExisting = await this.state.github.getFile(modelPath, false);
+
+                const markerUpload = await this.state.github.uploadFile(markerPath, markerBase64, `Demo marker ${i + 1}`, markerExisting ? markerExisting.sha : null);
+                const modelUpload = await this.state.github.uploadFile(modelPath, modelBase64, `Demo model ${i + 1}`, modelExisting ? modelExisting.sha : null);
+
+                const markerUrl = markerUpload.content.download_url.includes('github.com') && markerUpload.content.download_url.includes('/blob/')
+                    ? markerUpload.content.download_url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/')
+                    : markerUpload.content.download_url;
+
+                const modelUrl = modelUpload.content.download_url.includes('github.com') && modelUpload.content.download_url.includes('/blob/')
+                    ? modelUpload.content.download_url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/')
+                    : modelUpload.content.download_url;
+
+                newCatalog.push({
+                    id: `zelva-${stamp}-${i}`,
+                    barcodeValue: i,
+                    targetIndex: i,
+                    name: stripExt(markerFile.name) || `Zelva ${i + 1}`,
+                    price: 0,
+                    description: '',
+                    model: modelUrl,
+                    marker: markerUrl,
+                    scale: '1 1 1',
+                    rotation: '0 0 0',
+                    position: '0 0 0'
+                });
+            }
+
+            this.state.catalog = newCatalog;
+            this.state.selectedIndex = -1;
+            this.elements.editContainer.style.display = 'none';
+            this.elements.emptyState.style.display = 'block';
+            this.renderList();
+
+            if (this.elements.demoStatus) this.elements.demoStatus.innerText = 'Actualizando catálogo...';
+            const currentCatalog = await this.state.github.getFile('catalog/catalog.json');
+            const catalogSha = currentCatalog ? currentCatalog.sha : null;
+            const jsonContent = btoa(unescape(encodeURIComponent(JSON.stringify(this.state.catalog, null, 4))));
+            await this.state.github.uploadFile('catalog/catalog.json', jsonContent, 'Set demo catalog (4 items)', catalogSha);
+
+            localStorage.setItem('ar_catalog_data', JSON.stringify(this.state.catalog));
+
+            if (this.elements.demoStatus) this.elements.demoStatus.innerText = 'Generando targets.mind...';
+            await this.buildAndUploadTargetsMind({ silent: true });
+
+            if (this.elements.demoStatus) this.elements.demoStatus.innerText = 'Listo: 4 markers y targets.mind actualizado.';
+            alert('Listo. Se reemplazó el catálogo a 4 items y se generó targets.mind con esos 4 targets.');
+        } catch (error) {
+            console.error(error);
+            alert('Error creando demo: ' + error.message);
+        } finally {
+            this.hideLoading();
+        }
+    },
+
+    async buildAndUploadTargetsMind(options = {}) {
+        const silent = !!options.silent;
+        this.showLoading('Generando targets.mind...');
+        if (this.elements.targetsStatus) this.elements.targetsStatus.innerText = '';
+
+        try {
+            if (!window.__MindARCompiler) {
+                throw new Error('MindAR Compiler no está disponible en este navegador.');
+            }
+
+            const candidates = this.state.catalog.filter((i) => i && i.marker && i.model);
+            if (candidates.length === 0) {
+                throw new Error('No hay productos con imagen target y modelo 3D en el catálogo.');
+            }
+
+            const used = new Set();
+            for (const item of this.state.catalog) {
+                if (!item) continue;
+                const idx = Number.isFinite(item.targetIndex) ? item.targetIndex : null;
+                if (idx === null) continue;
+                if (used.has(idx)) {
+                    item.targetIndex = null;
+                    continue;
+                }
+                used.add(idx);
+            }
+
+            const getNextIndex = () => {
+                let i = 0;
+                while (used.has(i)) i++;
+                used.add(i);
+                return i;
+            };
+
+            for (const item of candidates) {
+                if (!Number.isFinite(item.targetIndex)) {
+                    item.targetIndex = getNextIndex();
+                }
+            }
+
+            const items = [...candidates].sort((a, b) => a.targetIndex - b.targetIndex);
+
+            const compiler = new window.__MindARCompiler();
+            const images = [];
+
+            for (let i = 0; i < items.length; i++) {
+                let url = items[i].marker;
+                if (typeof url === 'string' && !/^https?:\/\//i.test(url)) {
+                    if (typeof CONFIG !== 'undefined' && CONFIG && typeof CONFIG.getRawUrl === 'function') {
+                        url = CONFIG.getRawUrl(url.replace(/^\/+/, ''));
+                    }
+                }
+                const file = await this.fetchUrlAsFile(url, `target-${i}.png`);
+                const img = await this.loadImageFromFile(file);
+                images.push(img);
+            }
+
+            await compiler.compileImageTargets(images, (progress) => {
+                if (this.elements.targetsStatus) {
+                    this.elements.targetsStatus.innerText = `Progreso: ${progress.toFixed(2)}%`;
+                }
+            });
+
+            const exportedBuffer = await compiler.exportData();
+            const base64 = this.arrayBufferToBase64(exportedBuffer);
+
+            const targetsPath = 'targets.mind';
+            const existingTargets = await this.state.github.getFile(targetsPath, false);
+            const targetsSha = existingTargets ? existingTargets.sha : null;
+
+            await this.state.github.uploadFile(targetsPath, base64, 'Update targets.mind', targetsSha);
+
+            const currentCatalog = await this.state.github.getFile('catalog/catalog.json');
+            const catalogSha = currentCatalog ? currentCatalog.sha : null;
+            const jsonContent = btoa(unescape(encodeURIComponent(JSON.stringify(this.state.catalog, null, 4))));
+            await this.state.github.uploadFile('catalog/catalog.json', jsonContent, 'Update catalog (targets)', catalogSha);
+
+            localStorage.setItem('ar_catalog_data', JSON.stringify(this.state.catalog));
+            if (this.elements.targetsStatus) this.elements.targetsStatus.innerText = 'targets.mind actualizado en GitHub.';
+
+            if (this.state.selectedIndex !== -1) {
+                this.elements.prodTargetIndex.value = Number.isFinite(this.state.catalog[this.state.selectedIndex].targetIndex)
+                    ? this.state.catalog[this.state.selectedIndex].targetIndex
+                    : '';
+            }
+
+            if (!silent) {
+                alert('targets.mind actualizado. Abre la experiencia AR y escanea la imagen target.');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Error generando targets.mind: ' + error.message);
         } finally {
             this.hideLoading();
         }
@@ -376,6 +595,39 @@ const UI = {
                 resolve(base64);
             };
             reader.onerror = error => reject(error);
+        });
+    },
+
+    arrayBufferToBase64(buffer) {
+        const bytes = new Uint8Array(buffer);
+        let binary = '';
+        for (let i = 0; i < bytes.length; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary);
+    },
+
+    async fetchUrlAsFile(url, name) {
+        const response = await fetch(url, { cache: 'no-store' });
+        if (!response.ok) {
+            throw new Error(`No se pudo descargar imagen target: ${response.status} ${response.statusText}`);
+        }
+        const blob = await response.blob();
+        const fileType = blob.type || 'image/png';
+        return new File([blob], name, { type: fileType });
+    },
+
+    loadImageFromFile(file) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            let objectUrl = null;
+            img.onload = () => {
+                if (objectUrl) URL.revokeObjectURL(objectUrl);
+                resolve(img);
+            };
+            img.onerror = () => reject(new Error('No se pudo cargar la imagen target'));
+            objectUrl = URL.createObjectURL(file);
+            img.src = objectUrl;
         });
     },
 

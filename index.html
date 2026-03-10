@@ -291,8 +291,8 @@
     
     <a-scene 
       embedded 
-      mindar-image="imageTargetSrc: targets.mind; autoStart: false;"
-      renderer="logarithmicDepthBuffer: true; colorManagement: true; precision: mediump; antialias: false; powerPreference: default; sortObjects: true; physicallyCorrectLights: false;"
+      mindar-image="imageTargetSrc: targets.mind; autoStart: false; uiLoading: no; uiScanning: no; uiError: no;"
+      renderer="colorManagement: true; precision: highp; antialias: true; alpha: true; pixelRatio: 2; powerPreference: high-performance; sortObjects: true; physicallyCorrectLights: false;"
       vr-mode-ui="enabled: false"
       device-orientation-permission-ui="enabled: false"
       gesture-detector
@@ -342,6 +342,14 @@
 
       // Hide Loader when scene is ready
       const sceneEl = document.querySelector('a-scene');
+      const getTargetsMindSrc = () => {
+        if (typeof CONFIG !== 'undefined' && CONFIG && typeof CONFIG.getRawUrl === 'function') {
+          return CONFIG.getRawUrl('targets.mind');
+        }
+        return 'targets.mind';
+      };
+
+      sceneEl.setAttribute('mindar-image', `imageTargetSrc: ${getTargetsMindSrc()}; autoStart: false; uiLoading: no; uiScanning: no; uiError: no;`);
       let arSystem = null;
       let arStarted = false;
       let catalogReady = false;

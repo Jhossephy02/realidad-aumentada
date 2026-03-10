@@ -127,6 +127,32 @@
 
             <!-- Main Content -->
             <div class="col-md-9 col-lg-10 main-content bg-light">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0">Carga rápida (4 markers)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-12 col-lg-6">
+                                <label class="form-label">4 Imágenes del catálogo (targets)</label>
+                                <input type="file" class="form-control" id="file-markers-bulk" accept="image/*" multiple>
+                                <div class="form-text">Selecciona exactamente 4 imágenes (una por hoja).</div>
+                            </div>
+                            <div class="col-12 col-lg-6">
+                                <label class="form-label">4 Modelos 3D (.glb)</label>
+                                <input type="file" class="form-control" id="file-models-bulk" accept=".glb" multiple>
+                                <div class="form-text">Selecciona exactamente 4 modelos (uno por imagen).</div>
+                            </div>
+                            <div class="col-12 d-flex gap-2 align-items-center">
+                                <button type="button" class="btn btn-primary" id="btn-create-demo-4">
+                                    Crear demo (reemplazar targets)
+                                </button>
+                                <div class="small text-muted" id="demo-status"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div id="empty-state" class="text-center mt-5">
                     <i class="fas fa-arrow-left fa-3x text-muted mb-3"></i>
                     <h3>Selecciona un producto</h3>
@@ -146,13 +172,17 @@
                                 <input type="hidden" id="prod-index"> <!-- Index in the array -->
                                 
                                 <div class="row mb-3">
-                                    <div class="col-md-8">
+                                    <div class="col-md-6">
                                         <label class="form-label">Nombre del Plato</label>
                                         <input type="text" class="form-control" id="prod-name" required>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <label class="form-label">ID Sistema (Barcode)</label>
                                         <input type="number" class="form-control" id="prod-barcode" readonly>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Target Index (MindAR)</label>
+                                        <input type="number" class="form-control" id="prod-target-index" readonly>
                                     </div>
                                 </div>
 
@@ -185,11 +215,18 @@
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label">Marcador (Imagen referencia)</label>
+                                    <label class="form-label">Imagen Target (MindAR)</label>
                                     <div class="input-group">
                                         <input type="text" class="form-control" id="prod-marker-url" readonly placeholder="URL se genera al subir">
                                         <input type="file" class="form-control" id="file-marker" accept="image/*">
                                     </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <button type="button" class="btn btn-outline-primary" id="btn-build-targets">
+                                        <i class="fas fa-bullseye me-2"></i>Generar y subir targets.mind
+                                    </button>
+                                    <div class="form-text" id="targets-status"></div>
                                 </div>
 
                                 <hr>
@@ -224,6 +261,11 @@
 
     <!-- System Config -->
     <script src="../config.js"></script>
+    <script type="module">
+        import { Compiler } from "https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/src/image-target/compiler.js";
+        window.__MindARCompiler = Compiler;
+        window.__mindarCompiler = new Compiler();
+    </script>
     <!-- Logic -->
     <script src="../js/admin-panel.js"></script>
 </body>

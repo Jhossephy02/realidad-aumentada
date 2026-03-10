@@ -65,7 +65,7 @@ async function fetchCatalog() {
 }
 
 function processCatalogData(data, options = {}) {
-    const items = Array.isArray(data) ? data : [];
+    const items = (Array.isArray(data) ? data : []).filter((item) => item && item.model && item.marker);
     const shouldResolveFromRepo = items.some((item) => {
         const value = item && typeof item.model === 'string' ? item.model : '';
         return value && !/^https?:\/\//i.test(value);
@@ -99,6 +99,7 @@ function processCatalogData(data, options = {}) {
         return {
             id: barcodeVal, // internal ID for AR.js barcode
             originalId: item.id, // string ID from DB
+            targetIndex: Number.isFinite(item.targetIndex) ? item.targetIndex : index,
             name: item.name,
             desc: item.description,
             price: typeof item.price === 'number' ? `$${item.price.toFixed(2)}` : item.price,
@@ -152,7 +153,8 @@ function generateARScene(models) {
 
     models.forEach(model => {
         const target = document.createElement('a-entity');
-        target.setAttribute('mindar-image-target', `targetIndex: ${model.id}`);
+        const targetIndex = Number.isFinite(model.targetIndex) ? model.targetIndex : model.id;
+        target.setAttribute('mindar-image-target', `targetIndex: ${targetIndex}`);
         target.setAttribute('id', `marker-${model.id}`);
         target.setAttribute('marker-handler', '');
         target.setAttribute('dynamic', 'true');

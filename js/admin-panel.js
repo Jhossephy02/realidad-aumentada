@@ -340,6 +340,17 @@ class ApiService {
         return await res.json();
     }
 
+    async getUploadsStats() {
+        const res = await this.request('/api/uploads/stats', { cache: 'no-store' });
+        return await res.json();
+    }
+
+    async cleanupUploads({ dryRun } = {}) {
+        const q = dryRun ? '?dryRun=1' : '';
+        const res = await this.request(`/api/uploads/cleanup${q}`, { method: 'POST' });
+        return await res.json();
+    }
+
     async replaceCatalog(items) {
         const res = await this.request('/api/catalog', {
             method: 'PUT',
@@ -390,6 +401,9 @@ const UI = {
         useLocalDb: document.getElementById('use-local-db'),
         loadingOverlay: document.getElementById('loading-overlay'),
         loadingText: document.getElementById('loading-text'),
+        serverStatus: document.getElementById('server-status'),
+        serverStats: document.getElementById('server-stats'),
+        btnCleanOrphans: document.getElementById('btn-clean-orphans'),
         productList: document.getElementById('product-list'),
         productForm: document.getElementById('product-form'),
         editContainer: document.getElementById('edit-form-container'),
@@ -415,6 +429,8 @@ const UI = {
         fileMarkersBulk: document.getElementById('file-markers-bulk'),
         fileModelsBulk: document.getElementById('file-models-bulk'),
         btnCreateDemo4: document.getElementById('btn-create-demo-4'),
+        bulkReplaceCatalog: document.getElementById('bulk-replace-catalog'),
+        bulkPreview: document.getElementById('bulk-preview'),
         demoStatus: document.getElementById('demo-status'),
         
         btnAdd: document.getElementById('btn-add-new'),
@@ -521,12 +537,25 @@ const UI = {
         if (this.elements.btnCreateDemo4) {
             this.elements.btnCreateDemo4.addEventListener('click', () => this.createDemo4());
         }
+        if (this.elements.fileMarkersBulk) {
+            this.elements.fileMarkersBulk.addEventListener('change', () => this.updateBulkPreview());
+        }
+        if (this.elements.fileModelsBulk) {
+            this.elements.fileModelsBulk.addEventListener('change', () => this.updateBulkPreview());
+        }
+        if (this.elements.bulkReplaceCatalog) {
+            this.elements.bulkReplaceCatalog.addEventListener('change', () => this.updateBulkPreview());
+        }
+        if (this.elements.btnCleanOrphans) {
+            this.elements.btnCleanOrphans.addEventListener('click', () => this.cleanupOrphans());
+        }
         this.elements.btnLogout.addEventListener('click', () => {
             sessionStorage.removeItem('webar_session');
             location.reload();
         });
 
         this.elements.productForm.addEventListener('submit', (e) => this.saveProduct(e));
+        this.updateBulkPreview();
     },
 
     updateAuthModeUI() {
@@ -555,8 +584,12 @@ const UI = {
             this.elements.loginScreen.style.display = 'none';
             this.elements.dashboardScreen.style.display = 'block';
             this.renderList();
+            this.setServerStatus('Servidor: conectado');
+            await this.refreshServerStats();
         } catch (error) {
             console.error(error);
+            this.setServerStatus('Servidor: desconectado');
+            this.setServerStats('');
             alert('Error conectando al servidor: ' + error.message);
         } finally {
             this.hideLoading();
@@ -577,6 +610,8 @@ const UI = {
             this.elements.loginScreen.style.display = 'none';
             this.elements.dashboardScreen.style.display = 'block';
             this.renderList();
+            this.setServerStatus('');
+            this.setServerStats('');
         } catch (error) {
             console.error(error);
             alert('Error cargando base local: ' + error.message);
@@ -591,6 +626,8 @@ const UI = {
         try {
             this.state.api = null;
             this.state.github = new GitHubService(token, user, repo, branch);
+            this.setServerStatus('');
+            this.setServerStats('');
 
             const viewer = await this.state.github.getViewer();
             this.state.viewerLogin = viewer?.login ? String(viewer.login) : null;
@@ -768,7 +805,8 @@ const UI = {
 
                 const markerFile = this.elements.fileMarker.files[0];
                 if (markerFile) {
-                    const result = await this.state.api.upload('marker', markerFile);
+                    const prepared = await this.prepareMarkerFile(markerFile);
+                    const result = await this.state.api.upload('marker', prepared);
                     item.marker = result?.url || '';
                     this.elements.prodMarkerUrl.value = item.marker;
                     shouldRebuildTargets = true;
@@ -785,6 +823,7 @@ const UI = {
                 }
                 alert('Guardado en el servidor.');
                 this.renderList();
+                await this.refreshServerStats();
             } else if (this.state.github) {
                 const modelFile = this.elements.fileModel.files[0];
                 if (modelFile) {
@@ -803,8 +842,9 @@ const UI = {
 
                 const markerFile = this.elements.fileMarker.files[0];
                 if (markerFile) {
-                    const content = await this.toBase64(markerFile);
-                    const path = `markers/${markerFile.name}`;
+                    const prepared = await this.prepareMarkerFile(markerFile);
+                    const content = await this.toBase64(prepared);
+                    const path = `markers/${prepared.name}`;
                     const existing = await this.state.github.getFile(path, false);
                     const sha = existing ? existing.sha : null;
                     const uploadResult = await this.state.github.uploadFile(path, content, `Update marker ${item.name}`, sha);
@@ -839,8 +879,9 @@ const UI = {
 
                 const markerFile = this.elements.fileMarker.files[0];
                 if (markerFile) {
-                    const key = `markers/${Date.now()}_${normalizeFileName(markerFile.name)}`;
-                    await this.putLocalBlob(key, markerFile);
+                    const prepared = await this.prepareMarkerFile(markerFile);
+                    const key = `markers/${Date.now()}_${normalizeFileName(prepared.name)}`;
+                    await this.putLocalBlob(key, prepared);
                     item.marker = `idb://${key}`;
                     this.elements.prodMarkerUrl.value = item.marker;
                     shouldRebuildTargets = true;
@@ -862,14 +903,81 @@ const UI = {
         }
     },
 
+    computeBulkPairs(markerFiles, modelFiles) {
+        const normalizeFileName = (name) => String(name || 'file')
+            .replace(/\\/g, '/')
+            .split('/')
+            .pop()
+            .replace(/\s+/g, '_')
+            .replace(/[^a-zA-Z0-9._-]/g, '');
+        const stripExt = (name) => String(name || '').replace(/\.[^.]+$/, '');
+        const normalizeStem = (name) => stripExt(normalizeFileName(name)).toLowerCase();
+
+        const pairs = [];
+        const missingModels = [];
+        const missingMarkers = [];
+
+        if (!Array.isArray(markerFiles) || !Array.isArray(modelFiles)) {
+            return { pairs, mode: 'none', missingModels, missingMarkers };
+        }
+
+        if (markerFiles.length === modelFiles.length) {
+            for (let i = 0; i < markerFiles.length; i++) {
+                pairs.push({ markerFile: markerFiles[i], modelFile: modelFiles[i], mode: 'order' });
+            }
+            return { pairs, mode: 'order', missingModels, missingMarkers };
+        }
+
+        const modelsByStem = new Map();
+        for (const f of modelFiles) {
+            modelsByStem.set(normalizeStem(f.name), f);
+        }
+        const usedModels = new Set();
+        for (const m of markerFiles) {
+            const key = normalizeStem(m.name);
+            const model = modelsByStem.get(key);
+            if (model) {
+                pairs.push({ markerFile: m, modelFile: model, mode: 'name' });
+                usedModels.add(model);
+            } else {
+                missingModels.push(m.name);
+            }
+        }
+        for (const f of modelFiles) {
+            if (!usedModels.has(f)) missingMarkers.push(f.name);
+        }
+
+        return { pairs, mode: 'name', missingModels, missingMarkers };
+    },
+
+    updateBulkPreview() {
+        if (!this.elements.bulkPreview) return;
+        const markerFiles = Array.from(this.elements.fileMarkersBulk?.files || []);
+        const modelFiles = Array.from(this.elements.fileModelsBulk?.files || []);
+        if (markerFiles.length === 0 && modelFiles.length === 0) {
+            this.elements.bulkPreview.innerText = '';
+            if (this.elements.btnCreateDemo4) this.elements.btnCreateDemo4.disabled = true;
+            return;
+        }
+        const { pairs, mode, missingModels, missingMarkers } = this.computeBulkPairs(markerFiles, modelFiles);
+        const modeLabel = mode === 'order' ? 'orden' : (mode === 'name' ? 'nombre' : '-');
+        const replace = !!this.elements.bulkReplaceCatalog?.checked;
+        const head = `Imágenes: ${markerFiles.length} | Modelos: ${modelFiles.length} | Emparejados: ${pairs.length} | Modo: ${modeLabel} | ${replace ? 'Reemplaza' : 'Agrega'}`;
+        const lines = [head];
+        const maxLines = 6;
+        for (let i = 0; i < Math.min(pairs.length, maxLines); i++) {
+            lines.push(`${i + 1}. ${pairs[i].markerFile?.name || ''} ↔ ${pairs[i].modelFile?.name || ''}`);
+        }
+        if (pairs.length > maxLines) lines.push(`... y ${pairs.length - maxLines} más`);
+        if (missingModels.length) lines.push(`Sin modelo: ${missingModels.slice(0, 4).join(', ')}${missingModels.length > 4 ? '...' : ''}`);
+        if (missingMarkers.length) lines.push(`Sin imagen: ${missingMarkers.slice(0, 4).join(', ')}${missingMarkers.length > 4 ? '...' : ''}`);
+        this.elements.bulkPreview.innerText = lines.join('\n');
+        if (this.elements.btnCreateDemo4) this.elements.btnCreateDemo4.disabled = pairs.length === 0;
+    },
+
     async createDemo4() {
         const markerFiles = Array.from(this.elements.fileMarkersBulk?.files || []);
         const modelFiles = Array.from(this.elements.fileModelsBulk?.files || []);
-
-        if (markerFiles.length !== 4 || modelFiles.length !== 4) {
-            alert('Selecciona exactamente 4 imágenes y 4 modelos (.glb).');
-            return;
-        }
 
         const normalizeFileName = (name) => String(name || 'file')
             .replace(/\\/g, '/')
@@ -880,37 +988,65 @@ const UI = {
 
         const stripExt = (name) => String(name || '').replace(/\.[^.]+$/, '');
 
-        this.showLoading('Creando demo (subiendo archivos)...');
+        const normalizeStem = (name) => stripExt(normalizeFileName(name)).toLowerCase();
+        const humanNameFromStem = (stem) => String(stem || 'Producto')
+            .replace(/[_-]+/g, ' ')
+            .trim()
+            .replace(/\s+/g, ' ');
+
+        const replaceCatalog = !!this.elements.bulkReplaceCatalog?.checked;
+
+        if (markerFiles.length === 0 || modelFiles.length === 0) {
+            alert('Selecciona imágenes y modelos.');
+            return;
+        }
+
+        const pairing = this.computeBulkPairs(markerFiles, modelFiles);
+        const pairs = pairing.pairs;
+        if (pairs.length === 0) {
+            alert('No se pudo emparejar. Sube la misma cantidad o usa nombres iguales para emparejar.');
+            return;
+        }
+
+        this.showLoading('Importando (subiendo archivos)...');
         if (this.elements.demoStatus) this.elements.demoStatus.innerText = '';
 
         try {
             const stamp = Date.now();
-            const newCatalog = [];
+            const baseCatalog = replaceCatalog ? [] : [...this.state.catalog];
+            const maxBarcode = baseCatalog.reduce((acc, it) => Number.isFinite(it?.barcodeValue) ? Math.max(acc, it.barcodeValue) : acc, -1);
+            let nextBarcode = maxBarcode + 1;
 
-            for (let i = 0; i < 4; i++) {
-                if (this.elements.demoStatus) this.elements.demoStatus.innerText = `Subiendo ${i + 1}/4...`;
+            for (let i = 0; i < pairs.length; i++) {
+                if (this.elements.demoStatus) this.elements.demoStatus.innerText = `Subiendo ${i + 1}/${pairs.length}...`;
 
-                const markerFile = markerFiles[i];
-                const modelFile = modelFiles[i];
+                const markerFile = pairs[i].markerFile;
+                const modelFile = pairs[i].modelFile;
+                const stem = normalizeStem(markerFile.name);
 
-                const markerPath = `markers/zelva_${stamp}_${i}_${normalizeFileName(markerFile.name)}`;
-                const modelPath = `models/zelva_${stamp}_${i}_${normalizeFileName(modelFile.name)}`;
+                const markerPath = `markers/${stamp}_${i}_${normalizeFileName(markerFile.name)}`;
+                const modelPath = `models/${stamp}_${i}_${normalizeFileName(modelFile.name)}`;
 
                 let markerUrl = '';
                 let modelUrl = '';
+                let quality = null;
 
                 if (this.state.api) {
-                    const markerRes = await this.state.api.upload('marker', markerFile);
+                    const preparedMarker = await this.prepareMarkerFile(markerFile);
+                    quality = await this.scoreTargetImage(preparedMarker);
+                    const markerRes = await this.state.api.upload('marker', preparedMarker);
                     const modelRes = await this.state.api.upload('model', modelFile);
                     markerUrl = markerRes?.url || '';
                     modelUrl = modelRes?.url || '';
                 } else if (this.state.github) {
-                    const markerBase64 = await this.toBase64(markerFile);
+                    const preparedMarker = await this.prepareMarkerFile(markerFile);
+                    quality = await this.scoreTargetImage(preparedMarker);
+                    const markerBase64 = await this.toBase64(preparedMarker);
                     const modelBase64 = await this.toBase64(modelFile);
                     const markerExisting = await this.state.github.getFile(markerPath, false);
                     const modelExisting = await this.state.github.getFile(modelPath, false);
-                    const markerUpload = await this.state.github.uploadFile(markerPath, markerBase64, `Demo marker ${i + 1}`, markerExisting ? markerExisting.sha : null);
-                    const modelUpload = await this.state.github.uploadFile(modelPath, modelBase64, `Demo model ${i + 1}`, modelExisting ? modelExisting.sha : null);
+                    const markerUpload = await this.state.github.uploadFile(markerPath, markerBase64, `Import marker ${i + 1}`, markerExisting ? markerExisting.sha : null);
+                    const modelUpload = await this.state.github.uploadFile(modelPath, modelBase64, `Import model ${i + 1}`, modelExisting ? modelExisting.sha : null);
                     markerUrl = markerUpload.content.download_url.includes('github.com') && markerUpload.content.download_url.includes('/blob/')
                         ? markerUpload.content.download_url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/')
                         : markerUpload.content.download_url;
@@ -918,17 +1054,26 @@ const UI = {
                         ? modelUpload.content.download_url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/')
                         : modelUpload.content.download_url;
                 } else {
-                    await this.putLocalBlob(markerPath, markerFile);
+                    const preparedMarker = await this.prepareMarkerFile(markerFile);
+                    quality = await this.scoreTargetImage(preparedMarker);
+                    await this.putLocalBlob(markerPath, preparedMarker);
                     await this.putLocalBlob(modelPath, modelFile);
                     markerUrl = `idb://${markerPath}`;
                     modelUrl = `idb://${modelPath}`;
                 }
 
-                newCatalog.push({
-                    id: `zelva-${stamp}-${i}`,
-                    barcodeValue: i,
-                    targetIndex: i,
-                    name: stripExt(markerFile.name) || `Zelva ${i + 1}`,
+                if (quality && this.elements.demoStatus) {
+                    const sharp = Number(quality.sharpness || 0);
+                    const cont = Number(quality.contrast || 0);
+                    const warn = sharp < 40 || cont < 25 ? ' (baja calidad)' : '';
+                    this.elements.demoStatus.innerText = `Subiendo ${i + 1}/${pairs.length}... Calidad: ${Math.round(sharp)}/${Math.round(cont)}${warn}`;
+                }
+
+                baseCatalog.push({
+                    id: `${stem || 'item'}-${stamp}-${i}`,
+                    barcodeValue: nextBarcode++,
+                    targetIndex: null,
+                    name: humanNameFromStem(stem) || `Producto ${i + 1}`,
                     price: 0,
                     description: '',
                     model: modelUrl,
@@ -939,25 +1084,22 @@ const UI = {
                 });
             }
 
-            this.state.catalog = newCatalog;
+            this.state.catalog = baseCatalog;
             this.state.selectedIndex = -1;
             this.elements.editContainer.style.display = 'none';
             this.elements.emptyState.style.display = 'block';
             this.renderList();
 
             localStorage.setItem('ar_catalog_data', JSON.stringify(this.state.catalog));
-            if (this.state.api) {
-                await this.state.api.replaceCatalog(this.state.catalog);
-            }
 
             if (this.elements.demoStatus) this.elements.demoStatus.innerText = 'Generando targets.mind...';
             await this.buildAndUploadTargetsMind({ silent: true });
 
-            if (this.elements.demoStatus) this.elements.demoStatus.innerText = 'Listo: 4 markers y targets.mind actualizado.';
-            alert('Listo. Se reemplazó el catálogo a 4 items y se generó targets.mind con esos 4 targets.');
+            if (this.elements.demoStatus) this.elements.demoStatus.innerText = 'Listo: targets.mind actualizado.';
+            alert('Listo. Se importaron productos y se generó targets.mind.');
         } catch (error) {
             console.error(error);
-            alert('Error creando demo: ' + (this.state.github ? this.getGitHubHintWithViewer(error.message) : error.message));
+            alert('Error importando: ' + (this.state.github ? this.getGitHubHintWithViewer(error.message) : error.message));
         } finally {
             this.hideLoading();
         }
@@ -1034,6 +1176,7 @@ const UI = {
                 await this.state.api.replaceCatalog(this.state.catalog);
                 localStorage.setItem('ar_catalog_data', JSON.stringify(this.state.catalog));
                 if (this.elements.targetsStatus) this.elements.targetsStatus.innerText = 'targets.mind actualizado en el servidor.';
+                await this.refreshServerStats();
             } else if (this.state.github) {
                 const targetsPath = 'targets.mind';
                 const existingTargets = await this.state.github.getFile(targetsPath, false);
@@ -1096,6 +1239,7 @@ const UI = {
             this.elements.editContainer.style.display = 'none';
             this.elements.emptyState.style.display = 'block';
             this.renderList();
+            await this.refreshServerStats();
             
         } catch (error) {
             alert('Error eliminando: ' + (this.state.github ? this.getGitHubHintWithViewer(error.message) : error.message));
@@ -1138,6 +1282,85 @@ const UI = {
             req.onsuccess = () => resolve(req.result ? req.result.blob : null);
             req.onerror = () => reject(req.error);
         });
+    },
+
+    async prepareMarkerFile(file) {
+        try {
+            if (!(file instanceof Blob)) return file;
+            const bitmap = await createImageBitmap(file);
+            const maxSize = 1024;
+            const scale = Math.min(1, maxSize / Math.max(bitmap.width, bitmap.height));
+            const width = Math.max(1, Math.round(bitmap.width * scale));
+            const height = Math.max(1, Math.round(bitmap.height * scale));
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d', { alpha: true, willReadFrequently: false });
+            if (!ctx) return file;
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.filter = 'contrast(1.1) saturate(1.05)';
+            ctx.drawImage(bitmap, 0, 0, width, height);
+            const outBlob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png', 0.92));
+            if (!outBlob) return file;
+            const baseName = String(file.name || 'marker').replace(/\.[^.]+$/, '');
+            return new File([outBlob], `${baseName}.png`, { type: 'image/png' });
+        } catch (e) {
+            return file;
+        }
+    },
+
+    async scoreTargetImage(file) {
+        try {
+            const bitmap = await createImageBitmap(file);
+            const size = 256;
+            const scale = size / Math.max(bitmap.width, bitmap.height);
+            const w = Math.max(1, Math.round(bitmap.width * scale));
+            const h = Math.max(1, Math.round(bitmap.height * scale));
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            if (!ctx) return { sharpness: 0, contrast: 0 };
+            ctx.drawImage(bitmap, 0, 0, w, h);
+            const img = ctx.getImageData(0, 0, w, h).data;
+            const gray = new Float32Array(w * h);
+            for (let i = 0, p = 0; i < img.length; i += 4, p++) {
+                const r = img[i], g = img[i + 1], b = img[i + 2];
+                gray[p] = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+            }
+            let sum = 0;
+            for (let i = 0; i < gray.length; i++) sum += gray[i];
+            const mean = sum / gray.length;
+            let varSum = 0;
+            for (let i = 0; i < gray.length; i++) {
+                const d = gray[i] - mean;
+                varSum += d * d;
+            }
+            const contrast = Math.sqrt(varSum / gray.length);
+
+            const lap = [];
+            for (let y = 1; y < h - 1; y++) {
+                for (let x = 1; x < w - 1; x++) {
+                    const c = gray[y * w + x];
+                    const v = (gray[(y - 1) * w + x] + gray[(y + 1) * w + x] + gray[y * w + (x - 1)] + gray[y * w + (x + 1)] - 4 * c);
+                    lap.push(v);
+                }
+            }
+            if (lap.length === 0) return { sharpness: 0, contrast };
+            let lsum = 0;
+            for (let i = 0; i < lap.length; i++) lsum += lap[i];
+            const lmean = lsum / lap.length;
+            let lvar = 0;
+            for (let i = 0; i < lap.length; i++) {
+                const d = lap[i] - lmean;
+                lvar += d * d;
+            }
+            const sharpness = lvar / lap.length;
+            return { sharpness, contrast };
+        } catch (e) {
+            return { sharpness: 0, contrast: 0 };
+        }
     },
 
     toBase64(file) {
@@ -1202,6 +1425,78 @@ const UI = {
 
     hideLoading() {
         this.elements.loadingOverlay.style.display = 'none';
+    },
+
+    setServerStatus(text) {
+        if (!this.elements.serverStatus) return;
+        this.elements.serverStatus.innerText = String(text || '');
+    },
+
+    setServerStats(text) {
+        if (!this.elements.serverStats) return;
+        this.elements.serverStats.innerText = String(text || '');
+    },
+
+    formatBytes(bytes) {
+        const n = Number(bytes);
+        if (!Number.isFinite(n) || n <= 0) return '0 B';
+        const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        const idx = Math.min(units.length - 1, Math.floor(Math.log(n) / Math.log(1024)));
+        const value = n / Math.pow(1024, idx);
+        return `${value.toFixed(idx === 0 ? 0 : 1)} ${units[idx]}`;
+    },
+
+    renderUploadsStats(stats) {
+        if (!stats || typeof stats !== 'object') {
+            this.setServerStats('');
+            return;
+        }
+        const models = stats.models || {};
+        const markers = stats.markers || {};
+        const targets = stats.targets || {};
+        const lines = [
+            `Modelos: ${Number(models.count) || 0} (${this.formatBytes(models.bytes)})`,
+            `Marcadores: ${Number(markers.count) || 0} (${this.formatBytes(markers.bytes)})`,
+            `Huérfanos: ${(Number(models.orphanCount) || 0) + (Number(markers.orphanCount) || 0)} (${this.formatBytes((Number(models.orphanBytes) || 0) + (Number(markers.orphanBytes) || 0))})`,
+            `targets.mind: ${targets.exists ? this.formatBytes(targets.bytes) : 'no existe'}`
+        ];
+        this.setServerStats(lines.join('\n'));
+    },
+
+    async refreshServerStats() {
+        if (!this.state.api) return;
+        try {
+            const stats = await this.state.api.getUploadsStats();
+            this.renderUploadsStats(stats);
+        } catch (e) {
+            this.setServerStats('Stats no disponibles');
+        }
+    },
+
+    async cleanupOrphans() {
+        if (!this.state.api) return;
+        try {
+            const preview = await this.state.api.cleanupUploads({ dryRun: true });
+            const previewCount = (Number(preview?.models?.count) || 0) + (Number(preview?.markers?.count) || 0);
+            if (previewCount === 0) {
+                alert('No hay huérfanos para limpiar.');
+                await this.refreshServerStats();
+                return;
+            }
+            const previewBytes = (Number(preview?.models?.bytes) || 0) + (Number(preview?.markers?.bytes) || 0);
+            const ok = confirm(`Se eliminarán ${previewCount} archivos huérfanos (~${this.formatBytes(previewBytes)}). ¿Continuar?`);
+            if (!ok) return;
+            const result = await this.state.api.cleanupUploads({ dryRun: false });
+            const deleted = (Number(result?.deletedModels) || 0) + (Number(result?.deletedMarkers) || 0);
+            if (result?.ok) {
+                alert(`Listo: eliminados ${deleted} archivos (${this.formatBytes(result?.deletedBytes)}).`);
+            } else {
+                alert(`Parcial: eliminados ${deleted} archivos (${this.formatBytes(result?.deletedBytes)}).`);
+            }
+            await this.refreshServerStats();
+        } catch (e) {
+            alert('No se pudo limpiar huérfanos: ' + (e?.message ? String(e.message) : 'error'));
+        }
     }
 };
 

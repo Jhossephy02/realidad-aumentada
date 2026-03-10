@@ -124,6 +124,15 @@
             <!-- Sidebar -->
             <div class="col-md-3 col-lg-2 sidebar p-3 d-flex flex-column">
                 <h5 class="mb-4"><i class="fas fa-database me-2"></i>Catálogo</h5>
+                <div class="small mb-3">
+                    <div id="server-status" class="text-muted"></div>
+                    <div id="server-stats" class="text-muted" style="white-space: pre-wrap;"></div>
+                    <div class="d-grid mt-2">
+                        <button class="btn btn-outline-secondary btn-sm" type="button" id="btn-clean-orphans">
+                            Limpiar huérfanos
+                        </button>
+                    </div>
+                </div>
                 <div class="flex-grow-1 overflow-auto">
                     <div class="list-group" id="product-list">
                         <!-- Items injected here -->
@@ -143,23 +152,32 @@
             <div class="col-md-9 col-lg-10 main-content bg-light">
                 <div class="card shadow-sm mb-4">
                     <div class="card-header bg-white py-3">
-                        <h5 class="mb-0">Carga rápida (4 markers)</h5>
+                        <h5 class="mb-0">Importación masiva (imágenes + modelos)</h5>
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
                             <div class="col-12 col-lg-6">
-                                <label class="form-label">4 Imágenes del catálogo (targets)</label>
+                                <label class="form-label">Imágenes target</label>
                                 <input type="file" class="form-control" id="file-markers-bulk" accept="image/*" multiple>
-                                <div class="form-text">Selecciona exactamente 4 imágenes (una por hoja).</div>
+                                <div class="form-text">Selecciona varias imágenes. Ideal: buen contraste y sin reflejos.</div>
                             </div>
                             <div class="col-12 col-lg-6">
-                                <label class="form-label">4 Modelos 3D (.glb)</label>
+                                <label class="form-label">Modelos 3D (.glb)</label>
                                 <input type="file" class="form-control" id="file-models-bulk" accept=".glb" multiple>
-                                <div class="form-text">Selecciona exactamente 4 modelos (uno por imagen).</div>
+                                <div class="form-text">Selecciona la misma cantidad de modelos que imágenes.</div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="bulk-replace-catalog">
+                                    <label class="form-check-label" for="bulk-replace-catalog">Reemplazar catálogo actual</label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="small text-muted" id="bulk-preview" style="white-space: pre-wrap;"></div>
                             </div>
                             <div class="col-12 d-flex gap-2 align-items-center">
                                 <button type="button" class="btn btn-primary" id="btn-create-demo-4">
-                                    Crear demo (reemplazar targets)
+                                    Importar y actualizar targets
                                 </button>
                                 <div class="small text-muted" id="demo-status"></div>
                             </div>

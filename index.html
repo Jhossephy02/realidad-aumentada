@@ -141,6 +141,59 @@
         100% { transform: rotate(360deg); }
       }
 
+      #status-indicator {
+        position: fixed;
+        top: 14px;
+        right: 14px;
+        z-index: 9998;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.55);
+        color: #fff;
+        font-size: 0.9rem;
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        user-select: none;
+        pointer-events: none;
+        max-width: 70vw;
+      }
+      .status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #9e9e9e;
+        flex: 0 0 10px;
+      }
+      #status-indicator[data-state="loading"] .status-dot { background: #ff9800; }
+      #status-indicator[data-state="ready"] .status-dot { background: #4caf50; }
+      #status-indicator[data-state="scanning"] .status-dot { background: #03a9f4; }
+      #status-indicator[data-state="tracking"] .status-dot { background: #8bc34a; }
+      #status-indicator[data-state="error"] .status-dot { background: #f44336; }
+
+      #ar-retry {
+        position: fixed;
+        left: 50%;
+        bottom: 22px;
+        transform: translateX(-50%);
+        z-index: 9997;
+        display: none;
+        pointer-events: auto;
+      }
+      #retry-btn {
+        appearance: none;
+        border: 0;
+        border-radius: 999px;
+        padding: 12px 16px;
+        background: rgba(244, 67, 54, 0.92);
+        color: #fff;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.35);
+      }
+
       /* Info Button (i) */
       .info-btn {
         position: fixed;
@@ -240,6 +293,9 @@
       <div class="status-dot" id="status-dot"></div>
       <span id="status-text">Esperando...</span>
     </div>
+    <div id="ar-retry">
+      <button id="retry-btn" type="button">Reintentar cámara</button>
+    </div>
 
     <div id="debug-text" style="position: fixed; top: 10px; left: 10px; color: yellow; background: rgba(0,0,0,0.6); z-index: 9999; font-family: monospace; font-size: 14px; pointer-events: none; padding: 5px; border-radius: 4px;">Debug: Esperando touch...</div>
     
@@ -292,7 +348,7 @@
     <a-scene 
       embedded 
       mindar-image="imageTargetSrc: targets.mind; autoStart: false; uiLoading: no; uiScanning: no; uiError: no;"
-      renderer="colorManagement: true; precision: highp; antialias: true; alpha: true; pixelRatio: 2; powerPreference: high-performance; sortObjects: true; physicallyCorrectLights: false;"
+      renderer="colorManagement: true; precision: highp; antialias: true; alpha: true; pixelRatio: 2; powerPreference: high-performance; sortObjects: true; physicallyCorrectLights: true;"
       vr-mode-ui="enabled: false"
       device-orientation-permission-ui="enabled: false"
       gesture-detector
@@ -339,6 +395,19 @@
       const statusIndicator = document.getElementById('status-indicator');
       const statusDot = document.getElementById('status-dot');
       const statusText = document.getElementById('status-text');
+      const retryWrap = document.getElementById('ar-retry');
+      const retryBtn = document.getElementById('retry-btn');
+      const debugEnabled = !((typeof CONFIG !== 'undefined' && CONFIG && CONFIG.system && CONFIG.system.debug === false));
+      if (debugText && !debugEnabled) debugText.style.display = 'none';
+
+      const setStatus = (state, text) => {
+        if (statusIndicator) statusIndicator.dataset.state = String(state || '');
+        if (statusText) statusText.innerText = String(text || '');
+      };
+      const setRetryVisible = (visible) => {
+        if (!retryWrap) return;
+        retryWrap.style.display = visible ? 'block' : 'none';
+      };
 
       // Hide Loader when scene is ready
       const sceneEl = document.querySelector('a-scene');
@@ -377,6 +446,7 @@
       };
 
       const initTargetsMind = async () => {
+        setStatus('loading', 'Cargando targets...');
         let src = getTargetsMindSrc();
         try {
           const blob = await getLocalBlob('targets.mind');
@@ -397,6 +467,7 @@
         }
         sceneEl.setAttribute('mindar-image', `imageTargetSrc: ${src}; autoStart: false; uiLoading: no; uiScanning: no; uiError: no;`);
         targetsReady = true;
+        setStatus('ready', 'Targets listos');
         startArIfReady();
       };
 
@@ -408,25 +479,75 @@
       function startArIfReady() {
         if (arStarted || !catalogReady || !targetsReady || !arSystem) return;
         arStarted = true;
-        arSystem.start();
+        setRetryVisible(false);
+        setStatus('scanning', 'Iniciando cámara...');
+        Promise.resolve(arSystem.start())
+          .then(() => {
+            setStatus('scanning', 'Escaneando...');
+          })
+          .catch((err) => {
+            arStarted = false;
+            console.error(err);
+            setStatus('error', 'Error de cámara. Toca reintentar.');
+            setRetryVisible(true);
+          });
       }
 
       initTargetsMind();
 
       document.addEventListener('catalogloaded', () => {
         catalogReady = true;
+        setStatus('ready', targetsReady ? 'Iniciando cámara...' : 'Catálogo listo');
         startArIfReady();
       });
 
       sceneEl.addEventListener('loaded', () => {
           console.log("Scene loaded");
           arSystem = sceneEl.systems && sceneEl.systems["mindar-image-system"];
+          if (sceneEl.renderer) {
+            const mem = Number(navigator.deviceMemory || 0);
+            const cores = Number(navigator.hardwareConcurrency || 0);
+            const dpr = Math.max(1, Math.min(3, Number(window.devicePixelRatio || 1)));
+            let cap = 2;
+            if (mem && mem <= 4) cap = 1.5;
+            if (cores && cores <= 4) cap = Math.min(cap, 1.5);
+            sceneEl.renderer.setPixelRatio(Math.min(dpr, cap));
+            if ('physicallyCorrectLights' in sceneEl.renderer) sceneEl.renderer.physicallyCorrectLights = true;
+            if ('toneMapping' in sceneEl.renderer && typeof THREE !== 'undefined') sceneEl.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            if ('toneMappingExposure' in sceneEl.renderer) sceneEl.renderer.toneMappingExposure = 1.0;
+          }
           startArIfReady();
+          if (!catalogReady || !targetsReady) setStatus('loading', 'Preparando...');
           const loader = document.getElementById('loader-overlay');
           if(loader) {
               loader.style.opacity = '0';
               setTimeout(() => loader.style.display = 'none', 500);
           }
+      });
+
+      if (retryBtn) {
+        retryBtn.addEventListener('click', () => {
+          setRetryVisible(false);
+          startArIfReady();
+        });
+      }
+
+      document.addEventListener('visibilitychange', () => {
+        if (!arSystem) return;
+        if (document.hidden) {
+          try {
+            if (arStarted && typeof arSystem.stop === 'function') arSystem.stop();
+          } catch (e) {}
+          arStarted = false;
+        } else {
+          startArIfReady();
+        }
+      });
+      window.addEventListener('pagehide', () => {
+        if (!arSystem) return;
+        try {
+          if (typeof arSystem.stop === 'function') arSystem.stop();
+        } catch (e) {}
       });
 
       let activeMarkerId = null;
@@ -445,13 +566,32 @@
           };
           
           this.el.addEventListener('targetFound', () => {
+             const modelEl = document.getElementById('model-' + markerId);
+             if (modelEl && !modelEl.getAttribute('gltf-model')) {
+               const src = modelEl.getAttribute('data-gltf-src');
+               if (src) {
+                 setStatus('loading', 'Cargando modelo...');
+                 modelEl.setAttribute('gltf-model', src);
+                 if (!modelEl.dataset.modelWired) {
+                   modelEl.dataset.modelWired = '1';
+                   modelEl.addEventListener('model-loaded', () => {
+                     setStatus('tracking', `Target ${markerId}`);
+                   });
+                   modelEl.addEventListener('model-error', () => {
+                     setStatus('error', 'Error cargando modelo');
+                   });
+                 }
+               }
+             }
+             setRetryVisible(false);
+             setStatus('tracking', `Target ${markerId}`);
              // First marker found becomes active automatically
              if (activeMarkerId === null) {
                  activeMarkerId = markerId;
                  // Force update immediately
                  updateState();
                  const debugEl = document.getElementById('debug-text');
-                 if(debugEl) debugEl.innerText = `Active: ${markerId}`;
+                 if(debugEnabled && debugEl) debugEl.innerText = `Active: ${markerId}`;
              }
           });
           
@@ -460,10 +600,11 @@
              if (activeMarkerId === markerId) {
                  activeMarkerId = getVisibleTargetId();
                  updateState();
+                 setStatus('scanning', 'Escaneando...');
                  
                  // Debug
                  const debugEl = document.getElementById('debug-text');
-                 if(debugEl) debugEl.innerText = `Lost: ${markerId}`;
+                 if(debugEnabled && debugEl) debugEl.innerText = `Lost: ${markerId}`;
              }
           });
         }

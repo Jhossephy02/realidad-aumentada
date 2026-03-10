@@ -6,7 +6,9 @@ const CATALOG_PATH = 'catalog/catalog.json';
 const API_BASE = (typeof CONFIG !== 'undefined' && CONFIG && typeof CONFIG.getApiBaseUrl === 'function')
     ? CONFIG.getApiBaseUrl()
     : '';
-let CATALOG_URL = API_BASE ? `${API_BASE}/api/catalog` : (CONFIG ? CONFIG.getRawUrl(CATALOG_PATH) : 'catalog/catalog.json');
+let CATALOG_URL = API_BASE
+    ? `${API_BASE}/api/catalog`
+    : ((typeof CONFIG !== 'undefined' && CONFIG && typeof CONFIG.getRawUrl === 'function') ? CONFIG.getRawUrl(CATALOG_PATH) : 'catalog/catalog.json');
 
 // Global object to store app data (compatible with existing components)
 window.APP_DATA = {
@@ -31,7 +33,7 @@ async function initCatalog() {
             await processCatalogDataAsync(data);
         } catch (e) {
             console.error("Error parsing local catalog:", e);
-            fetchCatalog(); // Fallback to file
+            await fetchCatalog();
         }
     } else {
         if (!API_BASE) {
@@ -46,25 +48,43 @@ async function initCatalog() {
                 }
             } catch (e) {}
         }
-        fetchCatalog();
+        await fetchCatalog();
     }
 }
 
 async function fetchCatalog() {
     console.log(`Fetching catalog from ${CATALOG_URL}...`);
     try {
-        const response = await fetch(CATALOG_URL);
+        const isApi = typeof CATALOG_URL === 'string' && (CATALOG_URL.includes('/api/') || CATALOG_URL.startsWith('/api/'));
+        const response = await fetch(CATALOG_URL, isApi ? { cache: 'no-store' } : undefined);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
         await processCatalogDataAsync(data, { assetsFromRepo: CATALOG_URL.startsWith('http') && !API_BASE });
     } catch (error) {
         console.error("Failed to load catalog:", error);
         
-        // If external load fails, try local fallback for development/demo
-        if (CATALOG_URL.startsWith('http')) {
+        // If API fails, try GitHub/raw catalog; then local fallback for dev
+        if (typeof CATALOG_URL === 'string' && (CATALOG_URL.includes('/api/') || CATALOG_URL.startsWith('/api/') || (API_BASE && CATALOG_URL.startsWith(API_BASE)))) {
+            try {
+                const rawUrl = (typeof CONFIG !== 'undefined' && CONFIG && typeof CONFIG.getRawUrl === 'function')
+                    ? CONFIG.getRawUrl(CATALOG_PATH)
+                    : '';
+                if (rawUrl) {
+                    console.log("API failed, trying raw catalog:", rawUrl);
+                    const response = await fetch(rawUrl);
+                    if (response.ok) {
+                        const data = await response.json();
+                        await processCatalogDataAsync(data, { assetsFromRepo: true });
+                        return;
+                    }
+                }
+            } catch (e) {}
+        }
+
+        if (typeof CATALOG_URL === 'string' && CATALOG_URL.startsWith('http')) {
             console.log("External load failed, trying local fallback 'catalog/catalog.json'...");
             try {
-                const response = await fetch('catalog/catalog.json');
+                const response = await fetch('catalog/catalog.json', { cache: 'no-store' });
                 if (response.ok) {
                     const data = await response.json();
                     await processCatalogDataAsync(data, { assetsFromRepo: true });
@@ -81,6 +101,12 @@ async function fetchCatalog() {
 
 const LOCAL_DB_NAME = 'webar_local_assets';
 const localObjectUrlCache = new Map();
+window.addEventListener('pagehide', () => {
+    for (const url of localObjectUrlCache.values()) {
+        try { URL.revokeObjectURL(url); } catch (e) {}
+    }
+    localObjectUrlCache.clear();
+});
 
 function openLocalDb() {
     return new Promise((resolve, reject) => {
@@ -105,6 +131,12 @@ async function getLocalBlob(key) {
         req.onsuccess = () => resolve(req.result ? req.result.blob : null);
         req.onerror = () => reject(req.error);
     });
+}
+
+function formatPrice(value) {
+    if (typeof value === 'number' && Number.isFinite(value)) return `S/ ${value.toFixed(2)}`;
+    if (typeof value === 'string') return value;
+    return 'S/ 0.00';
 }
 
 async function resolveAssetUrlAsync(pathOrUrl, assetsFromRepo) {
@@ -151,7 +183,7 @@ async function processCatalogDataAsync(data, options = {}) {
     
     const processedModels = await Promise.all(items.map(async (item, index) => {
         // Ensure we have a valid barcode value
-        let barcodeVal = item.barcodeValue;
+        let barcodeVal = Number.isFinite(item.barcodeValue) ? item.barcodeValue : undefined;
         if (barcodeVal === undefined) {
             // Try to parse from ID if it looks like "sushi01" -> 1? No, too risky.
             // Default to index if not provided (risky if order changes)
@@ -164,7 +196,7 @@ async function processCatalogDataAsync(data, options = {}) {
             targetIndex: Number.isFinite(item.targetIndex) ? item.targetIndex : index,
             name: item.name,
             desc: item.description,
-            price: typeof item.price === 'number' ? `$${item.price.toFixed(2)}` : item.price,
+            price: formatPrice(item.price),
             modelSrc: await resolveAssetUrlAsync(item.model, assetsFromRepo),
             markerSrc: await resolveAssetUrlAsync(item.marker, assetsFromRepo),
             scale: item.scale || "1 1 1",
@@ -183,12 +215,13 @@ async function processCatalogDataAsync(data, options = {}) {
     }));
 
     // Update Global State
-    window.APP_DATA.models = processedModels;
+    const filteredModels = processedModels.filter((m) => m && m.modelSrc && m.markerSrc);
+    window.APP_DATA.models = filteredModels;
     
     // Generate the AR Scene
-    generateARScene(processedModels);
+    generateARScene(filteredModels);
 
-    document.dispatchEvent(new CustomEvent('catalogloaded', { detail: { models: processedModels } }));
+    document.dispatchEvent(new CustomEvent('catalogloaded', { detail: { models: filteredModels } }));
 }
 
 function generateARScene(models) {
@@ -252,7 +285,7 @@ function generateARScene(models) {
         modelEnt.setAttribute('position', model.position);
         modelEnt.setAttribute('rotation', model.rotation);
         modelEnt.setAttribute('scale', model.scale);
-        modelEnt.setAttribute('gltf-model', model.modelSrc); // GitHub URL or local path
+        modelEnt.setAttribute('data-gltf-src', model.modelSrc);
         modelEnt.setAttribute('click-handler', '');
         modelEnt.setAttribute('model-controller', `minScale: ${model.minScale}; maxScale: ${model.maxScale}; rotationSpeed: ${model.rotationSpeed}`);
         

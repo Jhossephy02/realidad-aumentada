@@ -3,11 +3,14 @@
   <head>
     <title>WebAR - V6 (RAYCASTER)</title>
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-    <!-- A-Frame -->
-    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-    <!-- AR.js for Barcode/Marker Tracking -->
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     
+    <!-- System Configuration -->
+    <script src="config.js"></script>
+    <!-- Catalog Loader -->
+    <script src="js/catalog-loader.js"></script>
+
     <style>
       body { margin: 0; overflow: hidden; font-family: sans-serif; touch-action: none; }
       
@@ -61,6 +64,9 @@
         backdrop-filter: blur(5px);
         border: 1px solid rgba(255, 255, 255, 0.2);
         transition: opacity 0.3s ease;
+      }
+      .info-panel.visible {
+        display: block;
       }
 
       .info-panel h2 {
@@ -235,7 +241,6 @@
       <span id="status-text">Esperando...</span>
     </div>
 
-      // Debug Text (Hidden by default, used for troubleshooting)
     <div id="debug-text" style="position: fixed; top: 10px; left: 10px; color: yellow; background: rgba(0,0,0,0.6); z-index: 9999; font-family: monospace; font-size: 14px; pointer-events: none; padding: 5px; border-radius: 4px;">Debug: Esperando touch...</div>
     
     <!-- Info Button -->
@@ -284,23 +289,14 @@
       <p style="font-size: 0.7rem; color: #aaa; margin-top: 5px;">(Pellizca para escalar)</p>
     </div>
     
-    <!-- AR.js Scene Setup for 3x3 Barcodes -->
-      <!-- OPTIMIZATION: Resolution increased to 1280x960 to detect small markers, but kept renderer optimized -->
-      <a-scene 
+    <a-scene 
       embedded 
-      arjs="sourceType: webcam; sourceWidth:1280; sourceHeight:960; displayWidth: 1280; displayHeight: 960; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; smoothing: true; smoothingAmount: 0.8; maxDetectionRate: 30;"
+      mindar-image="imageTargetSrc: targets.mind; autoStart: false;"
       renderer="logarithmicDepthBuffer: true; colorManagement: true; precision: mediump; antialias: false; powerPreference: default; sortObjects: true; physicallyCorrectLights: false;"
       vr-mode-ui="enabled: false"
+      device-orientation-permission-ui="enabled: false"
       gesture-detector
-      id="scene"
-      marker-follower-system>
-
-      <a-assets>
-        <a-asset-item id="ramen-model" src="models/sushi/shrimp_ramen_bowl.glb"></a-asset-item>
-        <a-asset-item id="roll-model" src="models/sushi/sushi_rolls.glb"></a-asset-item>
-        <a-asset-item id="salmon-model" src="models/sushi/salmon_nigiri.glb"></a-asset-item>
-        <a-asset-item id="sushi-model" src="models/sushi/sushi.glb"></a-asset-item>
-      </a-assets>
+      id="scene">
 
       <!-- Lighting (Optimized: No dynamic shadows, 2 Lights Only for Speed) -->
       <!-- 1. Ambient + Fill (Hemisphere): Simulates Sky/Ground reflection -->
@@ -308,94 +304,13 @@
       <!-- 2. Key Light (Directional): Simulates Sun/Ceiling Light -->
       <a-light type="directional" position="1 4 2" intensity="1.2" color="#FFF"></a-light>
 
-      <!-- MARKER 0: Zelva Ramen -->
-      <a-marker type="barcode" value="0" id="marker-0" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2" marker-handler>
-          <!-- Placeholder (Ring) - Flat on marker (no billboard) for stability -->
-          <a-entity id="placeholder-0" visible="false" rotation="-90 0 0">
-              <a-circle radius="0.8" position="0 0 0" material="opacity: 0; transparent: true" class="clickable" click-handler></a-circle>
-              <a-ring class="clickable" click-handler color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0 0"></a-ring>
-          </a-entity>
-      </a-marker>
-
-      <!-- MARKER 1: Roll -->
-      <a-marker type="barcode" value="1" id="marker-1" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2" marker-handler>
-          <a-entity id="placeholder-1" visible="false" rotation="-90 0 0">
-              <a-circle radius="0.8" position="0 0 0" material="opacity: 0; transparent: true" class="clickable" click-handler></a-circle>
-              <a-ring class="clickable" click-handler color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0 0"></a-ring>
-          </a-entity>
-      </a-marker>
-
-      <!-- MARKER 2: Salmon -->
-      <a-marker type="barcode" value="2" id="marker-2" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2" marker-handler>
-          <a-entity id="placeholder-2" visible="false" rotation="-90 0 0">
-              <a-circle radius="0.8" position="0 0 0" material="opacity: 0; transparent: true" class="clickable" click-handler></a-circle>
-              <a-ring class="clickable" click-handler color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0 0"></a-ring>
-          </a-entity>
-      </a-marker>
-
-      <!-- MARKER 3: Sushi -->
-      <a-marker type="barcode" value="3" id="marker-3" smooth="true" smoothCount="5" smoothTolerance="0.01" smoothThreshold="2" marker-handler>
-          <a-entity id="placeholder-3" visible="false" rotation="-90 0 0">
-              <a-circle radius="0.8" position="0 0 0" material="opacity: 0; transparent: true" class="clickable" click-handler></a-circle>
-              <a-ring class="clickable" click-handler color="#00FFFF" radius-inner="0.4" radius-outer="0.6" position="0 0 0"></a-ring>
-          </a-entity>
-      </a-marker>
-
-      <!-- WORLD CONTAINER FOR MODELS (PERSISTENT) -->
-      <a-entity id="world-container">
-          <!-- Model 0 Wrapper: Ramen -->
-          <a-entity id="model-wrapper-0" visible="false">
-              <a-entity class="model-entity clickable" id="model-0"
-                  position="0 0.1 0" 
-                  rotation="0 45 0"
-                  scale="0.8 0.8 0.8" 
-                  gltf-model="#ramen-model" 
-                  click-handler 
-                  model-controller="minScale: 0.2; maxScale: 4; rotationSpeed: 1.5">
-              </a-entity>
-          </a-entity>
-
-          <!-- Model 1 Wrapper: Rolls -->
-          <a-entity id="model-wrapper-1" visible="false">
-              <a-entity class="model-entity clickable" id="model-1"
-                  position="0 0.1 0" 
-                  rotation="0 45 0"
-                  scale="2.5 2.5 2.5" 
-                  gltf-model="#roll-model" 
-                  click-handler 
-                  model-controller="minScale: 0.5; maxScale: 8; rotationSpeed: 1.5">
-              </a-entity>
-          </a-entity>
-
-          <!-- Model 2 Wrapper: Salmon -->
-          <a-entity id="model-wrapper-2" visible="false">
-              <a-entity class="model-entity clickable" id="model-2"
-                  position="0 0.1 0" 
-                  rotation="0 45 0"
-                  scale="0.5 0.5 0.5" 
-                  gltf-model="#salmon-model" 
-                  click-handler 
-                  model-controller="minScale: 0.1; maxScale: 3; rotationSpeed: 1.5">
-              </a-entity>
-          </a-entity>
-
-          <!-- Model 3 Wrapper: Sushi Set -->
-          <a-entity id="model-wrapper-3" visible="false">
-              <a-entity class="model-entity clickable" id="model-3"
-                  position="0 0.1 0" 
-                  rotation="0 45 0"
-                  scale="3.5 3.5 3.5" 
-                  gltf-model="#sushi-model" 
-                  click-handler 
-                  model-controller="minScale: 1.0; maxScale: 10; rotationSpeed: 1.5">
-              </a-entity>
-          </a-entity>
-      </a-entity>
-
-      <a-entity camera cursor="rayOrigin: mouse" raycaster="objects: .clickable" near="0.005" far="500"></a-entity>
+      <a-camera position="0 0 0" look-controls="enabled: false" cursor="rayOrigin: mouse" raycaster="objects: .clickable" near="0.005" far="500"></a-camera>
     </a-scene>
 
     <script>
+      // DYNAMIC SCENE GENERATION
+      // Handled by catalog-loader.js
+
       // Global click handler for better touch response
       AFRAME.registerComponent('cursor-listener', {
         init: function () {
@@ -411,6 +326,8 @@
           });
         }
       });
+        
+    
       
       const debugText = document.getElementById('debug-text');
       const captureBtn = document.getElementById('capture-btn');
@@ -425,8 +342,25 @@
 
       // Hide Loader when scene is ready
       const sceneEl = document.querySelector('a-scene');
+      let arSystem = null;
+      let arStarted = false;
+      let catalogReady = false;
+
+      const startArIfReady = () => {
+        if (arStarted || !catalogReady || !arSystem) return;
+        arStarted = true;
+        arSystem.start();
+      };
+
+      document.addEventListener('catalogloaded', () => {
+        catalogReady = true;
+        startArIfReady();
+      });
+
       sceneEl.addEventListener('loaded', () => {
           console.log("Scene loaded");
+          arSystem = sceneEl.systems && sceneEl.systems["mindar-image-system"];
+          startArIfReady();
           const loader = document.getElementById('loader-overlay');
           if(loader) {
               loader.style.opacity = '0';
@@ -435,16 +369,21 @@
       });
 
       let activeMarkerId = null;
-      const visibleMarkers = new Set(); // Track which markers are currently detected
 
       // Marker Handler Component
       AFRAME.registerComponent('marker-handler', {
         init: function() {
           const markerId = parseInt(this.el.id.split('-')[1]);
+          const getVisibleTargetId = () => {
+            if (typeof APP_DATA === 'undefined' || !Array.isArray(APP_DATA.models)) return null;
+            for (const model of APP_DATA.models) {
+              const marker = document.getElementById('marker-' + model.id);
+              if (marker && (marker.getAttribute('visible') || marker.object3D?.visible)) return model.id;
+            }
+            return null;
+          };
           
-          this.el.addEventListener('markerFound', () => {
-             visibleMarkers.add(markerId);
-             
+          this.el.addEventListener('targetFound', () => {
              // First marker found becomes active automatically
              if (activeMarkerId === null) {
                  activeMarkerId = markerId;
@@ -455,12 +394,10 @@
              }
           });
           
-          this.el.addEventListener('markerLost', () => {
-             visibleMarkers.delete(markerId);
-             
+          this.el.addEventListener('targetLost', () => {
              // If the lost marker was the active one, deselect it
              if (activeMarkerId === markerId) {
-                 activeMarkerId = null;
+                 activeMarkerId = getVisibleTargetId();
                  updateState();
                  
                  // Debug
@@ -611,11 +548,13 @@
             let targetId = activeMarkerId;
             if (targetId === null) {
                // Fallback: try to find a visible model wrapper
-               for(let i=0; i<4; i++) {
-                   const wrapper = document.getElementById('model-wrapper-' + i);
-                   if (wrapper && wrapper.getAttribute('visible')) {
-                       targetId = i;
-                       break;
+               if (typeof APP_DATA !== 'undefined' && APP_DATA.models) {
+                   for (const model of APP_DATA.models) {
+                       const marker = document.getElementById('marker-' + model.id);
+                       if (marker && (marker.getAttribute('visible') || marker.object3D?.visible)) {
+                           targetId = model.id;
+                           break;
+                       }
                    }
                }
             }
@@ -662,11 +601,13 @@
             let targetId = activeMarkerId;
             if (targetId === null) {
                // Fallback: try to find a visible model wrapper
-               for(let i=0; i<4; i++) {
-                   const wrapper = document.getElementById('model-wrapper-' + i);
-                   if (wrapper && wrapper.getAttribute('visible')) {
-                       targetId = i;
-                       break;
+               if (typeof APP_DATA !== 'undefined' && APP_DATA.models) {
+                   for (const model of APP_DATA.models) {
+                       const marker = document.getElementById('marker-' + model.id);
+                       if (marker && (marker.getAttribute('visible') || marker.object3D?.visible)) {
+                           targetId = model.id;
+                           break;
+                       }
                    }
                }
             }
@@ -682,53 +623,32 @@
       });
 
 
-      // Dish Data
-      const dishes = {
-        0: {
-          name: "Zelva Ramen",
-          desc: "Ramen especial de la casa con camarones frescos, huevo y vegetales.",
-          price: "$12.99",
-          details: {
-            ingredients: "Caldo tonkotsu, fideos artesanos, camarones tigre, huevo marinado, nori, cebollín.",
-            calories: "650 kcal",
-            time: "15-20 min",
-            chefNote: "Nuestro caldo se cocina a fuego lento durante 12 horas para lograr ese sabor umami profundo."
-          }
-        },
-        1: {
-          name: "Sushi Roll",
-          desc: "Roll clásico de salmón y aguacate con semillas de sésamo.",
-          price: "$8.50",
-          details: {
-            ingredients: "Arroz de sushi, salmón fresco, aguacate, alga nori, sésamo tostado.",
-            calories: "320 kcal",
-            time: "10 min",
-            chefNote: "Perfecto para compartir o como entrada ligera."
-          }
-        },
-        2: {
-          name: "Nigiri Salmón",
-          desc: "Nigiri tradicional con corte premium de salmón noruego.",
-          price: "$5.00",
-          details: {
-            ingredients: "Arroz avinagrado, lomo de salmón premium, toque de wasabi.",
-            calories: "180 kcal (2 piezas)",
-            time: "5 min",
-            chefNote: "El corte del pescado es la clave, realizado por nuestros maestros sushiman."
-          }
-        },
-        3: {
-          name: "Bento Box",
-          desc: "Caja completa con variedad de sushi y acompañamientos.",
-          price: "$15.00",
-          details: {
-            ingredients: "Surtido de nigiris y makis, ensalada de algas, edamame, fruta de temporada.",
-            calories: "850 kcal",
-            time: "20 min",
-            chefNote: "La experiencia completa de la cocina japonesa en una sola caja."
-          }
-        }
+      // Dish Data (Loaded from app-data.js)
+      const dishes = {};
+      
+      const setDishesFromModels = (models) => {
+        for (const key of Object.keys(dishes)) delete dishes[key];
+
+        (models || []).forEach((model) => {
+          dishes[model.id] = {
+            name: model.name,
+            desc: model.desc,
+            price: model.price,
+            details: model.details
+          };
+        });
+
+        updateState();
       };
+
+      document.addEventListener('catalogloaded', (event) => {
+        const models = event?.detail?.models;
+        if (Array.isArray(models)) setDishesFromModels(models);
+      });
+
+      if (typeof APP_DATA !== 'undefined' && Array.isArray(APP_DATA.models) && APP_DATA.models.length) {
+        setDishesFromModels(APP_DATA.models);
+      }
 
       // Info Modal Elements
       const infoBtn = document.getElementById('info-btn');
@@ -765,6 +685,14 @@
       });
 
       const scene = document.querySelector('a-scene');
+
+      // SECRET ADMIN PANEL SHORTCUT (CTRL + SHIFT + A)
+      document.addEventListener('keydown', function(event) {
+          if (event.ctrlKey && event.shiftKey && (event.key === 'A' || event.key === 'a')) {
+              event.preventDefault();
+              window.location.href = 'admin/panel.html';
+          }
+      });
 
       // Debug: Log all clicks on scene to see what's being hit
       scene.addEventListener('click', (evt) => {
@@ -839,90 +767,6 @@
         link.click();
       });
 
-      // Marker Follower System (Persistent World)
-      // Optimized for performance: Throttled updates (30fps cap)
-      AFRAME.registerComponent('marker-follower-system', {
-        init: function() {
-          this.tickCount = 0;
-        },
-        tick: function(t, dt) {
-          // Optimization: Skip every other frame to reduce CPU load (15fps target for logic)
-          if (this.tickCount++ % 2 !== 0) return;
-
-          [0, 1, 2, 3].forEach(id => {
-             const marker = document.getElementById('marker-' + id);
-             const wrapper = document.getElementById('model-wrapper-' + id);
-             const placeholder = document.getElementById('placeholder-' + id);
-             
-             if (!marker || !wrapper) return;
-
-             const isMarkerVisible = marker.object3D.visible;
-             const isActive = (id === activeMarkerId);
-
-             // 1. MODEL VISIBILITY & TRACKING
-             if (isActive) {
-                 // Active model follows marker visibility
-                 const shouldBeVisible = isMarkerVisible;
-                 wrapper.setAttribute('visible', shouldBeVisible);
-                 if(wrapper.object3D) wrapper.object3D.visible = shouldBeVisible;
-                 
-                 // Update Status Indicator (Only update DOM if state changes to avoid reflows)
-                 if (statusIndicator) {
-                    const isLive = isMarkerVisible;
-                    const currentStatus = statusIndicator.getAttribute('data-status');
-                    const newStatus = isLive ? 'live' : 'frozen';
-                    
-                    if (currentStatus !== newStatus) {
-                        statusIndicator.style.opacity = '1';
-                        statusIndicator.setAttribute('data-status', newStatus);
-                        if (isLive) {
-                            statusDot.className = 'status-dot status-live';
-                            statusText.innerText = 'En Vivo';
-                        } else {
-                            statusDot.className = 'status-dot status-frozen';
-                            statusText.innerText = 'Perdido'; // Changed from 'Congelado' to indicate loss
-                        }
-                    }
-                 }
-                 
-                 // If marker is tracked, follow it
-                 if (isMarkerVisible) {
-                     // Ensure marker matrix is up to date
-                     marker.object3D.updateMatrixWorld();
-                     
-                     // Decompose marker world matrix
-                     const pos = new THREE.Vector3();
-                     const quat = new THREE.Quaternion();
-                     const scale = new THREE.Vector3();
-                     
-                     marker.object3D.matrixWorld.decompose(pos, quat, scale);
-                     
-                     // Apply to wrapper (world space)
-                     // Use direct object3D access for performance
-                     wrapper.object3D.position.copy(pos);
-                     wrapper.object3D.quaternion.copy(quat);
-                     // We don't copy scale because the model has its own scale
-                 }
-             } else {
-                 // Inactive models are hidden
-                 wrapper.setAttribute('visible', false);
-                 if(wrapper.object3D) wrapper.object3D.visible = false;
-             }
-             
-             // 2. PLACEHOLDER VISIBILITY
-             // Show placeholder only if marker is visible AND NOT active (so user knows they can scan it)
-             if (placeholder) {
-                 const showPlaceholder = isMarkerVisible && !isActive;
-                 // Optimization: Only touch DOM if visibility changes
-                 if (placeholder.object3D.visible !== showPlaceholder) {
-                     placeholder.setAttribute('visible', showPlaceholder);
-                     placeholder.object3D.visible = showPlaceholder;
-                 }
-             }
-          });
-        }
-      });
-
       // Component to make entities face the camera (Billboard)
       AFRAME.registerComponent('billboard', {
         tick: function() {
@@ -938,28 +782,10 @@
           this.el.addEventListener('click', (evt) => {
              let id = null;
              
-             // 1. Check if clicking on a model directly
              if (this.el.id && this.el.id.startsWith('model-')) {
                  id = parseInt(this.el.id.split('-')[1]);
                  console.log("Raycaster clicked model:", id);
              } 
-             // 2. Check if clicking on a marker/placeholder
-             else {
-                 const marker = this.el.closest('a-marker');
-                 if (marker) {
-                     id = parseInt(marker.id.split('-')[1]);
-                     console.log("Raycaster clicked marker:", id);
-                     
-                     // Animation Feedback on the Ring
-                     const ring = marker.querySelector('a-ring');
-                     if (ring) {
-                         ring.setAttribute('animation__click', 'property: scale; from: 1 1 1; to: 1.5 1.5 1.5; dur: 150; easing: easeInOutQuad; dir: alternate; loop: 2');
-                         setTimeout(() => {
-                             ring.removeAttribute('animation__click');
-                         }, 400);
-                     }
-                 }
-             }
 
              if (id !== null) {
                  // Visual feedback for the click
@@ -980,21 +806,6 @@
              if (this.el.id && this.el.id.startsWith('model-')) {
                  id = parseInt(this.el.id.split('-')[1]);
                  console.log("Raycaster touchstart model:", id);
-             } else {
-                 const marker = this.el.closest('a-marker');
-                 if (marker) {
-                     id = parseInt(marker.id.split('-')[1]);
-                     console.log("Raycaster touchstart marker:", id);
-                     
-                     // Animation Feedback
-                     const ring = marker.querySelector('a-ring');
-                     if (ring) {
-                         ring.setAttribute('animation__click', 'property: scale; from: 1 1 1; to: 1.5 1.5 1.5; dur: 150; easing: easeInOutQuad; dir: alternate; loop: 2');
-                         setTimeout(() => {
-                             ring.removeAttribute('animation__click');
-                         }, 400);
-                     }
-                 }
              }
 
              if (id !== null) {
@@ -1013,8 +824,6 @@
 
       // Update Info Panel based on activeMarkerId
       function updateState() {
-        // Models are handled by 'marker-follower-system' component now
-        // Just update the info panel
         if (activeMarkerId !== null && dishes[activeMarkerId]) {
           const dish = dishes[activeMarkerId];
           panelTitle.innerText = dish.name;
@@ -1045,159 +854,6 @@
       document.head.appendChild(style);
 
       // ---------------------------------------------------------
-      // Screen-Space Interaction Logic (Tap to Select)
-      // ---------------------------------------------------------
-      
-      // Project 3D position to 2D screen coordinates
-      function toScreenPosition(object3D, camera) {
-          const vector = new THREE.Vector3();
-          // Get world position
-          object3D.getWorldPosition(vector);
-          
-          // Project to normalized device coordinates (-1 to +1)
-          vector.project(camera);
-          
-          // Map to screen coordinates
-          const widthHalf = window.innerWidth / 2;
-          const heightHalf = window.innerHeight / 2;
-          
-          return {
-              x: (vector.x * widthHalf) + widthHalf,
-              y: -(vector.y * heightHalf) + heightHalf
-          };
-      }
-
-      // 3. Check for Tap Selection (Priority 1)
-      function checkMarkerTap(x, y) {
-          const debugEl = document.getElementById('debug-text');
-          let closestDist = Infinity;
-          let closestId = null;
-          
-          let debugMsg = `Tap: ${x.toFixed(0)},${y.toFixed(0)}<br>`;
-
-          // IMPORTANT: Check ALL markers, not just visible ones?
-          // If markerLost fired, it's removed from visibleMarkers.
-          // BUT, sometimes AR.js loses tracking for a split second.
-          // Let's check ALL markers if visibleMarkers is empty, just in case?
-          // No, if not tracked, matrixWorld is invalid.
-          
-          if (visibleMarkers.size === 0) {
-             debugMsg += "No markers tracked";
-             if(debugEl) debugEl.innerHTML = debugMsg;
-             return false;
-          }
-
-          // Convert Set to Array to avoid issues
-          Array.from(visibleMarkers).forEach(id => {
-              const marker = document.getElementById('marker-' + id);
-              if (!marker) return;
-
-              // Project marker position to screen coordinates
-              const vector = new THREE.Vector3();
-              const camera = scene.camera; 
-              if (!camera) return;
-
-              // Make sure matrixWorld is updated
-              if (marker.object3D) {
-                  vector.setFromMatrixPosition(marker.object3D.matrixWorld);
-                  vector.project(camera);
-                  
-                  const screenX = (vector.x * .5 + .5) * window.innerWidth;
-                  const screenY = -(vector.y * .5 - .5) * window.innerHeight;
-                  
-                  const dx = x - screenX;
-                  const dy = y - screenY;
-                  const dist = Math.sqrt(dx*dx + dy*dy);
-                  
-                  debugMsg += `M${id}: ${dist.toFixed(0)}px<br>`;
-    
-                  // Threshold: Half of the screen size (very generous)
-                  const limit = Math.min(window.innerWidth, window.innerHeight) * 0.5;
-                  
-                  if (dist < limit && dist < closestDist) {
-                      closestDist = dist;
-                      closestId = id;
-                  }
-              }
-          });
-          
-          debugMsg += `Select: ${closestId}`;
-          if(debugEl) debugEl.innerHTML = debugMsg;
-
-          if (closestId !== null && closestId !== activeMarkerId) {
-              console.log("Tap detected on marker:", closestId);
-              activeMarkerId = closestId;
-              updateState();
-              return true; // Handled
-          }
-          return false;
-      }
-
-      // Global Tap Handler
-      // We use 'touchend' to detect taps, but check if it was a drag
-      let touchStartX = 0;
-      let touchStartY = 0;
-      let touchStartTime = 0;
-
-      window.addEventListener('touchstart', (evt) => {
-          if(evt.touches.length === 1) {
-              touchStartX = evt.touches[0].clientX;
-              touchStartY = evt.touches[0].clientY;
-              touchStartTime = Date.now();
-          }
-      }, {passive: false});
-
-      window.addEventListener('touchend', (evt) => {
-          if (evt.changedTouches.length === 0) return;
-          
-          const touchEndX = evt.changedTouches[0].clientX;
-          const touchEndY = evt.changedTouches[0].clientY;
-          const timeDiff = Date.now() - touchStartTime;
-          const distDiff = Math.sqrt(Math.pow(touchEndX - touchStartX, 2) + Math.pow(touchEndY - touchStartY, 2));
-
-          // If tap is short (<500ms) and didn't move much (<50px)
-          if (timeDiff < 500 && distDiff < 50) {
-              // It's a TAP!
-              // Don't trigger if tapping UI
-              if (evt.target.closest('.ui-element')) return;
-              
-              // Show tap feedback
-              showTapFeedback(touchEndX, touchEndY);
-
-              // Pass the touch coordinates to checkMarkerTap
-              checkMarkerTap(touchEndX, touchEndY);
-          }
-      });
-      
-      function showTapFeedback(x, y) {
-          const el = document.createElement('div');
-          el.style.position = 'absolute';
-          el.style.left = (x - 20) + 'px';
-          el.style.top = (y - 20) + 'px';
-          el.style.width = '40px';
-          el.style.height = '40px';
-          el.style.border = '2px solid white';
-          el.style.borderRadius = '50%';
-          el.style.pointerEvents = 'none';
-          el.style.zIndex = '9999';
-          el.style.animation = 'ping 0.5s ease-out forwards';
-          document.body.appendChild(el);
-          setTimeout(() => el.remove(), 500);
-      }
-      
-      // Also support mouse click for testing
-      window.addEventListener('click', (evt) => {
-          if (evt.target.closest('.ui-element')) return;
-          showTapFeedback(evt.clientX, evt.clientY);
-          checkMarkerTap(evt.clientX, evt.clientY);
-      });
-      
-      // ---------------------------------------------------------
-
-      // Handle marker detection
-      // Note: The 'marker-handler' component above handles the logic now.
-      // We keep the lostTimeouts object for compatibility if needed, but the component handles its own state.
-      const lostTimeouts = {}; 
     </script>
   </body>
 </html>

@@ -2,10 +2,11 @@
 // Handles the Admin Panel logic and GitHub API integration
 
 class GitHubService {
-    constructor(token, owner, repo) {
+    constructor(token, owner, repo, branch = 'main') {
         this.token = token;
         this.owner = owner;
         this.repo = repo;
+        this.branch = branch;
         this.baseUrl = `https://api.github.com/repos/${owner}/${repo}`;
     }
 
@@ -60,16 +61,25 @@ class GitHubService {
     }
 
     async uploadFile(path, contentBase64, message, sha = null) {
+        const normalizedPath = String(path || '').replace(/^\/+/, '');
+        const base64 = String(contentBase64 || '').replace(/\s+/g, '');
+        const estimatedBytes = Math.floor((base64.length * 3) / 4);
+        const tooLargeForContentsApi = estimatedBytes > 900 * 1024;
+
+        if (tooLargeForContentsApi) {
+            return await this.uploadFileViaGitData(normalizedPath, base64, message);
+        }
+
         const body = {
             message: message,
-            content: contentBase64
+            content: base64
         };
 
         if (sha) {
             body.sha = sha; // Required if updating an existing file
         }
 
-        const response = await fetch(`${this.baseUrl}/contents/${path}`, {
+        const response = await fetch(`${this.baseUrl}/contents/${normalizedPath}`, {
             method: 'PUT',
             headers: {
                 ...this.getHeaders({ 'Content-Type': 'application/json' })
@@ -81,10 +91,168 @@ class GitHubService {
             let err = null;
             try { err = await response.json(); } catch (e) {}
             const msg = err?.message ? `: ${err.message}` : '';
+            if (response.status === 422 && /too large/i.test(String(err?.message || ''))) {
+                return await this.uploadFileViaGitData(normalizedPath, base64, message);
+            }
             throw new Error(`Upload Failed (${response.status})${msg}`);
         }
 
         return await response.json();
+    }
+
+    async getRef(branch) {
+        const response = await fetch(`${this.baseUrl}/git/ref/heads/${encodeURIComponent(branch)}`, {
+            headers: {
+                ...this.getHeaders()
+            }
+        });
+
+        if (!response.ok) {
+            let err = null;
+            try { err = await response.json(); } catch (e) {}
+            const msg = err?.message ? `: ${err.message}` : '';
+            throw new Error(`GitHub Ref Error (${response.status})${msg}`);
+        }
+
+        return await response.json();
+    }
+
+    async getCommit(sha) {
+        const response = await fetch(`${this.baseUrl}/git/commits/${sha}`, {
+            headers: {
+                ...this.getHeaders()
+            }
+        });
+
+        if (!response.ok) {
+            let err = null;
+            try { err = await response.json(); } catch (e) {}
+            const msg = err?.message ? `: ${err.message}` : '';
+            throw new Error(`GitHub Commit Error (${response.status})${msg}`);
+        }
+
+        return await response.json();
+    }
+
+    async createBlob(contentBase64) {
+        const response = await fetch(`${this.baseUrl}/git/blobs`, {
+            method: 'POST',
+            headers: {
+                ...this.getHeaders({ 'Content-Type': 'application/json' })
+            },
+            body: JSON.stringify({
+                content: contentBase64,
+                encoding: 'base64'
+            })
+        });
+
+        if (!response.ok) {
+            let err = null;
+            try { err = await response.json(); } catch (e) {}
+            const msg = err?.message ? `: ${err.message}` : '';
+            throw new Error(`GitHub Blob Error (${response.status})${msg}`);
+        }
+
+        return await response.json();
+    }
+
+    async createTree(baseTreeSha, entries) {
+        const response = await fetch(`${this.baseUrl}/git/trees`, {
+            method: 'POST',
+            headers: {
+                ...this.getHeaders({ 'Content-Type': 'application/json' })
+            },
+            body: JSON.stringify({
+                base_tree: baseTreeSha,
+                tree: entries
+            })
+        });
+
+        if (!response.ok) {
+            let err = null;
+            try { err = await response.json(); } catch (e) {}
+            const msg = err?.message ? `: ${err.message}` : '';
+            throw new Error(`GitHub Tree Error (${response.status})${msg}`);
+        }
+
+        return await response.json();
+    }
+
+    async createCommit(message, treeSha, parentCommitSha) {
+        const response = await fetch(`${this.baseUrl}/git/commits`, {
+            method: 'POST',
+            headers: {
+                ...this.getHeaders({ 'Content-Type': 'application/json' })
+            },
+            body: JSON.stringify({
+                message,
+                tree: treeSha,
+                parents: [parentCommitSha]
+            })
+        });
+
+        if (!response.ok) {
+            let err = null;
+            try { err = await response.json(); } catch (e) {}
+            const msg = err?.message ? `: ${err.message}` : '';
+            throw new Error(`GitHub Create Commit Error (${response.status})${msg}`);
+        }
+
+        return await response.json();
+    }
+
+    async updateRef(branch, commitSha) {
+        const response = await fetch(`${this.baseUrl}/git/refs/heads/${encodeURIComponent(branch)}`, {
+            method: 'PATCH',
+            headers: {
+                ...this.getHeaders({ 'Content-Type': 'application/json' })
+            },
+            body: JSON.stringify({
+                sha: commitSha,
+                force: false
+            })
+        });
+
+        if (!response.ok) {
+            let err = null;
+            try { err = await response.json(); } catch (e) {}
+            const msg = err?.message ? `: ${err.message}` : '';
+            throw new Error(`GitHub Update Ref Error (${response.status})${msg}`);
+        }
+
+        return await response.json();
+    }
+
+    async uploadFileViaGitData(path, contentBase64, message) {
+        const branch = String(this.branch || 'main');
+        const ref = await this.getRef(branch);
+        const parentCommitSha = ref?.object?.sha;
+        if (!parentCommitSha) throw new Error('GitHub Ref Error: no commit SHA');
+
+        const parentCommit = await this.getCommit(parentCommitSha);
+        const baseTreeSha = parentCommit?.tree?.sha;
+        if (!baseTreeSha) throw new Error('GitHub Commit Error: no tree SHA');
+
+        const blob = await this.createBlob(contentBase64);
+        const blobSha = blob?.sha;
+        if (!blobSha) throw new Error('GitHub Blob Error: no blob SHA');
+
+        const tree = await this.createTree(baseTreeSha, [
+            { path: String(path), mode: '100644', type: 'blob', sha: blobSha }
+        ]);
+
+        const newCommit = await this.createCommit(message, tree.sha, parentCommitSha);
+        await this.updateRef(branch, newCommit.sha);
+
+        const rawUrl = `https://raw.githubusercontent.com/${this.owner}/${this.repo}/${encodeURIComponent(branch)}/${path}`;
+        return {
+            content: {
+                download_url: rawUrl
+            },
+            commit: {
+                sha: newCommit.sha
+            }
+        };
     }
 
     async getRepo() {
@@ -99,6 +267,23 @@ class GitHubService {
             try { err = await response.json(); } catch (e) {}
             const msg = err?.message ? `: ${err.message}` : '';
             throw new Error(`GitHub Repo Error (${response.status})${msg}`);
+        }
+
+        return await response.json();
+    }
+
+    async getViewer() {
+        const response = await fetch(`https://api.github.com/user`, {
+            headers: {
+                ...this.getHeaders()
+            }
+        });
+
+        if (!response.ok) {
+            let err = null;
+            try { err = await response.json(); } catch (e) {}
+            const msg = err?.message ? `: ${err.message}` : '';
+            throw new Error(`GitHub User Error (${response.status})${msg}`);
         }
 
         return await response.json();
@@ -151,7 +336,8 @@ const UI = {
         github: null,
         catalog: [],
         catalogSha: null,
-        selectedIndex: -1
+        selectedIndex: -1,
+        viewerLogin: null
     },
 
     init() {
@@ -159,7 +345,7 @@ const UI = {
         const session = sessionStorage.getItem('webar_session');
         if (session) {
             const creds = JSON.parse(session);
-            this.login(creds.user, creds.repo, creds.token);
+            this.login(creds.user, creds.repo, creds.token, creds.branch);
         }
 
         this.elements.loginForm.addEventListener('submit', (e) => {
@@ -169,13 +355,14 @@ const UI = {
             const user = document.getElementById('gh-user').value;
             const repo = document.getElementById('gh-repo').value;
             const token = document.getElementById('gh-token').value;
+            const branch = window.CONFIG?.assets?.branch || 'main';
             
             // Simple mock authentication for panel access
             const panelUser = document.getElementById('username').value;
             const panelPass = document.getElementById('password').value;
 
             if (panelUser === 'admin' && panelPass === 'admin123') {
-                this.login(user, repo, token);
+                this.login(user, repo, token, branch);
             } else {
                 alert('Usuario o contraseña del panel incorrectos');
             }
@@ -197,13 +384,24 @@ const UI = {
         this.elements.productForm.addEventListener('submit', (e) => this.saveProduct(e));
     },
 
-    async login(user, repo, token) {
+    async login(user, repo, token, branch = 'main') {
         this.showLoading('Conectando con GitHub...');
         
         try {
-            this.state.github = new GitHubService(token, user, repo);
+            this.state.github = new GitHubService(token, user, repo, branch);
 
+            const viewer = await this.state.github.getViewer();
+            this.state.viewerLogin = viewer?.login ? String(viewer.login) : null;
             await this.state.github.getRepo();
+
+            if (this.state.viewerLogin && String(user).toLowerCase() !== this.state.viewerLogin.toLowerCase()) {
+                alert(
+                    `Aviso: el token pertenece a "${this.state.viewerLogin}" pero el repo configurado es "${user}/${repo}".\n\n` +
+                    `Para poder subir archivos necesitas:\n` +
+                    `- Que "${this.state.viewerLogin}" tenga permisos de escritura en ese repo, o\n` +
+                    `- Usar un token del owner del repo.`
+                );
+            }
             
             // Test connection by fetching catalog from ASSETS repo
             const fileData = await this.state.github.getFile('catalog/catalog.json');
@@ -219,7 +417,7 @@ const UI = {
             }
 
             // Save session
-            sessionStorage.setItem('webar_session', JSON.stringify({ user, repo, token }));
+            sessionStorage.setItem('webar_session', JSON.stringify({ user, repo, token, branch }));
 
             // Show Dashboard
             this.elements.loginScreen.style.display = 'none';
@@ -236,6 +434,9 @@ const UI = {
 
     getGitHubHint(message) {
         const msg = String(message || '');
+        if (/\(422\)/.test(msg) && /too large/i.test(msg)) {
+            return `${msg}\n\nEsto pasa cuando se intenta subir un archivo grande con la API /contents. La versión nueva del panel ya usa otra ruta para archivos grandes.\nSi estás en Netlify: haz Clear cache and deploy o Ctrl+F5.`;
+        }
         if (/Resource not accessible by personal access token/i.test(msg)) {
             return `${msg}\n\nSolución: tu token Fine-grained no tiene permisos de escritura o no tiene acceso al repo.\n- Debe tener acceso al repo realidadaumentada_imagen\n- Permissions: Contents = Read and write`;
         }
@@ -246,6 +447,14 @@ const UI = {
             return `${msg}\n\nRevisa owner/repo y la ruta (404).`;
         }
         return msg;
+    },
+
+    getGitHubHintWithViewer(message) {
+        const base = this.getGitHubHint(message);
+        if (/Resource not accessible by personal access token/i.test(String(message || '')) && this.state.viewerLogin) {
+            return `${base}\n\nToken pertenece a: ${this.state.viewerLogin}\nRevisa también que el campo Owner en el panel sea ese usuario o que tenga permisos en el repo.`;
+        }
+        return base;
     },
 
     renderList() {
@@ -403,7 +612,7 @@ const UI = {
 
         } catch (error) {
             console.error(error);
-            alert('Error guardando: ' + error.message);
+            alert('Error guardando: ' + this.getGitHubHintWithViewer(error.message));
         } finally {
             this.hideLoading();
         }
@@ -501,7 +710,7 @@ const UI = {
             alert('Listo. Se reemplazó el catálogo a 4 items y se generó targets.mind con esos 4 targets.');
         } catch (error) {
             console.error(error);
-            alert('Error creando demo: ' + error.message);
+            alert('Error creando demo: ' + this.getGitHubHintWithViewer(error.message));
         } finally {
             this.hideLoading();
         }
@@ -598,7 +807,7 @@ const UI = {
             }
         } catch (error) {
             console.error(error);
-            alert('Error generando targets.mind: ' + error.message);
+            alert('Error generando targets.mind: ' + this.getGitHubHintWithViewer(error.message));
         } finally {
             this.hideLoading();
         }

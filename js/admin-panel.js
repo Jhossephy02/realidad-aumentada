@@ -9,18 +9,31 @@ class GitHubService {
         this.baseUrl = `https://api.github.com/repos/${owner}/${repo}`;
     }
 
+    getHeaders(extra = {}) {
+        const token = String(this.token || '').trim();
+        const headers = {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/vnd.github+json',
+            'X-GitHub-Api-Version': '2022-11-28',
+            ...extra
+        };
+        return headers;
+    }
+
     async getFile(path, decode = true) {
         try {
             const response = await fetch(`${this.baseUrl}/contents/${path}`, {
                 headers: {
-                    'Authorization': `token ${this.token}`,
-                    'Accept': 'application/vnd.github.v3+json'
+                    ...this.getHeaders()
                 }
             });
             
             if (!response.ok) {
                 if (response.status === 404) return null; // File not found
-                throw new Error(`GitHub API Error: ${response.statusText}`);
+                let details = null;
+                try { details = await response.json(); } catch (e) {}
+                const msg = details?.message ? `: ${details.message}` : '';
+                throw new Error(`GitHub API Error (${response.status})${msg}`);
             }
 
             const data = await response.json();
@@ -59,15 +72,33 @@ class GitHubService {
         const response = await fetch(`${this.baseUrl}/contents/${path}`, {
             method: 'PUT',
             headers: {
-                'Authorization': `token ${this.token}`,
-                'Content-Type': 'application/json',
+                ...this.getHeaders({ 'Content-Type': 'application/json' })
             },
             body: JSON.stringify(body)
         });
 
         if (!response.ok) {
-            const err = await response.json();
-            throw new Error(`Upload Failed: ${err.message}`);
+            let err = null;
+            try { err = await response.json(); } catch (e) {}
+            const msg = err?.message ? `: ${err.message}` : '';
+            throw new Error(`Upload Failed (${response.status})${msg}`);
+        }
+
+        return await response.json();
+    }
+
+    async getRepo() {
+        const response = await fetch(`${this.baseUrl}`, {
+            headers: {
+                ...this.getHeaders()
+            }
+        });
+
+        if (!response.ok) {
+            let err = null;
+            try { err = await response.json(); } catch (e) {}
+            const msg = err?.message ? `: ${err.message}` : '';
+            throw new Error(`GitHub Repo Error (${response.status})${msg}`);
         }
 
         return await response.json();
@@ -171,6 +202,8 @@ const UI = {
         
         try {
             this.state.github = new GitHubService(token, user, repo);
+
+            await this.state.github.getRepo();
             
             // Test connection by fetching catalog from ASSETS repo
             const fileData = await this.state.github.getFile('catalog/catalog.json');
@@ -196,9 +229,23 @@ const UI = {
 
         } catch (error) {
             console.error(error);
-            alert('Error de conexión con GitHub: ' + error.message);
+            alert('Error de conexión con GitHub: ' + this.getGitHubHint(error.message));
             this.hideLoading();
         }
+    },
+
+    getGitHubHint(message) {
+        const msg = String(message || '');
+        if (/Resource not accessible by personal access token/i.test(msg)) {
+            return `${msg}\n\nSolución: tu token Fine-grained no tiene permisos de escritura o no tiene acceso al repo.\n- Debe tener acceso al repo realidadaumentada_imagen\n- Permissions: Contents = Read and write`;
+        }
+        if (/\(403\)/.test(msg)) {
+            return `${msg}\n\nSolución típica: el token no tiene acceso/permisos al repo (403).`;
+        }
+        if (/\(404\)/.test(msg)) {
+            return `${msg}\n\nRevisa owner/repo y la ruta (404).`;
+        }
+        return msg;
     },
 
     renderList() {

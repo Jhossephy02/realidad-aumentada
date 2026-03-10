@@ -17,6 +17,10 @@ const CONFIG = {
         debug: true, // Set to false in production
     },
 
+    api: {
+        baseUrl: ''
+    },
+
     // Helper to generate Raw GitHub URLs
     getRawUrl: function(path) {
         return `https://raw.githubusercontent.com/${this.assets.owner}/${this.assets.repo}/${this.assets.branch}/${path}`;
@@ -25,6 +29,11 @@ const CONFIG = {
     // Helper to get the full API URL for contents
     getApiUrl: function(path) {
         return `https://api.github.com/repos/${this.assets.owner}/${this.assets.repo}/contents/${path}`;
+    },
+
+    getApiBaseUrl: function() {
+        const base = (this.api && typeof this.api.baseUrl === 'string') ? this.api.baseUrl.trim() : '';
+        return base.replace(/\/+$/, '');
     }
 };
 

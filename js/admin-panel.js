@@ -64,9 +64,10 @@ class GitHubService {
         const normalizedPath = String(path || '').replace(/^\/+/, '');
         const base64 = String(contentBase64 || '').replace(/\s+/g, '');
         const estimatedBytes = Math.floor((base64.length * 3) / 4);
-        const tooLargeForContentsApi = estimatedBytes > 900 * 1024;
+        const isSmallTextFile = /\.(json|txt|md|csv)$/i.test(normalizedPath);
+        const canUseContentsApi = isSmallTextFile && estimatedBytes <= 400 * 1024;
 
-        if (tooLargeForContentsApi) {
+        if (!canUseContentsApi) {
             return await this.uploadFileViaGitData(normalizedPath, base64, message);
         }
 
@@ -225,34 +226,50 @@ class GitHubService {
 
     async uploadFileViaGitData(path, contentBase64, message) {
         const branch = String(this.branch || 'main');
-        const ref = await this.getRef(branch);
-        const parentCommitSha = ref?.object?.sha;
-        if (!parentCommitSha) throw new Error('GitHub Ref Error: no commit SHA');
-
-        const parentCommit = await this.getCommit(parentCommitSha);
-        const baseTreeSha = parentCommit?.tree?.sha;
-        if (!baseTreeSha) throw new Error('GitHub Commit Error: no tree SHA');
-
+        const normalizedPath = String(path || '').replace(/^\/+/, '');
         const blob = await this.createBlob(contentBase64);
         const blobSha = blob?.sha;
         if (!blobSha) throw new Error('GitHub Blob Error: no blob SHA');
 
-        const tree = await this.createTree(baseTreeSha, [
-            { path: String(path), mode: '100644', type: 'blob', sha: blobSha }
-        ]);
+        const maxAttempts = 3;
+        let lastError = null;
 
-        const newCommit = await this.createCommit(message, tree.sha, parentCommitSha);
-        await this.updateRef(branch, newCommit.sha);
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                const ref = await this.getRef(branch);
+                const parentCommitSha = ref?.object?.sha;
+                if (!parentCommitSha) throw new Error('GitHub Ref Error: no commit SHA');
 
-        const rawUrl = `https://raw.githubusercontent.com/${this.owner}/${this.repo}/${encodeURIComponent(branch)}/${path}`;
-        return {
-            content: {
-                download_url: rawUrl
-            },
-            commit: {
-                sha: newCommit.sha
+                const parentCommit = await this.getCommit(parentCommitSha);
+                const baseTreeSha = parentCommit?.tree?.sha;
+                if (!baseTreeSha) throw new Error('GitHub Commit Error: no tree SHA');
+
+                const tree = await this.createTree(baseTreeSha, [
+                    { path: normalizedPath, mode: '100644', type: 'blob', sha: blobSha }
+                ]);
+
+                const newCommit = await this.createCommit(message, tree.sha, parentCommitSha);
+                await this.updateRef(branch, newCommit.sha);
+
+                const rawUrl = `https://raw.githubusercontent.com/${this.owner}/${this.repo}/${encodeURIComponent(branch)}/${normalizedPath}`;
+                return {
+                    content: {
+                        download_url: rawUrl
+                    },
+                    commit: {
+                        sha: newCommit.sha
+                    }
+                };
+            } catch (error) {
+                lastError = error;
+                const msg = String(error?.message || '');
+                const isNonFastForward = /\(422\)/.test(msg) && /not a fast forward/i.test(msg);
+                if (!isNonFastForward || attempt === maxAttempts) break;
             }
-        };
+        }
+
+        throw lastError || new Error('Upload Failed: unknown error');
+
     }
 
     async getRepo() {
@@ -290,12 +307,87 @@ class GitHubService {
     }
 }
 
+class ApiService {
+    constructor(baseUrl = '') {
+        this.baseUrl = String(baseUrl || '').replace(/\/+$/, '');
+    }
+
+    url(path) {
+        const p = String(path || '');
+        if (!this.baseUrl) return p;
+        if (p.startsWith('http')) return p;
+        return `${this.baseUrl}${p.startsWith('/') ? '' : '/'}${p}`;
+    }
+
+    async request(path, options = {}) {
+        const response = await fetch(this.url(path), options);
+        if (!response.ok) {
+            let err = null;
+            try { err = await response.json(); } catch (e) {}
+            const msg = err?.message ? `: ${err.message}` : '';
+            throw new Error(`API Error (${response.status})${msg}`);
+        }
+        return response;
+    }
+
+    async health() {
+        await this.request('/api/health', { cache: 'no-store' });
+        return true;
+    }
+
+    async getCatalog() {
+        const res = await this.request('/api/catalog', { cache: 'no-store' });
+        return await res.json();
+    }
+
+    async replaceCatalog(items) {
+        const res = await this.request('/api/catalog', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(items || [])
+        });
+        return await res.json();
+    }
+
+    async upsertProduct(product) {
+        const res = await this.request('/api/products', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(product || {})
+        });
+        return await res.json();
+    }
+
+    async deleteProduct(id) {
+        await this.request(`/api/products/${encodeURIComponent(String(id))}`, { method: 'DELETE' });
+        return true;
+    }
+
+    async upload(kind, file) {
+        const form = new FormData();
+        form.append('file', file);
+        const res = await this.request(`/api/upload/${kind}`, { method: 'POST', body: form });
+        return await res.json();
+    }
+
+    async uploadTargets(base64) {
+        const res = await this.request('/api/upload/targets', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ base64 })
+        });
+        return await res.json();
+    }
+}
+
 // UI Manager
 const UI = {
     elements: {
         loginScreen: document.getElementById('login-screen'),
         dashboardScreen: document.getElementById('dashboard-screen'),
         loginForm: document.getElementById('login-form'),
+        useNodeApi: document.getElementById('use-node-api'),
+        useLocalDb: document.getElementById('use-local-db'),
         loadingOverlay: document.getElementById('loading-overlay'),
         loadingText: document.getElementById('loading-text'),
         productList: document.getElementById('product-list'),
@@ -334,18 +426,65 @@ const UI = {
 
     state: {
         github: null,
+        api: null,
         catalog: [],
         catalogSha: null,
         selectedIndex: -1,
-        viewerLogin: null
+        viewerLogin: null,
+        useNodeApi: true,
+        useLocalDb: false
     },
 
     init() {
+        const savedNodeMode = localStorage.getItem('webar_use_node_api');
+        if (savedNodeMode !== null) {
+            this.state.useNodeApi = savedNodeMode === '1';
+        }
+        const savedLocalMode = localStorage.getItem('webar_use_local_db');
+        if (savedLocalMode !== null) {
+            this.state.useLocalDb = savedLocalMode === '1';
+        }
+        if (this.state.useNodeApi) this.state.useLocalDb = false;
+
+        if (this.elements.useNodeApi) {
+            this.elements.useNodeApi.checked = this.state.useNodeApi;
+            this.elements.useNodeApi.addEventListener('change', () => {
+                this.state.useNodeApi = !!this.elements.useNodeApi.checked;
+                if (this.state.useNodeApi) {
+                    this.state.useLocalDb = false;
+                    if (this.elements.useLocalDb) this.elements.useLocalDb.checked = false;
+                }
+                localStorage.setItem('webar_use_node_api', this.state.useNodeApi ? '1' : '0');
+                localStorage.setItem('webar_use_local_db', this.state.useLocalDb ? '1' : '0');
+                this.updateAuthModeUI();
+            });
+        }
+        if (this.elements.useLocalDb) {
+            this.elements.useLocalDb.checked = this.state.useLocalDb;
+            this.elements.useLocalDb.addEventListener('change', () => {
+                this.state.useLocalDb = !!this.elements.useLocalDb.checked;
+                if (this.state.useLocalDb) {
+                    this.state.useNodeApi = false;
+                    if (this.elements.useNodeApi) this.elements.useNodeApi.checked = false;
+                }
+                localStorage.setItem('webar_use_local_db', this.state.useLocalDb ? '1' : '0');
+                localStorage.setItem('webar_use_node_api', this.state.useNodeApi ? '1' : '0');
+                this.updateAuthModeUI();
+            });
+        }
+        this.updateAuthModeUI();
+
         // Check for session
         const session = sessionStorage.getItem('webar_session');
         if (session) {
             const creds = JSON.parse(session);
-            this.login(creds.user, creds.repo, creds.token, creds.branch);
+            if (creds && creds.node) {
+                this.loginNode();
+            } else if (creds && creds.local) {
+                this.loginLocal();
+            } else {
+                this.login(creds.user, creds.repo, creds.token, creds.branch);
+            }
         }
 
         this.elements.loginForm.addEventListener('submit', (e) => {
@@ -362,7 +501,13 @@ const UI = {
             const panelPass = document.getElementById('password').value;
 
             if (panelUser === 'admin' && panelPass === 'admin123') {
-                this.login(user, repo, token, branch);
+                if (this.state.useNodeApi) {
+                    this.loginNode();
+                } else if (this.state.useLocalDb) {
+                    this.loginLocal();
+                } else {
+                    this.login(user, repo, token, branch);
+                }
             } else {
                 alert('Usuario o contraseña del panel incorrectos');
             }
@@ -384,10 +529,67 @@ const UI = {
         this.elements.productForm.addEventListener('submit', (e) => this.saveProduct(e));
     },
 
+    updateAuthModeUI() {
+        const user = document.getElementById('gh-user');
+        const repo = document.getElementById('gh-repo');
+        const token = document.getElementById('gh-token');
+        const disabled = !!this.state.useLocalDb || !!this.state.useNodeApi;
+        if (user) user.disabled = disabled;
+        if (repo) repo.disabled = disabled;
+        if (token) token.disabled = disabled;
+    },
+
+    async loginNode() {
+        this.showLoading('Conectando con el servidor...');
+        try {
+            const baseUrl = (window.CONFIG && typeof window.CONFIG.getApiBaseUrl === 'function') ? window.CONFIG.getApiBaseUrl() : '';
+            this.state.api = new ApiService(baseUrl);
+            await this.state.api.health();
+            const catalog = await this.state.api.getCatalog();
+            this.state.catalog = Array.isArray(catalog) ? catalog : [];
+            this.state.catalogSha = null;
+            this.state.github = null;
+            this.state.viewerLogin = null;
+            this.state.selectedIndex = -1;
+            sessionStorage.setItem('webar_session', JSON.stringify({ node: true }));
+            this.elements.loginScreen.style.display = 'none';
+            this.elements.dashboardScreen.style.display = 'block';
+            this.renderList();
+        } catch (error) {
+            console.error(error);
+            alert('Error conectando al servidor: ' + error.message);
+        } finally {
+            this.hideLoading();
+        }
+    },
+
+    async loginLocal() {
+        this.showLoading('Cargando base de datos local...');
+        try {
+            const stored = localStorage.getItem('ar_catalog_data');
+            this.state.catalog = stored ? JSON.parse(stored) : [];
+            this.state.catalogSha = null;
+            this.state.github = null;
+            this.state.api = null;
+            this.state.viewerLogin = null;
+            this.state.selectedIndex = -1;
+            sessionStorage.setItem('webar_session', JSON.stringify({ local: true }));
+            this.elements.loginScreen.style.display = 'none';
+            this.elements.dashboardScreen.style.display = 'block';
+            this.renderList();
+        } catch (error) {
+            console.error(error);
+            alert('Error cargando base local: ' + error.message);
+        } finally {
+            this.hideLoading();
+        }
+    },
+
     async login(user, repo, token, branch = 'main') {
         this.showLoading('Conectando con GitHub...');
         
         try {
+            this.state.api = null;
             this.state.github = new GitHubService(token, user, repo, branch);
 
             const viewer = await this.state.github.getViewer();
@@ -548,82 +750,119 @@ const UI = {
         item.targetIndex = Number.isFinite(item.targetIndex) ? item.targetIndex : null;
 
         try {
-            // 1. Upload Model if selected
-            const modelFile = this.elements.fileModel.files[0];
-            if (modelFile) {
-                const content = await this.toBase64(modelFile);
-                const path = `models/${modelFile.name}`; // Uploads to models/ folder in Assets Repo
-                
-                // Check if file exists to get SHA (for overwrite) - Don't decode content
-                const existing = await this.state.github.getFile(path, false);
-                const sha = existing ? existing.sha : null;
+            const normalizeFileName = (name) => String(name || 'file')
+                .replace(/\\/g, '/')
+                .split('/')
+                .pop()
+                .replace(/\s+/g, '_')
+                .replace(/[^a-zA-Z0-9._-]/g, '');
 
-                const uploadResult = await this.state.github.uploadFile(path, content, `Update model ${item.name}`, sha);
-                
-                // Construct Raw URL
-                item.model = uploadResult.content.download_url;
-                // Fix for raw.githubusercontent.com if needed, but download_url is usually reliable
-                if (item.model.includes('github.com') && item.model.includes('/blob/')) {
-                     item.model = item.model.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+            if (this.state.api) {
+                const modelFile = this.elements.fileModel.files[0];
+                if (modelFile) {
+                    const result = await this.state.api.upload('model', modelFile);
+                    item.model = result?.url || '';
+                    this.elements.prodModelUrl.value = item.model;
+                    shouldRebuildTargets = true;
                 }
-                this.elements.prodModelUrl.value = item.model;
-                shouldRebuildTargets = true;
-            }
 
-            // 2. Upload Marker if selected
-            const markerFile = this.elements.fileMarker.files[0];
-            if (markerFile) {
-                const content = await this.toBase64(markerFile);
-                const path = `markers/${markerFile.name}`; // Uploads to markers/ folder in Assets Repo
-                
-                const existing = await this.state.github.getFile(path, false);
-                const sha = existing ? existing.sha : null;
-
-                const uploadResult = await this.state.github.uploadFile(path, content, `Update marker ${item.name}`, sha);
-                
-                item.marker = uploadResult.content.download_url;
-                if (item.marker.includes('github.com') && item.marker.includes('/blob/')) {
-                     item.marker = item.marker.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+                const markerFile = this.elements.fileMarker.files[0];
+                if (markerFile) {
+                    const result = await this.state.api.upload('marker', markerFile);
+                    item.marker = result?.url || '';
+                    this.elements.prodMarkerUrl.value = item.marker;
+                    shouldRebuildTargets = true;
                 }
-                this.elements.prodMarkerUrl.value = item.marker;
-                shouldRebuildTargets = true;
+
+                const saved = await this.state.api.upsertProduct(item);
+                if (saved && typeof saved === 'object') {
+                    this.state.catalog[this.state.selectedIndex] = saved;
+                }
+
+                localStorage.setItem('ar_catalog_data', JSON.stringify(this.state.catalog));
+                if (shouldRebuildTargets) {
+                    await this.buildAndUploadTargetsMind({ silent: true });
+                }
+                alert('Guardado en el servidor.');
+                this.renderList();
+            } else if (this.state.github) {
+                const modelFile = this.elements.fileModel.files[0];
+                if (modelFile) {
+                    const content = await this.toBase64(modelFile);
+                    const path = `models/${modelFile.name}`;
+                    const existing = await this.state.github.getFile(path, false);
+                    const sha = existing ? existing.sha : null;
+                    const uploadResult = await this.state.github.uploadFile(path, content, `Update model ${item.name}`, sha);
+                    item.model = uploadResult.content.download_url;
+                    if (item.model.includes('github.com') && item.model.includes('/blob/')) {
+                        item.model = item.model.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+                    }
+                    this.elements.prodModelUrl.value = item.model;
+                    shouldRebuildTargets = true;
+                }
+
+                const markerFile = this.elements.fileMarker.files[0];
+                if (markerFile) {
+                    const content = await this.toBase64(markerFile);
+                    const path = `markers/${markerFile.name}`;
+                    const existing = await this.state.github.getFile(path, false);
+                    const sha = existing ? existing.sha : null;
+                    const uploadResult = await this.state.github.uploadFile(path, content, `Update marker ${item.name}`, sha);
+                    item.marker = uploadResult.content.download_url;
+                    if (item.marker.includes('github.com') && item.marker.includes('/blob/')) {
+                        item.marker = item.marker.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+                    }
+                    this.elements.prodMarkerUrl.value = item.marker;
+                    shouldRebuildTargets = true;
+                }
+
+                const currentCatalog = await this.state.github.getFile('catalog/catalog.json');
+                const catalogSha = currentCatalog ? currentCatalog.sha : null;
+                const jsonContent = btoa(unescape(encodeURIComponent(JSON.stringify(this.state.catalog, null, 4))));
+                await this.state.github.uploadFile('catalog/catalog.json', jsonContent, 'Update catalog', catalogSha);
+                this.state.catalogSha = (await this.state.github.getFile('catalog/catalog.json')).sha;
+                localStorage.setItem('ar_catalog_data', JSON.stringify(this.state.catalog));
+                if (shouldRebuildTargets) {
+                    await this.buildAndUploadTargetsMind({ silent: true });
+                }
+                alert('Guardado correctamente en GitHub!');
+                this.renderList();
+            } else {
+                const modelFile = this.elements.fileModel.files[0];
+                if (modelFile) {
+                    const key = `models/${Date.now()}_${normalizeFileName(modelFile.name)}`;
+                    await this.putLocalBlob(key, modelFile);
+                    item.model = `idb://${key}`;
+                    this.elements.prodModelUrl.value = item.model;
+                    shouldRebuildTargets = true;
+                }
+
+                const markerFile = this.elements.fileMarker.files[0];
+                if (markerFile) {
+                    const key = `markers/${Date.now()}_${normalizeFileName(markerFile.name)}`;
+                    await this.putLocalBlob(key, markerFile);
+                    item.marker = `idb://${key}`;
+                    this.elements.prodMarkerUrl.value = item.marker;
+                    shouldRebuildTargets = true;
+                }
+
+                localStorage.setItem('ar_catalog_data', JSON.stringify(this.state.catalog));
+                if (shouldRebuildTargets) {
+                    await this.buildAndUploadTargetsMind({ silent: true });
+                }
+                alert('Guardado localmente.');
+                this.renderList();
             }
-
-            // 3. Update Catalog JSON in ASSETS repo
-            // Re-fetch catalog SHA just in case it changed
-            const currentCatalog = await this.state.github.getFile('catalog/catalog.json');
-            const catalogSha = currentCatalog ? currentCatalog.sha : null;
-            
-            const jsonContent = btoa(unescape(encodeURIComponent(JSON.stringify(this.state.catalog, null, 4))));
-            
-            await this.state.github.uploadFile('catalog/catalog.json', jsonContent, 'Update catalog', catalogSha);
-            
-            this.state.catalogSha = (await this.state.github.getFile('catalog/catalog.json')).sha; // Update local SHA
-
-            // Save to LocalStorage for instant preview on this device
-            localStorage.setItem('ar_catalog_data', JSON.stringify(this.state.catalog));
-
-            if (shouldRebuildTargets) {
-                await this.buildAndUploadTargetsMind({ silent: true });
-            }
-
-            alert('Guardado correctamente en GitHub!');
-            this.renderList();
 
         } catch (error) {
             console.error(error);
-            alert('Error guardando: ' + this.getGitHubHintWithViewer(error.message));
+            alert('Error guardando: ' + (this.state.github ? this.getGitHubHintWithViewer(error.message) : error.message));
         } finally {
             this.hideLoading();
         }
     },
 
     async createDemo4() {
-        if (!this.state.github) {
-            alert('Primero inicia sesión y conecta el repo de assets.');
-            return;
-        }
-
         const markerFiles = Array.from(this.elements.fileMarkersBulk?.files || []);
         const modelFiles = Array.from(this.elements.fileModelsBulk?.files || []);
 
@@ -654,25 +893,36 @@ const UI = {
                 const markerFile = markerFiles[i];
                 const modelFile = modelFiles[i];
 
-                const markerBase64 = await this.toBase64(markerFile);
-                const modelBase64 = await this.toBase64(modelFile);
-
                 const markerPath = `markers/zelva_${stamp}_${i}_${normalizeFileName(markerFile.name)}`;
                 const modelPath = `models/zelva_${stamp}_${i}_${normalizeFileName(modelFile.name)}`;
 
-                const markerExisting = await this.state.github.getFile(markerPath, false);
-                const modelExisting = await this.state.github.getFile(modelPath, false);
+                let markerUrl = '';
+                let modelUrl = '';
 
-                const markerUpload = await this.state.github.uploadFile(markerPath, markerBase64, `Demo marker ${i + 1}`, markerExisting ? markerExisting.sha : null);
-                const modelUpload = await this.state.github.uploadFile(modelPath, modelBase64, `Demo model ${i + 1}`, modelExisting ? modelExisting.sha : null);
-
-                const markerUrl = markerUpload.content.download_url.includes('github.com') && markerUpload.content.download_url.includes('/blob/')
-                    ? markerUpload.content.download_url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/')
-                    : markerUpload.content.download_url;
-
-                const modelUrl = modelUpload.content.download_url.includes('github.com') && modelUpload.content.download_url.includes('/blob/')
-                    ? modelUpload.content.download_url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/')
-                    : modelUpload.content.download_url;
+                if (this.state.api) {
+                    const markerRes = await this.state.api.upload('marker', markerFile);
+                    const modelRes = await this.state.api.upload('model', modelFile);
+                    markerUrl = markerRes?.url || '';
+                    modelUrl = modelRes?.url || '';
+                } else if (this.state.github) {
+                    const markerBase64 = await this.toBase64(markerFile);
+                    const modelBase64 = await this.toBase64(modelFile);
+                    const markerExisting = await this.state.github.getFile(markerPath, false);
+                    const modelExisting = await this.state.github.getFile(modelPath, false);
+                    const markerUpload = await this.state.github.uploadFile(markerPath, markerBase64, `Demo marker ${i + 1}`, markerExisting ? markerExisting.sha : null);
+                    const modelUpload = await this.state.github.uploadFile(modelPath, modelBase64, `Demo model ${i + 1}`, modelExisting ? modelExisting.sha : null);
+                    markerUrl = markerUpload.content.download_url.includes('github.com') && markerUpload.content.download_url.includes('/blob/')
+                        ? markerUpload.content.download_url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/')
+                        : markerUpload.content.download_url;
+                    modelUrl = modelUpload.content.download_url.includes('github.com') && modelUpload.content.download_url.includes('/blob/')
+                        ? modelUpload.content.download_url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/')
+                        : modelUpload.content.download_url;
+                } else {
+                    await this.putLocalBlob(markerPath, markerFile);
+                    await this.putLocalBlob(modelPath, modelFile);
+                    markerUrl = `idb://${markerPath}`;
+                    modelUrl = `idb://${modelPath}`;
+                }
 
                 newCatalog.push({
                     id: `zelva-${stamp}-${i}`,
@@ -695,13 +945,10 @@ const UI = {
             this.elements.emptyState.style.display = 'block';
             this.renderList();
 
-            if (this.elements.demoStatus) this.elements.demoStatus.innerText = 'Actualizando catálogo...';
-            const currentCatalog = await this.state.github.getFile('catalog/catalog.json');
-            const catalogSha = currentCatalog ? currentCatalog.sha : null;
-            const jsonContent = btoa(unescape(encodeURIComponent(JSON.stringify(this.state.catalog, null, 4))));
-            await this.state.github.uploadFile('catalog/catalog.json', jsonContent, 'Set demo catalog (4 items)', catalogSha);
-
             localStorage.setItem('ar_catalog_data', JSON.stringify(this.state.catalog));
+            if (this.state.api) {
+                await this.state.api.replaceCatalog(this.state.catalog);
+            }
 
             if (this.elements.demoStatus) this.elements.demoStatus.innerText = 'Generando targets.mind...';
             await this.buildAndUploadTargetsMind({ silent: true });
@@ -710,7 +957,7 @@ const UI = {
             alert('Listo. Se reemplazó el catálogo a 4 items y se generó targets.mind con esos 4 targets.');
         } catch (error) {
             console.error(error);
-            alert('Error creando demo: ' + this.getGitHubHintWithViewer(error.message));
+            alert('Error creando demo: ' + (this.state.github ? this.getGitHubHintWithViewer(error.message) : error.message));
         } finally {
             this.hideLoading();
         }
@@ -763,7 +1010,7 @@ const UI = {
 
             for (let i = 0; i < items.length; i++) {
                 let url = items[i].marker;
-                if (typeof url === 'string' && !/^https?:\/\//i.test(url)) {
+                if (typeof url === 'string' && !url.startsWith('idb://') && !/^https?:\/\//i.test(url)) {
                     if (typeof CONFIG !== 'undefined' && CONFIG && typeof CONFIG.getRawUrl === 'function') {
                         url = CONFIG.getRawUrl(url.replace(/^\/+/, ''));
                     }
@@ -782,19 +1029,30 @@ const UI = {
             const exportedBuffer = await compiler.exportData();
             const base64 = this.arrayBufferToBase64(exportedBuffer);
 
-            const targetsPath = 'targets.mind';
-            const existingTargets = await this.state.github.getFile(targetsPath, false);
-            const targetsSha = existingTargets ? existingTargets.sha : null;
+            if (this.state.api) {
+                await this.state.api.uploadTargets(base64);
+                await this.state.api.replaceCatalog(this.state.catalog);
+                localStorage.setItem('ar_catalog_data', JSON.stringify(this.state.catalog));
+                if (this.elements.targetsStatus) this.elements.targetsStatus.innerText = 'targets.mind actualizado en el servidor.';
+            } else if (this.state.github) {
+                const targetsPath = 'targets.mind';
+                const existingTargets = await this.state.github.getFile(targetsPath, false);
+                const targetsSha = existingTargets ? existingTargets.sha : null;
+                await this.state.github.uploadFile(targetsPath, base64, 'Update targets.mind', targetsSha);
 
-            await this.state.github.uploadFile(targetsPath, base64, 'Update targets.mind', targetsSha);
+                const currentCatalog = await this.state.github.getFile('catalog/catalog.json');
+                const catalogSha = currentCatalog ? currentCatalog.sha : null;
+                const jsonContent = btoa(unescape(encodeURIComponent(JSON.stringify(this.state.catalog, null, 4))));
+                await this.state.github.uploadFile('catalog/catalog.json', jsonContent, 'Update catalog (targets)', catalogSha);
 
-            const currentCatalog = await this.state.github.getFile('catalog/catalog.json');
-            const catalogSha = currentCatalog ? currentCatalog.sha : null;
-            const jsonContent = btoa(unescape(encodeURIComponent(JSON.stringify(this.state.catalog, null, 4))));
-            await this.state.github.uploadFile('catalog/catalog.json', jsonContent, 'Update catalog (targets)', catalogSha);
-
-            localStorage.setItem('ar_catalog_data', JSON.stringify(this.state.catalog));
-            if (this.elements.targetsStatus) this.elements.targetsStatus.innerText = 'targets.mind actualizado en GitHub.';
+                localStorage.setItem('ar_catalog_data', JSON.stringify(this.state.catalog));
+                if (this.elements.targetsStatus) this.elements.targetsStatus.innerText = 'targets.mind actualizado en GitHub.';
+            } else {
+                const blob = new Blob([exportedBuffer], { type: 'application/octet-stream' });
+                await this.putLocalBlob('targets.mind', blob);
+                localStorage.setItem('ar_catalog_data', JSON.stringify(this.state.catalog));
+                if (this.elements.targetsStatus) this.elements.targetsStatus.innerText = 'targets.mind actualizado localmente.';
+            }
 
             if (this.state.selectedIndex !== -1) {
                 this.elements.prodTargetIndex.value = Number.isFinite(this.state.catalog[this.state.selectedIndex].targetIndex)
@@ -807,7 +1065,7 @@ const UI = {
             }
         } catch (error) {
             console.error(error);
-            alert('Error generando targets.mind: ' + this.getGitHubHintWithViewer(error.message));
+            alert('Error generando targets.mind: ' + (this.state.github ? this.getGitHubHintWithViewer(error.message) : error.message));
         } finally {
             this.hideLoading();
         }
@@ -820,14 +1078,19 @@ const UI = {
         this.showLoading('Eliminando...');
         
         try {
+            const item = this.state.catalog[this.state.selectedIndex];
+            if (this.state.api && item?.id) {
+                await this.state.api.deleteProduct(item.id);
+            }
             this.state.catalog.splice(this.state.selectedIndex, 1);
-            
-            // Sync with GitHub (Assets Repo)
-            const currentCatalog = await this.state.github.getFile('catalog/catalog.json');
-            const catalogSha = currentCatalog ? currentCatalog.sha : null;
-            const jsonContent = btoa(unescape(encodeURIComponent(JSON.stringify(this.state.catalog, null, 4))));
-            
-            await this.state.github.uploadFile('catalog/catalog.json', jsonContent, 'Remove product', catalogSha);
+            if (this.state.github) {
+                const currentCatalog = await this.state.github.getFile('catalog/catalog.json');
+                const catalogSha = currentCatalog ? currentCatalog.sha : null;
+                const jsonContent = btoa(unescape(encodeURIComponent(JSON.stringify(this.state.catalog, null, 4))));
+                await this.state.github.uploadFile('catalog/catalog.json', jsonContent, 'Remove product', catalogSha);
+            } else {
+                localStorage.setItem('ar_catalog_data', JSON.stringify(this.state.catalog));
+            }
             
             this.state.selectedIndex = -1;
             this.elements.editContainer.style.display = 'none';
@@ -835,10 +1098,46 @@ const UI = {
             this.renderList();
             
         } catch (error) {
-            alert('Error eliminando: ' + error.message);
+            alert('Error eliminando: ' + (this.state.github ? this.getGitHubHintWithViewer(error.message) : error.message));
         } finally {
             this.hideLoading();
         }
+    },
+
+    openLocalDb() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open('webar_local_assets', 1);
+            request.onupgradeneeded = () => {
+                const db = request.result;
+                if (!db.objectStoreNames.contains('blobs')) {
+                    db.createObjectStore('blobs', { keyPath: 'key' });
+                }
+            };
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    },
+
+    async putLocalBlob(key, blob) {
+        const db = await this.openLocalDb();
+        return await new Promise((resolve, reject) => {
+            const tx = db.transaction('blobs', 'readwrite');
+            const store = tx.objectStore('blobs');
+            store.put({ key, blob });
+            tx.oncomplete = () => resolve(true);
+            tx.onerror = () => reject(tx.error);
+        });
+    },
+
+    async getLocalBlob(key) {
+        const db = await this.openLocalDb();
+        return await new Promise((resolve, reject) => {
+            const tx = db.transaction('blobs', 'readonly');
+            const store = tx.objectStore('blobs');
+            const req = store.get(key);
+            req.onsuccess = () => resolve(req.result ? req.result.blob : null);
+            req.onerror = () => reject(req.error);
+        });
     },
 
     toBase64(file) {
@@ -864,6 +1163,15 @@ const UI = {
     },
 
     async fetchUrlAsFile(url, name) {
+        if (typeof url === 'string' && url.startsWith('idb://')) {
+            const key = url.replace(/^idb:\/\//, '');
+            const blob = await this.getLocalBlob(key);
+            if (!blob) {
+                throw new Error('No se encontró la imagen target en la base local.');
+            }
+            const fileType = blob.type || 'image/png';
+            return new File([blob], name, { type: fileType });
+        }
         const response = await fetch(url, { cache: 'no-store' });
         if (!response.ok) {
             throw new Error(`No se pudo descargar imagen target: ${response.status} ${response.statusText}`);

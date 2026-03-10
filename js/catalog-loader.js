@@ -3,7 +3,10 @@
 
 // Use configuration to determine catalog source
 const CATALOG_PATH = 'catalog/catalog.json';
-let CATALOG_URL = CONFIG ? CONFIG.getRawUrl(CATALOG_PATH) : 'catalog/catalog.json';
+const API_BASE = (typeof CONFIG !== 'undefined' && CONFIG && typeof CONFIG.getApiBaseUrl === 'function')
+    ? CONFIG.getApiBaseUrl()
+    : '';
+let CATALOG_URL = API_BASE ? `${API_BASE}/api/catalog` : (CONFIG ? CONFIG.getRawUrl(CATALOG_PATH) : 'catalog/catalog.json');
 
 // Global object to store app data (compatible with existing components)
 window.APP_DATA = {
@@ -25,12 +28,24 @@ async function initCatalog() {
         console.log("Loading catalog from LocalStorage (Admin Override)");
         try {
             const data = JSON.parse(localOverride);
-            processCatalogData(data);
+            await processCatalogDataAsync(data);
         } catch (e) {
             console.error("Error parsing local catalog:", e);
             fetchCatalog(); // Fallback to file
         }
     } else {
+        if (!API_BASE) {
+            try {
+                const controller = new AbortController();
+                const timer = setTimeout(() => controller.abort(), 600);
+                const res = await fetch('/api/health', { cache: 'no-store', signal: controller.signal });
+                clearTimeout(timer);
+                if (res.ok) {
+                    CATALOG_URL = '/api/catalog';
+                    console.log("Detected local Node API, using:", CATALOG_URL);
+                }
+            } catch (e) {}
+        }
         fetchCatalog();
     }
 }
@@ -41,7 +56,7 @@ async function fetchCatalog() {
         const response = await fetch(CATALOG_URL);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
-        processCatalogData(data, { assetsFromRepo: CATALOG_URL.startsWith('http') });
+        await processCatalogDataAsync(data, { assetsFromRepo: CATALOG_URL.startsWith('http') && !API_BASE });
     } catch (error) {
         console.error("Failed to load catalog:", error);
         
@@ -52,7 +67,7 @@ async function fetchCatalog() {
                 const response = await fetch('catalog/catalog.json');
                 if (response.ok) {
                     const data = await response.json();
-                    processCatalogData(data, { assetsFromRepo: true });
+                    await processCatalogDataAsync(data, { assetsFromRepo: true });
                     return;
                 }
             } catch (e) {
@@ -64,30 +79,77 @@ async function fetchCatalog() {
     }
 }
 
-function processCatalogData(data, options = {}) {
+const LOCAL_DB_NAME = 'webar_local_assets';
+const localObjectUrlCache = new Map();
+
+function openLocalDb() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(LOCAL_DB_NAME, 1);
+        request.onupgradeneeded = () => {
+            const db = request.result;
+            if (!db.objectStoreNames.contains('blobs')) {
+                db.createObjectStore('blobs', { keyPath: 'key' });
+            }
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+}
+
+async function getLocalBlob(key) {
+    const db = await openLocalDb();
+    return await new Promise((resolve, reject) => {
+        const tx = db.transaction('blobs', 'readonly');
+        const store = tx.objectStore('blobs');
+        const req = store.get(key);
+        req.onsuccess = () => resolve(req.result ? req.result.blob : null);
+        req.onerror = () => reject(req.error);
+    });
+}
+
+async function resolveAssetUrlAsync(pathOrUrl, assetsFromRepo) {
+    if (!pathOrUrl || typeof pathOrUrl !== 'string') return pathOrUrl;
+
+    if (pathOrUrl.startsWith('idb://')) {
+        const key = pathOrUrl.replace(/^idb:\/\//, '');
+        if (localObjectUrlCache.has(key)) return localObjectUrlCache.get(key);
+        try {
+            const blob = await getLocalBlob(key);
+            if (!blob) return null;
+            const objUrl = URL.createObjectURL(blob);
+            localObjectUrlCache.set(key, objUrl);
+            return objUrl;
+        } catch (e) {
+            console.error('Failed to load local blob', e);
+            return null;
+        }
+    }
+
+    if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
+    if (pathOrUrl.startsWith('/')) {
+        return API_BASE ? `${API_BASE}${pathOrUrl}` : pathOrUrl;
+    }
+    if (!assetsFromRepo) return pathOrUrl;
+    if (typeof CONFIG === 'undefined' || !CONFIG || typeof CONFIG.getRawUrl !== 'function') return pathOrUrl;
+    const normalized = pathOrUrl.replace(/^\/+/, '');
+    return CONFIG.getRawUrl(normalized);
+}
+
+async function processCatalogDataAsync(data, options = {}) {
     const items = (Array.isArray(data) ? data : []).filter((item) => item && item.model && item.marker);
     const shouldResolveFromRepo = items.some((item) => {
         const value = item && typeof item.model === 'string' ? item.model : '';
-        return value && !/^https?:\/\//i.test(value);
+        return value && !value.startsWith('idb://') && !value.startsWith('/') && !/^https?:\/\//i.test(value);
     });
 
     const assetsFromRepo = options.assetsFromRepo ?? (CATALOG_URL.startsWith('http') && shouldResolveFromRepo);
-
-    const resolveAssetUrl = (pathOrUrl) => {
-        if (!pathOrUrl || typeof pathOrUrl !== 'string') return pathOrUrl;
-        if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
-        if (!assetsFromRepo) return pathOrUrl;
-        if (typeof CONFIG === 'undefined' || !CONFIG || typeof CONFIG.getRawUrl !== 'function') return pathOrUrl;
-        const normalized = pathOrUrl.replace(/^\/+/, '');
-        return CONFIG.getRawUrl(normalized);
-    };
 
     // Map the JSON data to the structure our app expects
     // The JSON has "id" as string, but we need numeric ID for barcodes if we stick to barcode system.
     // However, the user wants "id": "sushi01". 
     // We will use "barcodeValue" from JSON if available, or try to parse "id" if it's a number, or auto-assign.
     
-    const processedModels = items.map((item, index) => {
+    const processedModels = await Promise.all(items.map(async (item, index) => {
         // Ensure we have a valid barcode value
         let barcodeVal = item.barcodeValue;
         if (barcodeVal === undefined) {
@@ -103,8 +165,8 @@ function processCatalogData(data, options = {}) {
             name: item.name,
             desc: item.description,
             price: typeof item.price === 'number' ? `$${item.price.toFixed(2)}` : item.price,
-            modelSrc: resolveAssetUrl(item.model),
-            markerSrc: resolveAssetUrl(item.marker),
+            modelSrc: await resolveAssetUrlAsync(item.model, assetsFromRepo),
+            markerSrc: await resolveAssetUrlAsync(item.marker, assetsFromRepo),
             scale: item.scale || "1 1 1",
             rotation: item.rotation || "0 0 0",
             position: item.position || "0 0 0",
@@ -118,7 +180,7 @@ function processCatalogData(data, options = {}) {
                 chefNote: ""
             }
         };
-    });
+    }));
 
     // Update Global State
     window.APP_DATA.models = processedModels;

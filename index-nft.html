@@ -3,310 +3,344 @@
   <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <title>WebAR NFT Menu - Zelva Nikkei</title>
+    <title>WebAR - Zelva</title>
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 
-    <!-- A-Frame 1.3.0 as requested for stability -->
-    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-    <!-- AR.js for Image Tracking -->
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
-    <!-- A-Frame Extras for Animation -->
-    <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.2.0/dist/aframe-extras.min.js"></script>
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <script src="config.js"></script>
+    <script src="js/catalog-loader.js"></script>
 
     <style>
-      /* --- LOADER --- */
-      .arjs-loader {
-        height: 100%;
+      html, body {
+        margin: 0;
+        padding: 0;
         width: 100%;
-        position: absolute;
-        top: 0;
-        left: 0;
-        background-color: rgba(0, 0, 0, 0.8);
-        z-index: 9999;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-        color: white;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        transition: opacity 0.5s ease;
+        height: 100%;
+        overflow: hidden;
+        background: #000;
+        touch-action: none;
+      }
+      a-scene {
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+      }
+      video, canvas, .a-canvas {
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+      }
+      video {
+        object-fit: cover !important;
       }
 
-      .arjs-loader.hidden {
+      #loader-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.9);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: opacity 0.35s ease;
+      }
+      #loader-overlay.hidden {
         opacity: 0;
         pointer-events: none;
       }
-
-      .spinner {
-        border: 4px solid rgba(255, 255, 255, 0.3);
+      .loader-spinner {
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid #ff9800;
         border-radius: 50%;
-        border-top: 4px solid #ff9800; /* Orange accent */
         width: 50px;
         height: 50px;
-        -webkit-animation: spin 1s linear infinite; /* Safari */
         animation: spin 1s linear infinite;
-        margin-bottom: 20px;
+        margin-bottom: 16px;
       }
-
+      .loader-text {
+        color: #fff;
+        font-size: 1.1rem;
+        font-weight: 700;
+      }
       @keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
       }
 
-      .loader-text {
-        font-size: 1.2rem;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-      }
-
-      /* --- INTERACTION UI (Floating Button) --- */
-      #interaction-ui {
+      #status-indicator {
         position: fixed;
-        bottom: 30px;
-        left: 50%;
-        transform: translateX(-50%) translateY(150%); /* Hidden initially */
-        width: 90%;
-        max-width: 350px;
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        padding: 20px;
-        border-radius: 20px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        z-index: 1000;
-        text-align: center;
-        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        border: 1px solid rgba(0,0,0,0.1);
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-
-      #interaction-ui.visible {
-        transform: translateX(-50%) translateY(0);
-      }
-
-      #dish-name {
-        margin: 0;
-        font-size: 1.5rem;
-        color: #333;
-        font-weight: 700;
-      }
-
-      #dish-price {
-        font-size: 1.2rem;
-        color: #4caf50;
-        font-weight: 600;
-        margin-bottom: 5px;
-      }
-
-      .whatsapp-btn {
-        background-color: #25D366;
-        color: white;
-        border: none;
-        padding: 12px 24px;
-        border-radius: 50px;
-        font-size: 1rem;
-        font-weight: bold;
-        cursor: pointer;
+        top: 14px;
+        right: 14px;
+        z-index: 9998;
         display: flex;
         align-items: center;
-        justify-content: center;
         gap: 10px;
-        text-decoration: none;
-        box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        padding: 10px 12px;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.55);
+        color: #fff;
+        font-size: 0.9rem;
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        user-select: none;
+        pointer-events: none;
+        max-width: 70vw;
       }
-
-      .whatsapp-btn:active {
-        transform: scale(0.95);
-        box-shadow: 0 2px 8px rgba(37, 211, 102, 0.4);
+      .status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: #ff9800;
+        box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.25);
       }
-
-      .whatsapp-icon {
-        width: 20px;
-        height: 20px;
-        fill: white;
+      #tap-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 9997;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        text-align: center;
+        color: #fff;
+        background: rgba(0, 0, 0, 0.35);
+        font-size: 1.1rem;
+        font-weight: 700;
       }
-      
-      body { margin: 0; overflow: hidden; }
+      #tap-overlay.visible {
+        display: flex;
+      }
     </style>
   </head>
   
   <body>
-    <!-- LOADER -->
-    <div class="arjs-loader" id="loader">
-      <div class="spinner"></div>
-      <div class="loader-text">Cargando Menú AR...</div>
+    <div id="loader-overlay">
+      <div class="loader-spinner"></div>
+      <div class="loader-text">Cargando Experiencia AR...</div>
     </div>
 
-    <!-- INTERACTION UI -->
-    <div id="interaction-ui">
-      <h2 id="dish-name">Nombre del Plato</h2>
-      <span id="dish-price">S/ 0.00</span>
-      <a href="#" id="whatsapp-link" class="whatsapp-btn" target="_blank">
-        <svg class="whatsapp-icon" viewBox="0 0 24 24">
-            <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.654-.698c.991.551 2.046.853 3.19.853 3.18 0 5.768-2.587 5.768-5.766 0-3.181-2.587-5.767-5.767-5.767zm8.267 5.767c0 4.555-3.711 8.266-8.267 8.266-1.503 0-2.887-.411-4.102-1.121l-4.593 1.206 1.229-4.47c-.777-1.285-1.229-2.784-1.229-4.394 0-4.555 3.71-8.267 8.266-8.267 4.555 0 8.267 3.712 8.267 8.267z"/>
-        </svg>
-        Pedir por WhatsApp
-      </a>
+    <div id="status-indicator" data-state="loading">
+      <div class="status-dot"></div>
+      <div id="status-text">Preparando...</div>
     </div>
 
-    <!-- SCENE -->
-    <!-- Optimization: logarithmicDepthBuffer for z-fighting, physicallyCorrectLights for realism -->
+    <div id="tap-overlay">Toca la pantalla para activar la cámara</div>
+
     <a-scene
       vr-mode-ui="enabled: false;"
-      renderer="logarithmicDepthBuffer: true; colorManagement: true; physicallyCorrectLights: true; antialias: true;"
+      renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true;"
       embedded
-      arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
-      
-      <!-- Lighting Setup Optimized for Food Realism -->
-      <!-- Hemisphere light for natural fill and 3D form (Sky vs Ground) -->
-      <a-light type="hemisphere" color="#ffffff" groundColor="#444444" intensity="1.2"></a-light>
-      <!-- Main Directional Key Light (Warm, casting shadows) -->
-      <a-light type="directional" position="3 5 2" intensity="2.5" color="#fff5e6" castShadow="true" shadow-bias="-0.001"></a-light>
-      <!-- Rim/Back Light to separate food from background (Cooler/Bright) -->
-      <a-light type="point" position="-2 4 -3" intensity="3.0" distance="10" decay="2" color="#ffeebb"></a-light>
-
-      <!-- Camera -->
-      <a-entity camera>
-          <a-entity cursor="rayOrigin: mouse" raycaster="objects: .clickable"></a-entity>
-      </a-entity>
-
+      mindar-image="imageTargetSrc: targets.mind; autoStart: false; uiLoading: no; uiScanning: no; uiError: no;">
+      <a-light type="hemisphere" groundColor="#443333" color="#FFFAFA" intensity="1.6"></a-light>
+      <a-light type="directional" position="1 4 2" intensity="1.2" color="#FFF"></a-light>
+      <a-camera position="0 0 0" look-controls="enabled: false" cursor="rayOrigin: mouse" raycaster="objects: .clickable" near="0.005" far="500"></a-camera>
     </a-scene>
 
     <script>
-      // Global State
-      let activeDish = null;
+      (() => {
+        const statusText = document.getElementById('status-text');
+        const loader = document.getElementById('loader-overlay');
+        const tapOverlay = document.getElementById('tap-overlay');
+        const sceneEl = document.querySelector('a-scene');
 
-      // Component to handle interactions
-      AFRAME.registerComponent('dish-interaction', {
-        schema: {
-          name: {type: 'string', default: ''},
-          price: {type: 'string', default: ''},
-          phone: {type: 'string', default: '51999999999'} // Replace with real number
-        },
-        init: function () {
-          const el = this.el;
-          const data = this.data;
-          
-          // Click event
-          el.addEventListener('click', () => {
-             console.log('Clicked dish:', data.name);
-             showInteractionUI(data);
-          });
-          
-          // Touch event (backup)
-          el.addEventListener('touchstart', () => {
-             console.log('Touched dish:', data.name);
-             showInteractionUI(data);
-          });
+        const setStatus = (state, text) => {
+          if (statusText) statusText.innerText = String(text || '');
+          const el = document.getElementById('status-indicator');
+          if (el) el.dataset.state = String(state || '');
+        };
 
-          // Marker Found/Lost events (attached to parent a-nft, but we can listen here if propagated)
-        }
-      });
-
-      // UI Logic
-      const uiPanel = document.getElementById('interaction-ui');
-      const nameEl = document.getElementById('dish-name');
-      const priceEl = document.getElementById('dish-price');
-      const whatsappBtn = document.getElementById('whatsapp-link');
-      const loader = document.getElementById('loader');
-
-      function showInteractionUI(data) {
-        nameEl.textContent = data.name;
-        priceEl.textContent = data.price;
-        
-        // WhatsApp Link Generator
-        const message = encodeURIComponent(`Hola, quisiera pedir el plato: ${data.name} (${data.price}) que vi en el menú AR.`);
-        whatsappBtn.href = `https://wa.me/${data.phone}?text=${message}`;
-        
-        uiPanel.classList.add('visible');
-      }
-
-      // Hide loader when AR system is ready (approximate)
-      window.addEventListener('arjs-nft-loaded', () => {
+        const hideLoader = () => {
+          if (!loader) return;
           loader.classList.add('hidden');
-      });
-      // Fallback in case event doesn't fire
-      setTimeout(() => {
-          loader.classList.add('hidden');
-      }, 5000);
+        };
 
-      // Main Logic: Load JSON and build scene
-      document.addEventListener('DOMContentLoaded', () => {
-        const scene = document.querySelector('a-scene');
+        const host = String(location.hostname || '').toLowerCase();
+        const isLocalHost = host === 'localhost' || host === '127.0.0.1';
 
-        fetch('data/platos.json')
-          .then(response => {
-            if (!response.ok) throw new Error('Network response was not ok');
-            return response.json();
-          })
-          .then(data => {
-            if (!data.platos || !Array.isArray(data.platos)) {
-              throw new Error('Invalid JSON format');
+        const canUseCamera = () => {
+          const secure = !!window.isSecureContext || location.protocol === 'https:' || isLocalHost;
+          if (!secure) {
+            setStatus('error', 'La cámara requiere HTTPS o localhost');
+            hideLoader();
+            return false;
+          }
+          return true;
+        };
+
+        const canFetchWithTimeout = async (url, timeoutMs = 1500) => {
+          try {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
+            const res = await fetch(url, { method: 'HEAD', cache: 'no-store', signal: controller.signal });
+            clearTimeout(timer);
+            if (res.status === 405) return true;
+            return res.ok;
+          } catch (e) {
+            return false;
+          }
+        };
+
+        const resolveTargetsSrc = () => {
+          if (typeof CONFIG !== 'undefined' && CONFIG && typeof CONFIG.getApiBaseUrl === 'function') {
+            const base = CONFIG.getApiBaseUrl();
+            if (base) return `${base}/api/targets.mind`;
+          }
+          return 'targets.mind';
+        };
+
+        let arSystem = null;
+        let arStarted = false;
+        let catalogReady = false;
+        let targetsReady = false;
+        let userActivated = false;
+
+        const preflightCameraPermission = async () => {
+          if (!canUseCamera()) return { ok: false, reason: 'insecure' };
+          const md = navigator && navigator.mediaDevices ? navigator.mediaDevices : null;
+          if (!md || typeof md.getUserMedia !== 'function') return { ok: false, reason: 'unsupported' };
+          try {
+            const stream = await md.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+            try {
+              for (const track of stream.getTracks()) {
+                try { track.stop(); } catch (e) {}
+              }
+            } catch (e) {}
+            return { ok: true };
+          } catch (err) {
+            const msg = String(err?.name || err?.message || err || '').toLowerCase();
+            if (msg.includes('notallowed') || msg.includes('permission') || msg.includes('denied')) return { ok: false, reason: 'denied', error: err };
+            if (msg.includes('notfound') || msg.includes('overconstrained')) return { ok: false, reason: 'notfound', error: err };
+            return { ok: false, reason: 'error', error: err };
+          }
+        };
+
+        const setTapVisible = (visible) => {
+          if (!tapOverlay) return;
+          tapOverlay.classList.toggle('visible', !!visible);
+        };
+
+        const tryStart = async () => {
+          if (arStarted) return;
+          if (!arSystem) return;
+          if (!catalogReady || !targetsReady) return;
+          if (!canUseCamera()) return;
+
+          arStarted = true;
+          setStatus('scanning', 'Iniciando cámara...');
+          try {
+            const pre = await preflightCameraPermission();
+            if (!pre?.ok) {
+              const r = String(pre?.reason || '');
+              if (r === 'unsupported') throw new Error('media_unsupported');
+              if (r === 'notfound') throw new Error('camera_not_found');
+              if (r === 'denied') {
+                if (!userActivated) {
+                  arStarted = false;
+                  setTapVisible(true);
+                  setStatus('ready', 'Toca la pantalla para activar la cámara');
+                  return;
+                }
+                throw new Error('permission_denied');
+              }
             }
+            await arSystem.start();
+            hideLoader();
+            setTapVisible(false);
+            setStatus('scanning', 'Escaneando...');
+          } catch (err) {
+            arStarted = false;
+            const msg = String(err?.message || err || '').toLowerCase();
+            if (msg.includes('permission_denied') || msg.includes('notallowed') || msg.includes('permission') || msg.includes('denied')) {
+              setStatus('error', 'Permiso de cámara denegado. Habilítalo en el navegador.');
+            } else if (msg.includes('media_unsupported')) {
+              setStatus('error', 'Tu navegador no soporta cámara en esta página.');
+            } else if (msg.includes('camera_not_found') || msg.includes('notfound')) {
+              setStatus('error', 'No se detectó cámara. Revisa tu dispositivo.');
+            } else if (msg.includes('target') || msg.includes('mind') || msg.includes('compile')) {
+              setStatus('error', 'No se pudo cargar targets.mind.');
+            } else {
+              setStatus('error', 'No se pudo iniciar la cámara.');
+            }
+            hideLoader();
+            setTapVisible(true);
+          }
+        };
 
-            data.platos.forEach(plato => {
-              // Create <a-nft> entity
-              const nft = document.createElement('a-nft');
-              
-              // Configure NFT properties for Extreme Stability
-              nft.setAttribute('type', 'nft');
-              nft.setAttribute('url', plato.descriptor); // Path to .fset/.iset (without extension)
-              nft.setAttribute('smooth', 'true');
-              nft.setAttribute('smoothCount', '15');
-              nft.setAttribute('smoothTolerance', '0.02');
-              nft.setAttribute('smoothThreshold', '5');
-              nft.setAttribute('id', `nft-${plato.nombre.replace(/\s+/g, '-')}`);
+        AFRAME.registerComponent('marker-handler', {
+          init: function () {
+            const idParts = String(this.el.id || '').split('-');
+            const markerId = idParts.length > 1 ? idParts.slice(1).join('-') : '';
 
-              // Create Model Entity
-              const model = document.createElement('a-entity');
-              model.setAttribute('gltf-model', plato.modelo);
-              
-              // Scale, Position, Rotation
-              // Note: NFT markers often require larger scales (e.g. 100-200) depending on descriptor generation
-              // Using JSON values but they might need adjustment.
-              // For safety, let's use the JSON values but wrapped in a parent that handles the NFT scale factor if needed.
-              // Usually NFT requires a scale of ~150 to match 150px image width. 
-              // Let's assume the JSON scales are relative to the marker size.
-              // A common pattern is: Marker -> Entity (scale 100-200) -> Model (scale from JSON)
-              
-              // Direct application for now:
-              // Adjust scale for NFT: The model needs to be visible. 
-              // If we assume the JSON scale is for Marker-based AR (1 unit = 1 meter), 
-              // NFT units are pixels. 1 meter ~ 100-150 pixels typically.
-              // So we multiply scale by ~100? Or just use as is?
-              // Let's stick to the JSON scale first. If it's too small, the user can prompt to fix.
-              // Actually, I'll multiply by 150 to be safe for NFT visibility.
-              // Wait, previous prompt set scales like "3.5". If I use 3.5 in NFT it will be microscopic (3.5 pixels).
-              // I will wrap the model in a container scaled to 150 (typical marker width) and apply the JSON scale inside.
-              
-              const container = document.createElement('a-entity');
-              container.setAttribute('scale', '150 150 150'); // Base NFT scale
-              container.setAttribute('rotation', '-90 0 0'); // Fix orientation for flat image
-              
-              model.setAttribute('scale', plato.escala);
-              model.setAttribute('position', '0 0 0'); // Centered
-              model.setAttribute('animation-mixer', 'loop: repeat');
-              model.setAttribute('class', 'clickable'); // For raycaster
-              
-              // Add interaction component
-              model.setAttribute('dish-interaction', `name: ${plato.nombre}; price: ${plato.precio}`);
-
-              // Assemble
-              container.appendChild(model);
-              nft.appendChild(container);
-              scene.appendChild(nft);
-              
-              console.log(`Loaded dish: ${plato.nombre}`);
+            this.el.addEventListener('targetFound', () => {
+              const modelEl = document.getElementById('model-' + markerId);
+              if (modelEl && !modelEl.getAttribute('gltf-model')) {
+                const src = modelEl.getAttribute('data-gltf-src');
+                if (src) modelEl.setAttribute('gltf-model', src);
+              }
+              setStatus('tracking', 'Detectado');
             });
-          })
-          .catch(error => {
-            console.error('Error loading menu data:', error);
-            const loaderText = document.querySelector('.loader-text');
-            if (loaderText) loaderText.textContent = 'Error cargando menú :(';
-          });
-      });
+
+            this.el.addEventListener('targetLost', () => {
+              setStatus('scanning', 'Escaneando...');
+            });
+          }
+        });
+
+        const initTargets = async () => {
+          const src = resolveTargetsSrc();
+          setStatus('loading', 'Cargando targets...');
+          const ok = await canFetchWithTimeout(src, 2200);
+          if (!ok) {
+            targetsReady = false;
+            setStatus('error', 'Falta targets.mind');
+            hideLoader();
+            return;
+          }
+          sceneEl.setAttribute('mindar-image', `imageTargetSrc: ${src}; autoStart: false; uiLoading: no; uiScanning: no; uiError: no;`);
+          targetsReady = true;
+          tryStart();
+        };
+
+        document.addEventListener('catalogloaded', () => {
+          catalogReady = true;
+          tryStart();
+        });
+
+        if (tapOverlay) {
+          tapOverlay.addEventListener('pointerdown', () => {
+            userActivated = true;
+            setTapVisible(false);
+            tryStart();
+          }, { passive: true });
+        }
+        window.addEventListener('pointerdown', () => {
+          if (userActivated) return;
+          userActivated = true;
+          tryStart();
+        }, { passive: true });
+
+        const onSceneLoaded = () => {
+          arSystem = sceneEl.systems && sceneEl.systems['mindar-image-system'];
+          if (sceneEl.renderer) {
+            const dpr = Math.max(1, Math.min(3, Number(window.devicePixelRatio || 1)));
+            sceneEl.renderer.setPixelRatio(dpr);
+          }
+          tryStart();
+          setTimeout(() => hideLoader(), 1500);
+        };
+
+        if (sceneEl && sceneEl.hasLoaded) onSceneLoaded();
+        else if (sceneEl) sceneEl.addEventListener('loaded', onSceneLoaded, { once: true });
+
+        initTargets();
+        setTapVisible(false);
+        setStatus('loading', 'Preparando...');
+        tryStart();
+      })();
     </script>
   </body>
 </html>

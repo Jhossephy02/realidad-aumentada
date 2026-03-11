@@ -571,8 +571,6 @@
       let targetsReady = false;
       let arUserActivated = false;
       let overlayOpen = false;
-      let adminKeyBuffer = '';
-      let adminKeyLastTs = 0;
 
       const setAdminVisible = (visible) => {
         overlayOpen = !!visible;
@@ -689,23 +687,15 @@
           tag === 'select' ||
           !!(el && el.isContentEditable);
         if (isTypingContext) return;
-
-        const now = Date.now();
-        if (now - adminKeyLastTs > 1500) adminKeyBuffer = '';
-        adminKeyLastTs = now;
-
-        if (typeof e.key === 'string' && e.key.length === 1) {
-          adminKeyBuffer = (adminKeyBuffer + e.key.toLowerCase()).slice(-16);
-        } else {
-          return;
-        }
-
-        const secret = 'webaradmin';
-        if (adminKeyBuffer.endsWith(secret)) {
-          setAdminVisible(!overlayOpen);
-          if (overlayOpen) stopAr();
-          adminKeyBuffer = '';
-        }
+        const isSecretCombo =
+          !!e.ctrlKey &&
+          !!e.altKey &&
+          !!e.shiftKey &&
+          (e.code === 'F8' || e.key === 'F8');
+        if (!isSecretCombo) return;
+        e.preventDefault();
+        setAdminVisible(!overlayOpen);
+        if (overlayOpen) stopAr();
       });
 
       window.addEventListener('message', (event) => {

@@ -409,6 +409,18 @@
         retryWrap.style.display = visible ? 'block' : 'none';
       };
 
+      const host = String(location.hostname || '').toLowerCase();
+      const isLocalHost = host === 'localhost' || host === '127.0.0.1';
+      const canUseCamera = () => {
+        const secure = !!window.isSecureContext || location.protocol === 'https:' || isLocalHost;
+        if (!secure) {
+          setStatus('error', 'La cámara requiere HTTPS o localhost');
+          setRetryVisible(false);
+          return false;
+        }
+        return true;
+      };
+
       // Hide Loader when scene is ready
       const sceneEl = document.querySelector('a-scene');
       const getTargetsMindSrc = () => {
@@ -475,9 +487,17 @@
       let arStarted = false;
       let catalogReady = false;
       let targetsReady = false;
+      let arUserActivated = false;
 
       function startArIfReady() {
         if (arStarted || !catalogReady || !targetsReady || !arSystem) return;
+        if (!canUseCamera()) return;
+        if (!arUserActivated) {
+          if (retryBtn) retryBtn.innerText = 'Iniciar cámara';
+          setRetryVisible(true);
+          setStatus('ready', 'Toca "Iniciar cámara"');
+          return;
+        }
         arStarted = true;
         setRetryVisible(false);
         setStatus('scanning', 'Iniciando cámara...');
@@ -489,6 +509,7 @@
             arStarted = false;
             console.error(err);
             setStatus('error', 'Error de cámara. Toca reintentar.');
+            if (retryBtn) retryBtn.innerText = 'Reintentar cámara';
             setRetryVisible(true);
           });
       }
@@ -527,6 +548,8 @@
 
       if (retryBtn) {
         retryBtn.addEventListener('click', () => {
+          if (!arUserActivated) arUserActivated = true;
+          retryBtn.innerText = 'Reintentar cámara';
           setRetryVisible(false);
           startArIfReady();
         });

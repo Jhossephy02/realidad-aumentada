@@ -458,8 +458,13 @@ const UI = {
         if (session) {
             try {
                 const creds = JSON.parse(session);
-                if (creds && creds.node) this.loginNode();
-                else sessionStorage.removeItem('webar_session');
+                if (creds && creds.node) {
+                    const baseUrl = (window.CONFIG && typeof window.CONFIG.getApiBaseUrl === 'function') ? window.CONFIG.getApiBaseUrl() : '';
+                    const host = String(location.hostname || '').toLowerCase();
+                    const isLocalHost = host === 'localhost' || host === '127.0.0.1';
+                    if (baseUrl || isLocalHost) this.loginNode();
+                    else sessionStorage.removeItem('webar_session');
+                } else sessionStorage.removeItem('webar_session');
             } catch (e) {
                 sessionStorage.removeItem('webar_session');
             }
@@ -535,6 +540,9 @@ const UI = {
             console.error(error);
             this.setServerStatus('Servidor: desconectado');
             this.setServerStats('');
+            sessionStorage.removeItem('webar_session');
+            if (this.elements.loginScreen) this.elements.loginScreen.style.display = 'block';
+            if (this.elements.dashboardScreen) this.elements.dashboardScreen.style.display = 'none';
             const msg = String(error?.message || '');
             if (msg.includes('API Error (404)')) {
                 alert('No se encontró la API (/api/*). Este panel solo funciona si tu backend Node está corriendo y la URL está configurada.');

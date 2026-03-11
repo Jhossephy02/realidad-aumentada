@@ -566,6 +566,17 @@ const UI = {
         if (user) user.disabled = disabled;
         if (repo) repo.disabled = disabled;
         if (token) token.disabled = disabled;
+
+        const showGitHub = !this.state.useLocalDb && !this.state.useNodeApi;
+        const setRowVisible = (inputEl, visible) => {
+            if (!inputEl) return;
+            const row = inputEl.closest('.mb-3');
+            if (!row) return;
+            row.style.display = visible ? '' : 'none';
+        };
+        setRowVisible(user, showGitHub);
+        setRowVisible(repo, showGitHub);
+        setRowVisible(token, showGitHub);
     },
 
     async loginNode() {
@@ -590,6 +601,20 @@ const UI = {
             console.error(error);
             this.setServerStatus('Servidor: desconectado');
             this.setServerStats('');
+            const host = String(location.hostname || '').toLowerCase();
+            const isLocalHost = host === 'localhost' || host === '127.0.0.1';
+            if (!isLocalHost) {
+                this.state.useNodeApi = false;
+                this.state.useLocalDb = true;
+                if (this.elements.useNodeApi) this.elements.useNodeApi.checked = false;
+                if (this.elements.useLocalDb) this.elements.useLocalDb.checked = true;
+                localStorage.setItem('webar_use_node_api', '0');
+                localStorage.setItem('webar_use_local_db', '1');
+                this.updateAuthModeUI();
+                alert('En hosting estático (Netlify) no hay servidor Node. Cambié a base local del navegador.');
+                await this.loginLocal();
+                return;
+            }
             alert('Error conectando al servidor: ' + error.message);
         } finally {
             this.hideLoading();

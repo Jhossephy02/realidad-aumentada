@@ -32,8 +32,14 @@ const CONFIG = {
     },
 
     getApiBaseUrl: function() {
-        const base = (this.api && typeof this.api.baseUrl === 'string') ? this.api.baseUrl.trim() : '';
-        return base.replace(/\/+$/, '');
+        let override = '';
+        try {
+            if (typeof window !== 'undefined' && window && window.localStorage) {
+                override = String(window.localStorage.getItem('webar_api_base_url') || '').trim();
+            }
+        } catch (e) {}
+        const base = override || ((this.api && typeof this.api.baseUrl === 'string') ? this.api.baseUrl.trim() : '');
+        return String(base || '').replace(/\/+$/, '');
     }
 };
 

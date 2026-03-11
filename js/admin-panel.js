@@ -512,6 +512,11 @@ const UI = {
         this.showLoading('Conectando con el servidor...');
         try {
             const baseUrl = (window.CONFIG && typeof window.CONFIG.getApiBaseUrl === 'function') ? window.CONFIG.getApiBaseUrl() : '';
+            const host = String(location.hostname || '').toLowerCase();
+            const isLocalHost = host === 'localhost' || host === '127.0.0.1';
+            if (!baseUrl && !isLocalHost) {
+                throw new Error('No hay backend Node configurado para este sitio. Configura CONFIG.api.baseUrl o localStorage "webar_api_base_url".');
+            }
             this.state.api = new ApiService(baseUrl);
             await this.state.api.health();
             const catalog = await this.state.api.getCatalog();
@@ -530,7 +535,12 @@ const UI = {
             console.error(error);
             this.setServerStatus('Servidor: desconectado');
             this.setServerStats('');
-            alert('Error conectando al servidor: ' + error.message);
+            const msg = String(error?.message || '');
+            if (msg.includes('API Error (404)')) {
+                alert('No se encontró la API (/api/*). Este panel solo funciona si tu backend Node está corriendo y la URL está configurada.');
+            } else {
+                alert('Error conectando al servidor: ' + msg);
+            }
         } finally {
             this.hideLoading();
         }

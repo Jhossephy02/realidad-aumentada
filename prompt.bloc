@@ -1,0 +1,483 @@
+Entiendo la estructura del proyecto (MindAR.js + Node.js). Basándome en los archivos detectados, aquí están todos los prompts y el código para cada funcionalidad:
+
+---
+
+## 🎯 RESUMEN DE CAMBIOS
+
+**Archivos a modificar/crear:**
+- `index.html` → AR principal con webcam + listener de teclado
+- `admin/index.html` → Panel admin embebido (overlay)
+- `server.js` → Endpoint para guardar marcadores
+- `js/ar-engine.js` → Motor AR con centrado automático
+
+---
+
+## 1️⃣ `index.html` — Cámara + Panel Admin con tecla
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>AR Menú</title>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  <link rel="stylesheet" href="css/admin-panel.css" />
+  <style>
+    body { margin: 0; overflow: hidden; }
+    #admin-overlay {
+      display: none;
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85);
+      z-index: 9999;
+    }
+    #admin-overlay.active { display: flex; }
+  </style>
+</head>
+<body>
+
+<!-- ESCENA AR -->
+<a-scene
+  id="arScene"
+  mindar-image="imageTargetSrc: /targets.mind; autoStart: true; uiLoading: yes; uiScanning: yes;"
+  color-space="sRGB"
+  renderer="colorManagement: true; physicallyCorrectLights: true"
+  vr-mode-ui="enabled: false"
+  device-orientation-permission-ui="enabled: false">
+
+  <a-assets id="arAssets"></a-assets>
+
+  <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+  <!-- Los targets se generan dinámicamente desde JS -->
+</a-scene>
+
+<!-- PANEL ADMINISTRATIVO (overlay, tecla A) -->
+<div id="admin-overlay">
+  <iframe src="/admin/index.html" style="width:100%;height:100%;border:none;"></iframe>
+</div>
+
+<!-- INDICADOR DE TECLA -->
+<div id="key-hint" style="
+  position:fixed; bottom:20px; left:50%;
+  transform:translateX(-50%);
+  background:rgba(0,0,0,0.6); color:white;
+  padding:8px 16px; border-radius:20px;
+  font-family:sans-serif; font-size:14px; z-index:100;">
+  Presiona <kbd>A</kbd> para abrir el panel admin
+</div>
+
+<script src="/js/ar-engine.js"></script>
+<script>
+  // ─── ABRIR PANEL ADMIN CON TECLA "A" ─────────────────────────
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'a' || e.key === 'A') {
+      const overlay = document.getElementById('admin-overlay');
+      overlay.classList.toggle('active');
+    }
+    if (e.key === 'Escape') {
+      document.getElementById('admin-overlay').classList.remove('active');
+    }
+  });
+
+  // ─── ESCUCHAR MENSAJES DEL PANEL ADMIN (para recargar targets) ─
+  window.addEventListener('message', (event) => {
+    if (event.data.type === 'RELOAD_TARGETS') {
+      document.getElementById('admin-overlay').classList.remove('active');
+      window.AREngine.reloadTargets();
+    }
+  });
+</script>
+</body>
+</html>
+```
+
+---
+
+## 2️⃣ `js/ar-engine.js` — Motor AR con centrado automático
+
+```javascript
+// js/ar-engine.js
+window.AREngine = (() => {
+
+  // ─── CARGAR TARGETS DESDE LA API ──────────────────────────────
+  async function loadTargets() {
+    const res = await fetch('/api/items');
+    const items = await res.json();
+    return items;
+  }
+
+  // ─── INYECTAR ENTIDADES AR DINÁMICAMENTE ──────────────────────
+  async function reloadTargets() {
+    const items = await loadTargets();
+    const scene = document.getElementById('arScene');
+    const assets = document.getElementById('arAssets');
+
+    // Limpiar entidades AR previas (no la cámara)
+    scene.querySelectorAll('a-entity[mindar-image-target]').forEach(e => e.remove());
+    assets.innerHTML = '';
+
+    items.forEach((item, index) => {
+      // Precargar imagen como asset
+      const img = document.createElement('img');
+      img.id = `img-${index}`;
+      img.src = item.imagePath;    // e.g. /uploads/burger.jpg
+      img.crossOrigin = 'anonymous';
+      assets.appendChild(img);
+
+      // Crear entidad target
+      const entity = document.createElement('a-entity');
+      entity.setAttribute('mindar-image-target', `targetIndex: ${index}`);
+
+      // ─── CENTRADO AUTOMÁTICO ──────────────────────────────────
+      // El plano se centra sobre el marcador con aspect ratio correcto
+      const plane = document.createElement('a-plane');
+      plane.setAttribute('src', `#img-${index}`);
+      plane.setAttribute('position', '0 0 0');     // centrado exacto
+      plane.setAttribute('rotation', '0 0 0');
+      plane.setAttribute('width', '1');
+      plane.setAttribute('height', '0.552');        // aspect 16:9 aprox
+      plane.setAttribute('material', `src: #img-${index}; transparent: true; alphaTest: 0.1`);
+
+      // Texto del nombre del plato debajo
+      const text = document.createElement('a-text');
+      text.setAttribute('value', item.name);
+      text.setAttribute('position', '0 -0.35 0.01');
+      text.setAttribute('align', 'center');
+      text.setAttribute('color', '#ffffff');
+      text.setAttribute('width', '1.5');
+      text.setAttribute('font', 'https://cdn.aframe.io/fonts/Roboto-msdf.json');
+
+      entity.appendChild(plane);
+      entity.appendChild(text);
+      scene.appendChild(entity);
+    });
+
+    console.log(`✅ ${items.length} marcadores cargados`);
+  }
+
+  // ─── INICIALIZAR ──────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    reloadTargets();
+
+    // ─── ASEGURAR QUE LA CÁMARA FUNCIONE ─────────────────────────
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+      .then(stream => {
+        console.log('✅ Cámara activa');
+        stream.getTracks().forEach(t => t.stop()); // MindAR la toma sola
+      })
+      .catch(err => {
+        alert('⚠️ Permite el acceso a la cámara para usar AR: ' + err.message);
+      });
+  });
+
+  return { reloadTargets };
+})();
+```
+
+---
+
+## 3️⃣ `admin/index.html` — Panel Admin (sin ir a otra página)
+
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Panel Administrativo</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #1a1a2e; color: #eee; padding: 20px; }
+    h1 { text-align: center; color: #e94560; }
+    .form-group { margin-bottom: 14px; }
+    label { display: block; margin-bottom: 4px; font-size: 14px; }
+    input, textarea {
+      width: 100%; padding: 10px; border-radius: 8px;
+      border: 1px solid #333; background: #16213e; color: #eee;
+      font-size: 14px;
+    }
+    .preview-img {
+      max-width: 200px; border-radius: 8px; margin-top: 8px;
+      border: 2px dashed #e94560;
+    }
+    .btn-save {
+      background: #e94560; color: white; border: none;
+      padding: 12px 24px; border-radius: 8px; cursor: pointer;
+      font-size: 16px; width: 100%; margin-top: 10px;
+    }
+    .btn-save:hover { background: #c73652; }
+    .btn-close {
+      position: absolute; top: 14px; right: 20px;
+      background: transparent; color: #e94560;
+      border: 1px solid #e94560; border-radius: 6px;
+      padding: 6px 14px; cursor: pointer; font-size: 14px;
+    }
+    .items-list { margin-top: 30px; }
+    .item-card {
+      background: #16213e; border-radius: 10px;
+      padding: 12px; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .item-card img { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; }
+    .item-card .info { flex: 1; }
+    .item-card .btn-del {
+      background: #e94560; border: none; color: white;
+      padding: 6px 12px; border-radius: 6px; cursor: pointer;
+    }
+    #status-msg {
+      text-align: center; padding: 8px;
+      border-radius: 8px; margin-top: 10px;
+      display: none;
+    }
+    .success { background: #155724; color: #d4edda; display: block !important; }
+    .error   { background: #721c24; color: #f8d7da; display: block !important; }
+  </style>
+</head>
+<body>
+
+<button class="btn-close" onclick="window.parent.document.getElementById('admin-overlay').classList.remove('active')">
+  ✕ Cerrar
+</button>
+
+<h1>🍽️ Panel Administrativo</h1>
+
+<!-- FORMULARIO DE NUEVO PLATO -->
+<div class="form-group">
+  <label>Nombre del plato</label>
+  <input type="text" id="inp-name" placeholder="Ej: Lomo Saltado" />
+</div>
+<div class="form-group">
+  <label>Descripción</label>
+  <textarea id="inp-desc" rows="2" placeholder="Ingredientes, precio..."></textarea>
+</div>
+<div class="form-group">
+  <label>Imagen del plato (se convierte en marcador AR)</label>
+  <input type="file" id="inp-image" accept="image/*" onchange="previewImage(event)" />
+  <img id="img-preview" class="preview-img" style="display:none;" />
+</div>
+
+<button class="btn-save" onclick="saveItem()">💾 Guardar y generar marcador</button>
+<div id="status-msg"></div>
+
+<!-- LISTA DE ITEMS GUARDADOS -->
+<div class="items-list">
+  <h3>Marcadores registrados</h3>
+  <div id="items-container">Cargando...</div>
+</div>
+
+<script>
+  // ─── PREVIEW DE IMAGEN ─────────────────────────────────────────
+  function previewImage(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = document.getElementById('img-preview');
+      img.src = e.target.result;
+      img.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ─── GUARDAR ITEM + SUBIR IMAGEN ──────────────────────────────
+  async function saveItem() {
+    const name    = document.getElementById('inp-name').value.trim();
+    const desc    = document.getElementById('inp-desc').value.trim();
+    const fileInp = document.getElementById('inp-image');
+    const file    = fileInp.files[0];
+
+    if (!name || !file) {
+      showStatus('⚠️ Nombre e imagen son requeridos.', 'error');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('description', desc);
+    formData.append('image', file);
+
+    try {
+      const res = await fetch('/api/items', { method: 'POST', body: formData });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || 'Error al guardar');
+
+      showStatus(`✅ "${name}" guardado como marcador AR`, 'success');
+
+      // Limpiar formulario
+      document.getElementById('inp-name').value = '';
+      document.getElementById('inp-desc').value = '';
+      fileInp.value = '';
+      document.getElementById('img-preview').style.display = 'none';
+
+      loadItems();
+
+      // ─── AVISAR AL INDEX.HTML PARA RECARGAR TARGETS ────────────
+      window.parent.postMessage({ type: 'RELOAD_TARGETS' }, '*');
+
+    } catch (err) {
+      showStatus('❌ ' + err.message, 'error');
+    }
+  }
+
+  // ─── CARGAR Y MOSTRAR ITEMS ───────────────────────────────────
+  async function loadItems() {
+    const container = document.getElementById('items-container');
+    try {
+      const res   = await fetch('/api/items');
+      const items = await res.json();
+
+      if (items.length === 0) {
+        container.innerHTML = '<p style="color:#888">No hay platos registrados aún.</p>';
+        return;
+      }
+
+      container.innerHTML = items.map(item => `
+        <div class="item-card">
+          <img src="${item.imagePath}" alt="${item.name}" />
+          <div class="info">
+            <strong>${item.name}</strong>
+            <p style="margin:4px 0;font-size:13px;color:#aaa">${item.description || ''}</p>
+          </div>
+          <button class="btn-del" onclick="deleteItem('${item.id}')">🗑️</button>
+        </div>
+      `).join('');
+    } catch (e) {
+      container.innerHTML = '<p style="color:#e94560">Error cargando items.</p>';
+    }
+  }
+
+  // ─── ELIMINAR ITEM ────────────────────────────────────────────
+  async function deleteItem(id) {
+    if (!confirm('¿Eliminar este marcador?')) return;
+    await fetch(`/api/items/${id}`, { method: 'DELETE' });
+    loadItems();
+    window.parent.postMessage({ type: 'RELOAD_TARGETS' }, '*');
+  }
+
+  function showStatus(msg, type) {
+    const el = document.getElementById('status-msg');
+    el.textContent = msg;
+    el.className = type;
+    setTimeout(() => { el.className = ''; el.style.display = 'none'; }, 3500);
+  }
+
+  loadItems(); // Cargar al inicio
+</script>
+</body>
+</html>
+```
+
+---
+
+## 4️⃣ `server.js` — Backend: guardar imágenes + API
+
+```javascript
+const express  = require('express');
+const multer   = require('multer');
+const path     = require('path');
+const fs       = require('fs');
+const { v4: uuidv4 } = require('uuid');
+
+const app  = express();
+const PORT = 3000;
+const DATA_FILE    = path.join(__dirname, 'data', 'items.json');
+const UPLOADS_DIR  = path.join(__dirname, 'uploads');
+
+// ─── ASEGURAR CARPETAS ────────────────────────────────────────────
+if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+if (!fs.existsSync(path.join(__dirname, 'data'))) fs.mkdirSync(path.join(__dirname, 'data'));
+if (!fs.existsSync(DATA_FILE)) fs.writeFileSync(DATA_FILE, '[]');
+
+// ─── MULTER: SUBIDA DE IMÁGENES ───────────────────────────────────
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, UPLOADS_DIR),
+  filename:    (req, file, cb) => {
+    const ext  = path.extname(file.originalname);
+    const name = `${Date.now()}-${uuidv4()}${ext}`;
+    cb(null, name);
+  }
+});
+const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
+
+app.use(express.json());
+app.use(express.static(__dirname));          // sirve index.html, admin/, etc.
+app.use('/uploads', express.static(UPLOADS_DIR));
+
+// ─── HELPERS JSON ─────────────────────────────────────────────────
+const readItems  = () => JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+const writeItems = (data) => fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+
+// ─── GET /api/items ───────────────────────────────────────────────
+app.get('/api/items', (req, res) => {
+  res.json(readItems());
+});
+
+// ─── POST /api/items ──────────────────────────────────────────────
+app.post('/api/items', upload.single('image'), (req, res) => {
+  const { name, description } = req.body;
+  if (!name || !req.file) {
+    return res.status(400).json({ error: 'Nombre e imagen requeridos' });
+  }
+
+  const items = readItems();
+  const newItem = {
+    id:          uuidv4(),
+    name,
+    description: description || '',
+    imagePath:   `/uploads/${req.file.filename}`,
+    createdAt:   new Date().toISOString()
+  };
+
+  items.push(newItem);
+  writeItems(items);
+
+  // ─── AQUÍ puedes agregar lógica para regenerar targets.mind ─────
+  // Por ahora se devuelve el item y MindAR usa las imágenes directas
+  console.log(`✅ Nuevo marcador: ${name} → ${req.file.filename}`);
+  res.json(newItem);
+});
+
+// ─── DELETE /api/items/:id ────────────────────────────────────────
+app.delete('/api/items/:id', (req, res) => {
+  let items = readItems();
+  const item = items.find(i => i.id === req.params.id);
+
+  if (item) {
+    // Borrar archivo de imagen
+    const filePath = path.join(__dirname, item.imagePath);
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    items = items.filter(i => i.id !== req.params.id);
+    writeItems(items);
+  }
+
+  res.json({ success: true });
+});
+
+app.listen(PORT, () => {
+  console.log(`🚀 Servidor en http://localhost:${PORT}`);
+});
+```
+
+---
+
+## 5️⃣ Instalar dependencias faltantes
+
+```bash
+npm install uuid multer express
+```
+
+---
+
+## 🔑 Flujo completo
+
+| Acción | Resultado |
+|---|---|
+| Abrir `localhost:3000` | Webcam AR activa |
+| Presionar `A` | Panel admin se abre como overlay |
+| Subir imagen + nombre | Se guarda en `/uploads/` y `data/items.json` |
+| Click "Guardar" | Panel envía `postMessage` → AR recarga marcadores |
+| Cerrar panel (`Esc` o `✕`) | Vuelve a la vista AR con los nuevos marcadores |
+
+> ⚠️ **Nota sobre `targets.mind`:** MindAR requiere un archivo `.mind` pre-compilado para tracking preciso. Para generarlo dinámicamente en producción, usa la librería `mind-ar` en Node con `Compiler` o la herramienta online en [https://hiukim.github.io/mind-ar-js-doc/tools/compile](https://hiukim.github.io/mind-ar-js-doc/tools/compile). Mientras tanto, las imágenes se muestran sobre el marcador existente.

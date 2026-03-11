@@ -3,7 +3,7 @@
   <head>
     <title>WebAR - V6 (RAYCASTER)</title>
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-    <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     
     <!-- System Configuration -->
@@ -220,6 +220,60 @@
         opacity: 1;
       }
 
+      .admin-btn {
+        position: fixed;
+        top: 60px;
+        right: 14px;
+        width: 44px;
+        height: 44px;
+        border-radius: 999px;
+        background: rgba(0,0,0,0.6);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        font-size: 18px;
+        z-index: 9999;
+        cursor: pointer;
+        opacity: 0.92;
+        pointer-events: auto;
+        user-select: none;
+      }
+
+      #admin-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.86);
+        z-index: 10000;
+        pointer-events: auto;
+      }
+      #admin-overlay.active { display: block; }
+      #admin-iframe {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+        background: transparent;
+      }
+      #admin-close {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        width: 40px;
+        height: 40px;
+        border-radius: 999px;
+        border: 0;
+        background: rgba(0,0,0,0.6);
+        color: #fff;
+        font-size: 22px;
+        line-height: 40px;
+        cursor: pointer;
+        z-index: 10001;
+      }
+
       /* Detailed Info Modal */
       .modal-overlay {
         position: fixed;
@@ -301,6 +355,12 @@
     
     <!-- Info Button -->
     <div class="info-btn" id="info-btn">i</div>
+    <div class="admin-btn" id="admin-btn">⚙</div>
+
+    <div id="admin-overlay">
+      <button id="admin-close" type="button">×</button>
+      <iframe id="admin-iframe" src="admin/panel.html"></iframe>
+    </div>
 
     <!-- Detailed Modal -->
     <div class="modal-overlay" id="detail-modal">
@@ -397,6 +457,9 @@
       const statusText = document.getElementById('status-text');
       const retryWrap = document.getElementById('ar-retry');
       const retryBtn = document.getElementById('retry-btn');
+      const adminBtn = document.getElementById('admin-btn');
+      const adminOverlay = document.getElementById('admin-overlay');
+      const adminClose = document.getElementById('admin-close');
       const debugEnabled = !((typeof CONFIG !== 'undefined' && CONFIG && CONFIG.system && CONFIG.system.debug === false));
       if (debugText && !debugEnabled) debugText.style.display = 'none';
 
@@ -488,10 +551,26 @@
       let catalogReady = false;
       let targetsReady = false;
       let arUserActivated = false;
+      let overlayOpen = false;
+
+      const setAdminVisible = (visible) => {
+        overlayOpen = !!visible;
+        if (!adminOverlay) return;
+        adminOverlay.classList.toggle('active', overlayOpen);
+      };
+
+      const stopAr = () => {
+        if (!arSystem) return;
+        try {
+          if (arStarted && typeof arSystem.stop === 'function') arSystem.stop();
+        } catch (e) {}
+        arStarted = false;
+      };
 
       function startArIfReady() {
         if (arStarted || !catalogReady || !targetsReady || !arSystem) return;
         if (!canUseCamera()) return;
+        if (overlayOpen) return;
         if (!arUserActivated) {
           if (retryBtn) retryBtn.innerText = 'Iniciar cámara';
           setRetryVisible(true);
@@ -554,6 +633,34 @@
           startArIfReady();
         });
       }
+
+      if (adminBtn) {
+        adminBtn.addEventListener('click', () => {
+          setAdminVisible(true);
+          stopAr();
+        });
+      }
+      if (adminClose) {
+        adminClose.addEventListener('click', () => {
+          setAdminVisible(false);
+        });
+      }
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') setAdminVisible(false);
+        if (e.key === 'a' || e.key === 'A') {
+          setAdminVisible(!overlayOpen);
+          if (overlayOpen) stopAr();
+        }
+      });
+
+      window.addEventListener('message', (event) => {
+        const data = event && event.data ? event.data : null;
+        const type = data && typeof data.type === 'string' ? data.type : '';
+        if (type === 'RELOAD_TARGETS' || type === 'RELOAD_ALL') {
+          setAdminVisible(false);
+          location.reload();
+        }
+      });
 
       document.addEventListener('visibilitychange', () => {
         if (!arSystem) return;

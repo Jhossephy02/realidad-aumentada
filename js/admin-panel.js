@@ -1155,6 +1155,12 @@ const UI = {
                 if (this.elements.targetsStatus) this.elements.targetsStatus.innerText = 'targets.mind actualizado localmente.';
             }
 
+            try {
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({ type: 'RELOAD_TARGETS' }, '*');
+                }
+            } catch (e) {}
+
             if (this.state.selectedIndex !== -1) {
                 this.elements.prodTargetIndex.value = Number.isFinite(this.state.catalog[this.state.selectedIndex].targetIndex)
                     ? this.state.catalog[this.state.selectedIndex].targetIndex

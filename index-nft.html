@@ -128,8 +128,6 @@
       <div id="status-text">Preparando...</div>
     </div>
 
-    <div id="tap-overlay">Toca la pantalla para activar la cámara</div>
-
     <a-scene
       vr-mode-ui="enabled: false;"
       renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true;"
@@ -196,7 +194,9 @@
         let arStarted = false;
         let catalogReady = false;
         let targetsReady = false;
-        let userActivated = false;
+        let userActivated = true;
+        let autoRetryTimer = null;
+        let autoRetryDelayMs = 800;
 
         const preflightCameraPermission = async () => {
           if (!canUseCamera()) return { ok: false, reason: 'insecure' };
@@ -220,7 +220,7 @@
 
         const setTapVisible = (visible) => {
           if (!tapOverlay) return;
-          tapOverlay.classList.toggle('visible', !!visible);
+          tapOverlay.classList.remove('visible');
         };
 
         const tryStart = async () => {
@@ -230,32 +230,28 @@
           if (!canUseCamera()) return;
 
           arStarted = true;
-          setStatus('scanning', 'Iniciando cámara...');
+          setStatus('scanning', 'Solicitando cámara...');
           try {
             const pre = await preflightCameraPermission();
             if (!pre?.ok) {
               const r = String(pre?.reason || '');
               if (r === 'unsupported') throw new Error('media_unsupported');
               if (r === 'notfound') throw new Error('camera_not_found');
-              if (r === 'denied') {
-                if (!userActivated) {
-                  arStarted = false;
-                  setTapVisible(true);
-                  setStatus('ready', 'Toca la pantalla para activar la cámara');
-                  return;
-                }
-                throw new Error('permission_denied');
-              }
+              if (r === 'denied') throw new Error('permission_denied');
             }
             await arSystem.start();
             hideLoader();
-            setTapVisible(false);
             setStatus('scanning', 'Escaneando...');
+            if (autoRetryTimer) {
+              clearTimeout(autoRetryTimer);
+              autoRetryTimer = null;
+            }
+            autoRetryDelayMs = 800;
           } catch (err) {
             arStarted = false;
             const msg = String(err?.message || err || '').toLowerCase();
             if (msg.includes('permission_denied') || msg.includes('notallowed') || msg.includes('permission') || msg.includes('denied')) {
-              setStatus('error', 'Permiso de cámara denegado. Habilítalo en el navegador.');
+              setStatus('scanning', 'Activando cámara...');
             } else if (msg.includes('media_unsupported')) {
               setStatus('error', 'Tu navegador no soporta cámara en esta página.');
             } else if (msg.includes('camera_not_found') || msg.includes('notfound')) {
@@ -263,10 +259,16 @@
             } else if (msg.includes('target') || msg.includes('mind') || msg.includes('compile')) {
               setStatus('error', 'No se pudo cargar targets.mind.');
             } else {
-              setStatus('error', 'No se pudo iniciar la cámara.');
+              setStatus('scanning', 'Activando cámara...');
             }
             hideLoader();
-            setTapVisible(true);
+            if (!autoRetryTimer) {
+              autoRetryTimer = setTimeout(() => {
+                autoRetryTimer = null;
+                tryStart();
+              }, autoRetryDelayMs);
+              autoRetryDelayMs = Math.min(5000, Math.floor(autoRetryDelayMs * 1.6));
+            }
           }
         };
 
@@ -310,16 +312,8 @@
           tryStart();
         });
 
-        if (tapOverlay) {
-          tapOverlay.addEventListener('pointerdown', () => {
-            userActivated = true;
-            setTapVisible(false);
-            tryStart();
-          }, { passive: true });
-        }
         window.addEventListener('pointerdown', () => {
-          if (userActivated) return;
-          userActivated = true;
+          if (!userActivated) userActivated = true;
           tryStart();
         }, { passive: true });
 

@@ -473,7 +473,7 @@
       };
       const setRetryVisible = (visible) => {
         if (!retryWrap) return;
-        retryWrap.style.display = visible ? 'block' : 'none';
+        retryWrap.style.display = 'none';
       };
 
       const host = String(location.hostname || '').toLowerCase();
@@ -602,6 +602,8 @@
       let targetsReady = false;
       let arUserActivated = true;
       let cameraStartAttempts = 0;
+      let autoRetryTimer = null;
+      let autoRetryDelayMs = 800;
       let overlayOpen = false;
       let adminShiftCount = 0;
       let adminShiftLastTs = 0;
@@ -666,7 +668,6 @@
         if (overlayOpen) return;
         cameraStartAttempts += 1;
         arStarted = true;
-        setRetryVisible(false);
         setStatus('scanning', 'Solicitando cámara...');
         Promise.resolve(preflightCameraPermission())
           .then((pre) => {
@@ -680,19 +681,18 @@
           })
           .then(() => {
             setStatus('scanning', 'Escaneando...');
+            if (autoRetryTimer) {
+              clearTimeout(autoRetryTimer);
+              autoRetryTimer = null;
+            }
+            autoRetryDelayMs = 800;
           })
           .catch((err) => {
             arStarted = false;
             console.error(err);
             const msg = String(err?.message || err || '').toLowerCase();
             if (msg.includes('notallowed') || msg.includes('permission') || msg.includes('denied') || msg.includes('permission_denied')) {
-              if (!arUserActivated || cameraStartAttempts <= 1) {
-                arUserActivated = false;
-                setStatus('ready', 'Toca la pantalla para activar la cámara');
-                setRetryVisible(true);
-                return;
-              }
-              setStatus('error', 'Permiso de cámara denegado. Habilítalo en el navegador.');
+              setStatus('scanning', 'Activando cámara...');
             } else if (msg.includes('media_unsupported')) {
               setStatus('error', 'Tu navegador no soporta cámara en esta página.');
             } else if (msg.includes('camera_not_found') || msg.includes('notfound')) {
@@ -700,9 +700,15 @@
             } else if (msg.includes('target') || msg.includes('mind') || msg.includes('compile')) {
               setStatus('error', 'No se pudo cargar targets.mind. Revisa que exista y reintenta.');
             } else {
-              setStatus('error', 'Error de cámara. Toca reintentar.');
+              setStatus('scanning', 'Activando cámara...');
             }
-            setRetryVisible(true);
+            if (!autoRetryTimer) {
+              autoRetryTimer = setTimeout(() => {
+                autoRetryTimer = null;
+                startArIfReady();
+              }, autoRetryDelayMs);
+              autoRetryDelayMs = Math.min(5000, Math.floor(autoRetryDelayMs * 1.6));
+            }
           });
       }
 
@@ -753,21 +759,11 @@
         hideLoader();
         if (!targetsReady) {
           setStatus('error', 'Falta targets.mind');
-          setRetryVisible(false);
         } else {
           setStatus('ready', 'Activando cámara...');
-          setRetryVisible(false);
           startArIfReady();
         }
       }, 6000);
-
-      if (retryWrap) {
-        retryWrap.addEventListener('pointerdown', () => {
-          arUserActivated = true;
-          setRetryVisible(false);
-          startArIfReady();
-        }, { passive: true });
-      }
 
       const armUserGestureStart = () => {
         const once = () => {

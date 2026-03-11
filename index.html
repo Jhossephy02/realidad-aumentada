@@ -19,6 +19,8 @@
         width: 100vw !important;
         height: 100vh !important;
       }
+      video { z-index: 0 !important; }
+      canvas, .a-canvas { z-index: 1 !important; background: transparent !important; }
       video { object-fit: cover !important; }
       
       .capture-button {
@@ -414,6 +416,7 @@
       embedded 
       mindar-image="imageTargetSrc: targets.mind; autoStart: false; uiLoading: no; uiScanning: no; uiError: no;"
       renderer="colorManagement: true; precision: highp; antialias: true; alpha: true; pixelRatio: 2; powerPreference: high-performance; sortObjects: true; physicallyCorrectLights: true;"
+      background="transparent: true"
       vr-mode-ui="enabled: false"
       device-orientation-permission-ui="enabled: false"
       gesture-detector
@@ -474,6 +477,34 @@
       const setRetryVisible = (visible) => {
         if (!retryWrap) return;
         retryWrap.style.display = 'none';
+      };
+
+      const forceCameraLayers = () => {
+        try {
+          const videos = document.querySelectorAll('video');
+          for (const v of videos) {
+            v.style.position = 'fixed';
+            v.style.inset = '0';
+            v.style.width = '100vw';
+            v.style.height = '100vh';
+            v.style.objectFit = 'cover';
+            v.style.zIndex = '0';
+            v.style.display = 'block';
+            v.setAttribute('playsinline', '');
+            v.setAttribute('webkit-playsinline', '');
+            v.muted = true;
+            v.autoplay = true;
+          }
+          const canvases = document.querySelectorAll('canvas');
+          for (const c of canvases) {
+            c.style.position = 'fixed';
+            c.style.inset = '0';
+            c.style.width = '100vw';
+            c.style.height = '100vh';
+            c.style.zIndex = '1';
+            c.style.background = 'transparent';
+          }
+        } catch (e) {}
       };
 
       const host = String(location.hostname || '').toLowerCase();
@@ -681,6 +712,7 @@
           })
           .then(() => {
             setStatus('scanning', 'Escaneando...');
+            forceCameraLayers();
             if (autoRetryTimer) {
               clearTimeout(autoRetryTimer);
               autoRetryTimer = null;

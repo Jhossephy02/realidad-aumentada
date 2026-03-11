@@ -33,9 +33,8 @@
         width: 100vw !important;
         height: 100vh !important;
       }
-      video {
-        object-fit: cover !important;
-      }
+      video { object-fit: cover !important; z-index: 0 !important; }
+      canvas, .a-canvas { z-index: 1 !important; background: transparent !important; }
 
       #loader-overlay {
         position: fixed;
@@ -132,7 +131,8 @@
       vr-mode-ui="enabled: false;"
       renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true;"
       embedded
-      mindar-image="imageTargetSrc: targets.mind; autoStart: false; uiLoading: no; uiScanning: no; uiError: no;">
+      mindar-image="imageTargetSrc: targets.mind; autoStart: false; uiLoading: no; uiScanning: no; uiError: no;"
+      background="transparent: true">
       <a-light type="hemisphere" groundColor="#443333" color="#FFFAFA" intensity="1.6"></a-light>
       <a-light type="directional" position="1 4 2" intensity="1.2" color="#FFF"></a-light>
       <a-camera position="0 0 0" look-controls="enabled: false" cursor="rayOrigin: mouse" raycaster="objects: .clickable" near="0.005" far="500"></a-camera>
@@ -154,6 +154,34 @@
         const hideLoader = () => {
           if (!loader) return;
           loader.classList.add('hidden');
+        };
+
+        const forceCameraLayers = () => {
+          try {
+            const videos = document.querySelectorAll('video');
+            for (const v of videos) {
+              v.style.position = 'fixed';
+              v.style.inset = '0';
+              v.style.width = '100vw';
+              v.style.height = '100vh';
+              v.style.objectFit = 'cover';
+              v.style.zIndex = '0';
+              v.style.display = 'block';
+              v.setAttribute('playsinline', '');
+              v.setAttribute('webkit-playsinline', '');
+              v.muted = true;
+              v.autoplay = true;
+            }
+            const canvases = document.querySelectorAll('canvas');
+            for (const c of canvases) {
+              c.style.position = 'fixed';
+              c.style.inset = '0';
+              c.style.width = '100vw';
+              c.style.height = '100vh';
+              c.style.zIndex = '1';
+              c.style.background = 'transparent';
+            }
+          } catch (e) {}
         };
 
         const host = String(location.hostname || '').toLowerCase();
@@ -242,6 +270,7 @@
             await arSystem.start();
             hideLoader();
             setStatus('scanning', 'Escaneando...');
+            forceCameraLayers();
             if (autoRetryTimer) {
               clearTimeout(autoRetryTimer);
               autoRetryTimer = null;

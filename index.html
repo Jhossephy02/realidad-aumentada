@@ -571,6 +571,8 @@
       let targetsReady = false;
       let arUserActivated = false;
       let overlayOpen = false;
+      let adminShiftCount = 0;
+      let adminShiftLastTs = 0;
 
       const setAdminVisible = (visible) => {
         overlayOpen = !!visible;
@@ -687,13 +689,13 @@
           tag === 'select' ||
           !!(el && el.isContentEditable);
         if (isTypingContext) return;
-        const isSecretCombo =
-          !!e.ctrlKey &&
-          !!e.altKey &&
-          !!e.shiftKey &&
-          (e.code === 'F8' || e.key === 'F8');
-        if (!isSecretCombo) return;
-        e.preventDefault();
+        if (e.key !== 'Shift') return;
+        const now = Date.now();
+        if (now - adminShiftLastTs > 700) adminShiftCount = 0;
+        adminShiftLastTs = now;
+        adminShiftCount += 1;
+        if (adminShiftCount < 3) return;
+        adminShiftCount = 0;
         setAdminVisible(!overlayOpen);
         if (overlayOpen) stopAr();
       });

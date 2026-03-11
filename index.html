@@ -274,6 +274,17 @@
         z-index: 10001;
       }
 
+      #admin-hotspot {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 26px;
+        height: 26px;
+        z-index: 10002;
+        opacity: 0;
+        pointer-events: auto;
+      }
+
       /* Detailed Info Modal */
       .modal-overlay {
         position: fixed;
@@ -356,6 +367,7 @@
     <!-- Info Button -->
     <div class="info-btn" id="info-btn">i</div>
     <div class="admin-btn" id="admin-btn">⚙</div>
+    <div id="admin-hotspot"></div>
 
     <div id="admin-overlay">
       <button id="admin-close" type="button">×</button>
@@ -458,6 +470,7 @@
       const retryWrap = document.getElementById('ar-retry');
       const retryBtn = document.getElementById('retry-btn');
       const adminBtn = document.getElementById('admin-btn');
+      const adminHotspot = document.getElementById('admin-hotspot');
       const adminOverlay = document.getElementById('admin-overlay');
       const adminClose = document.getElementById('admin-close');
       const debugEnabled = !((typeof CONFIG !== 'undefined' && CONFIG && CONFIG.system && CONFIG.system.debug === false));
@@ -699,6 +712,21 @@
         setAdminVisible(!overlayOpen);
         if (overlayOpen) stopAr();
       });
+
+      if (adminHotspot) {
+        let tapCount = 0;
+        let tapLastTs = 0;
+        adminHotspot.addEventListener('pointerdown', () => {
+          const now = Date.now();
+          if (now - tapLastTs > 1200) tapCount = 0;
+          tapLastTs = now;
+          tapCount += 1;
+          if (tapCount < 6) return;
+          tapCount = 0;
+          setAdminVisible(!overlayOpen);
+          if (overlayOpen) stopAr();
+        }, { passive: true });
+      }
 
       window.addEventListener('message', (event) => {
         const data = event && event.data ? event.data : null;

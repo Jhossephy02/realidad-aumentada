@@ -571,6 +571,8 @@
       let targetsReady = false;
       let arUserActivated = false;
       let overlayOpen = false;
+      let adminKeyBuffer = '';
+      let adminKeyLastTs = 0;
 
       const setAdminVisible = (visible) => {
         overlayOpen = !!visible;
@@ -679,11 +681,30 @@
       }
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') setAdminVisible(false);
-        const isA = e.key === 'a' || e.key === 'A';
-        const isCtrlShiftA = isA && !!e.ctrlKey && !!e.shiftKey;
-        if (isCtrlShiftA) {
+        const el = e.target;
+        const tag = el && el.tagName ? String(el.tagName).toLowerCase() : '';
+        const isTypingContext =
+          tag === 'input' ||
+          tag === 'textarea' ||
+          tag === 'select' ||
+          !!(el && el.isContentEditable);
+        if (isTypingContext) return;
+
+        const now = Date.now();
+        if (now - adminKeyLastTs > 1500) adminKeyBuffer = '';
+        adminKeyLastTs = now;
+
+        if (typeof e.key === 'string' && e.key.length === 1) {
+          adminKeyBuffer = (adminKeyBuffer + e.key.toLowerCase()).slice(-16);
+        } else {
+          return;
+        }
+
+        const secret = 'webaradmin';
+        if (adminKeyBuffer.endsWith(secret)) {
           setAdminVisible(!overlayOpen);
           if (overlayOpen) stopAr();
+          adminKeyBuffer = '';
         }
       });
 

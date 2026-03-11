@@ -12,7 +12,14 @@
     <script src="js/catalog-loader.js"></script>
 
     <style>
-      body { margin: 0; overflow: hidden; font-family: sans-serif; touch-action: none; }
+      html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: sans-serif; touch-action: none; background: #000; }
+      a-scene, canvas, .a-canvas, video {
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+      }
+      video { object-fit: cover !important; }
       
       .capture-button {
         position: fixed;
@@ -175,23 +182,11 @@
 
       #ar-retry {
         position: fixed;
-        left: 50%;
-        bottom: 22px;
-        transform: translateX(-50%);
+        inset: 0;
         z-index: 9997;
         display: none;
         pointer-events: auto;
-      }
-      #retry-btn {
-        appearance: none;
-        border: 0;
-        border-radius: 999px;
-        padding: 12px 16px;
-        background: rgba(244, 67, 54, 0.92);
-        color: #fff;
-        font-weight: 700;
-        letter-spacing: 0.2px;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.35);
+        background: rgba(0,0,0,0.01);
       }
 
       /* Info Button (i) */
@@ -358,9 +353,7 @@
       <div class="status-dot" id="status-dot"></div>
       <span id="status-text">Esperando...</span>
     </div>
-    <div id="ar-retry">
-      <button id="retry-btn" type="button">Reintentar cámara</button>
-    </div>
+    <div id="ar-retry"></div>
 
     <div id="debug-text" style="position: fixed; top: 10px; left: 10px; color: yellow; background: rgba(0,0,0,0.6); z-index: 9999; font-family: monospace; font-size: 14px; pointer-events: none; padding: 5px; border-radius: 4px;">Debug: Esperando touch...</div>
     
@@ -469,7 +462,6 @@
       const statusDot = document.getElementById('status-dot');
       const statusText = document.getElementById('status-text');
       const retryWrap = document.getElementById('ar-retry');
-      const retryBtn = document.getElementById('retry-btn');
       const adminBtn = document.getElementById('admin-btn');
       const adminHotspot = document.getElementById('admin-hotspot');
       const adminOverlay = document.getElementById('admin-overlay');
@@ -608,7 +600,8 @@
       let arStarted = false;
       let catalogReady = false;
       let targetsReady = false;
-      let arUserActivated = false;
+      let arUserActivated = true;
+      let cameraStartAttempts = 0;
       let overlayOpen = false;
       let adminShiftCount = 0;
       let adminShiftLastTs = 0;
@@ -671,15 +664,10 @@
         }
         if (!canUseCamera()) return;
         if (overlayOpen) return;
-        if (!arUserActivated) {
-          if (retryBtn) retryBtn.innerText = 'Iniciar cámara';
-          setRetryVisible(true);
-          setStatus('ready', 'Toca "Iniciar cámara"');
-          return;
-        }
+        cameraStartAttempts += 1;
         arStarted = true;
         setRetryVisible(false);
-        setStatus('scanning', 'Iniciando cámara...');
+        setStatus('scanning', 'Solicitando cámara...');
         Promise.resolve(preflightCameraPermission())
           .then((pre) => {
             if (!pre?.ok) {
@@ -697,8 +685,14 @@
             arStarted = false;
             console.error(err);
             const msg = String(err?.message || err || '').toLowerCase();
-            if (msg.includes('notallowed') || msg.includes('permission') || msg.includes('denied')) {
-              setStatus('error', 'Permiso de cámara denegado. Habilítalo y reintenta.');
+            if (msg.includes('notallowed') || msg.includes('permission') || msg.includes('denied') || msg.includes('permission_denied')) {
+              if (!arUserActivated || cameraStartAttempts <= 1) {
+                arUserActivated = false;
+                setStatus('ready', 'Toca la pantalla para activar la cámara');
+                setRetryVisible(true);
+                return;
+              }
+              setStatus('error', 'Permiso de cámara denegado. Habilítalo en el navegador.');
             } else if (msg.includes('media_unsupported')) {
               setStatus('error', 'Tu navegador no soporta cámara en esta página.');
             } else if (msg.includes('camera_not_found') || msg.includes('notfound')) {
@@ -708,7 +702,6 @@
             } else {
               setStatus('error', 'Error de cámara. Toca reintentar.');
             }
-            if (retryBtn) retryBtn.innerText = 'Reintentar cámara';
             setRetryVisible(true);
           });
       }
@@ -762,19 +755,18 @@
           setStatus('error', 'Falta targets.mind');
           setRetryVisible(false);
         } else {
-          setStatus('ready', 'Toca "Iniciar cámara"');
-          setRetryVisible(true);
-          if (retryBtn) retryBtn.innerText = 'Iniciar cámara';
+          setStatus('ready', 'Activando cámara...');
+          setRetryVisible(false);
+          startArIfReady();
         }
       }, 6000);
 
-      if (retryBtn) {
-        retryBtn.addEventListener('click', () => {
-          if (!arUserActivated) arUserActivated = true;
-          retryBtn.innerText = 'Reintentar cámara';
+      if (retryWrap) {
+        retryWrap.addEventListener('pointerdown', () => {
+          arUserActivated = true;
           setRetryVisible(false);
           startArIfReady();
-        });
+        }, { passive: true });
       }
 
       const armUserGestureStart = () => {

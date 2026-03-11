@@ -371,7 +371,7 @@
 
     <div id="admin-overlay">
       <button id="admin-close" type="button">×</button>
-      <iframe id="admin-iframe" src="admin/panel.html"></iframe>
+      <iframe id="admin-iframe" src="about:blank" data-src="admin/panel.html"></iframe>
     </div>
 
     <!-- Detailed Modal -->
@@ -436,6 +436,7 @@
     </a-scene>
 
     <script>
+      (function () {
       // DYNAMIC SCENE GENERATION
       // Handled by catalog-loader.js
 
@@ -616,6 +617,14 @@
         overlayOpen = !!visible;
         if (!adminOverlay) return;
         adminOverlay.classList.toggle('active', overlayOpen);
+        if (overlayOpen) {
+          const frame = document.getElementById('admin-iframe');
+          const current = frame ? String(frame.getAttribute('src') || '') : '';
+          const desired = frame ? String(frame.getAttribute('data-src') || '') : '';
+          if (frame && desired && (current === '' || current === 'about:blank')) {
+            frame.setAttribute('src', desired);
+          }
+        }
       };
 
       const stopAr = () => {
@@ -626,8 +635,40 @@
         arStarted = false;
       };
 
+      const preflightCameraPermission = async () => {
+        if (!canUseCamera()) return { ok: false, reason: 'insecure' };
+        const md = navigator && navigator.mediaDevices ? navigator.mediaDevices : null;
+        if (!md || typeof md.getUserMedia !== 'function') return { ok: false, reason: 'unsupported' };
+        try {
+          const stream = await md.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+          try {
+            for (const track of stream.getTracks()) {
+              try { track.stop(); } catch (e) {}
+            }
+          } catch (e) {}
+          return { ok: true };
+        } catch (err) {
+          const msg = String(err?.name || err?.message || err || '').toLowerCase();
+          if (msg.includes('notallowed') || msg.includes('permission') || msg.includes('denied')) return { ok: false, reason: 'denied' };
+          if (msg.includes('notfound') || msg.includes('overconstrained')) return { ok: false, reason: 'notfound' };
+          return { ok: false, reason: 'error', error: err };
+        }
+      };
+
       function startArIfReady() {
-        if (arStarted || !catalogReady || !targetsReady || !arSystem) return;
+        if (arStarted) return;
+        if (!arSystem) {
+          setStatus('loading', 'Cargando motor AR...');
+          return;
+        }
+        if (!catalogReady) {
+          setStatus('loading', 'Cargando catálogo...');
+          return;
+        }
+        if (!targetsReady) {
+          setStatus('loading', 'Cargando targets...');
+          return;
+        }
         if (!canUseCamera()) return;
         if (overlayOpen) return;
         if (!arUserActivated) {
@@ -639,7 +680,16 @@
         arStarted = true;
         setRetryVisible(false);
         setStatus('scanning', 'Iniciando cámara...');
-        Promise.resolve(arSystem.start())
+        Promise.resolve(preflightCameraPermission())
+          .then((pre) => {
+            if (!pre?.ok) {
+              const r = String(pre?.reason || '');
+              if (r === 'denied') throw new Error('permission_denied');
+              if (r === 'unsupported') throw new Error('media_unsupported');
+              if (r === 'notfound') throw new Error('camera_not_found');
+            }
+            return arSystem.start();
+          })
           .then(() => {
             setStatus('scanning', 'Escaneando...');
           })
@@ -649,6 +699,10 @@
             const msg = String(err?.message || err || '').toLowerCase();
             if (msg.includes('notallowed') || msg.includes('permission') || msg.includes('denied')) {
               setStatus('error', 'Permiso de cámara denegado. Habilítalo y reintenta.');
+            } else if (msg.includes('media_unsupported')) {
+              setStatus('error', 'Tu navegador no soporta cámara en esta página.');
+            } else if (msg.includes('camera_not_found') || msg.includes('notfound')) {
+              setStatus('error', 'No se detectó cámara. Revisa tu dispositivo.');
             } else if (msg.includes('target') || msg.includes('mind') || msg.includes('compile')) {
               setStatus('error', 'No se pudo cargar targets.mind. Revisa que exista y reintenta.');
             } else {
@@ -1309,6 +1363,7 @@
       document.head.appendChild(style);
 
       // ---------------------------------------------------------
+      })();
     </script>
   </body>
 </html>

@@ -473,8 +473,6 @@
       const adminHotspot = document.getElementById('admin-hotspot');
       const adminOverlay = document.getElementById('admin-overlay');
       const adminClose = document.getElementById('admin-close');
-      const debugEnabled = !((typeof CONFIG !== 'undefined' && CONFIG && CONFIG.system && CONFIG.system.debug === false));
-      if (debugText && !debugEnabled) debugText.style.display = 'none';
 
       const setStatus = (state, text) => {
         if (statusIndicator) statusIndicator.dataset.state = String(state || '');
@@ -487,11 +485,30 @@
 
       const host = String(location.hostname || '').toLowerCase();
       const isLocalHost = host === 'localhost' || host === '127.0.0.1';
+      const debugEnabled = (() => {
+        if (isLocalHost) return true;
+        try {
+          return new URLSearchParams(location.search).get('debug') === '1';
+        } catch (e) {
+          return false;
+        }
+      })();
+      if (debugText && !debugEnabled) debugText.style.display = 'none';
+
+      const hideLoader = () => {
+        const loader = document.getElementById('loader-overlay');
+        if (!loader) return;
+        loader.style.opacity = '0';
+        setTimeout(() => {
+          loader.style.display = 'none';
+        }, 500);
+      };
       const canUseCamera = () => {
         const secure = !!window.isSecureContext || location.protocol === 'https:' || isLocalHost;
         if (!secure) {
           setStatus('error', 'La cámara requiere HTTPS o localhost');
           setRetryVisible(false);
+          hideLoader();
           return false;
         }
         return true;
@@ -571,6 +588,14 @@
               if (rawOk) src = raw;
             }
           }
+        }
+        const ok = await canFetchWithTimeout(src, 1800);
+        if (!ok) {
+          targetsReady = false;
+          setStatus('error', 'No se encontró targets.mind');
+          setRetryVisible(false);
+          hideLoader();
+          return;
         }
         sceneEl.setAttribute('mindar-image', `imageTargetSrc: ${src}; autoStart: false; uiLoading: no; uiScanning: no; uiError: no;`);
         targetsReady = true;
@@ -659,11 +684,7 @@
         }
         startArIfReady();
         if (!catalogReady || !targetsReady) setStatus('loading', 'Preparando...');
-        const loader = document.getElementById('loader-overlay');
-        if (loader) {
-          loader.style.opacity = '0';
-          setTimeout(() => loader.style.display = 'none', 500);
-        }
+        hideLoader();
       };
 
       if (sceneEl && sceneEl.hasLoaded) {
@@ -671,6 +692,27 @@
       } else {
         sceneEl.addEventListener('loaded', onSceneLoaded, { once: true });
       }
+
+      window.addEventListener('error', () => {
+        hideLoader();
+      });
+      window.addEventListener('unhandledrejection', () => {
+        hideLoader();
+      });
+      setTimeout(() => {
+        const loader = document.getElementById('loader-overlay');
+        const stillVisible = loader && loader.style.display !== 'none' && loader.style.opacity !== '0';
+        if (!stillVisible) return;
+        hideLoader();
+        if (!targetsReady) {
+          setStatus('error', 'Falta targets.mind');
+          setRetryVisible(false);
+        } else {
+          setStatus('ready', 'Toca "Iniciar cámara"');
+          setRetryVisible(true);
+          if (retryBtn) retryBtn.innerText = 'Iniciar cámara';
+        }
+      }, 6000);
 
       if (retryBtn) {
         retryBtn.addEventListener('click', () => {

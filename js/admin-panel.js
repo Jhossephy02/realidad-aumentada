@@ -397,8 +397,6 @@ const UI = {
         loginScreen: document.getElementById('login-screen'),
         dashboardScreen: document.getElementById('dashboard-screen'),
         loginForm: document.getElementById('login-form'),
-        useNodeApi: document.getElementById('use-node-api'),
-        useLocalDb: document.getElementById('use-local-db'),
         loadingOverlay: document.getElementById('loading-overlay'),
         loadingText: document.getElementById('loading-text'),
         serverStatus: document.getElementById('server-status'),
@@ -452,85 +450,37 @@ const UI = {
     },
 
     init() {
-        const savedNodeMode = localStorage.getItem('webar_use_node_api');
-        if (savedNodeMode !== null) {
-            this.state.useNodeApi = savedNodeMode === '1';
-        }
-        const savedLocalMode = localStorage.getItem('webar_use_local_db');
-        if (savedLocalMode !== null) {
-            this.state.useLocalDb = savedLocalMode === '1';
-        }
-        if (this.state.useNodeApi) this.state.useLocalDb = false;
-
-        if (this.elements.useNodeApi) {
-            this.elements.useNodeApi.checked = this.state.useNodeApi;
-            this.elements.useNodeApi.addEventListener('change', () => {
-                this.state.useNodeApi = !!this.elements.useNodeApi.checked;
-                if (this.state.useNodeApi) {
-                    this.state.useLocalDb = false;
-                    if (this.elements.useLocalDb) this.elements.useLocalDb.checked = false;
-                }
-                localStorage.setItem('webar_use_node_api', this.state.useNodeApi ? '1' : '0');
-                localStorage.setItem('webar_use_local_db', this.state.useLocalDb ? '1' : '0');
-                this.updateAuthModeUI();
-            });
-        }
-        if (this.elements.useLocalDb) {
-            this.elements.useLocalDb.checked = this.state.useLocalDb;
-            this.elements.useLocalDb.addEventListener('change', () => {
-                this.state.useLocalDb = !!this.elements.useLocalDb.checked;
-                if (this.state.useLocalDb) {
-                    this.state.useNodeApi = false;
-                    if (this.elements.useNodeApi) this.elements.useNodeApi.checked = false;
-                }
-                localStorage.setItem('webar_use_local_db', this.state.useLocalDb ? '1' : '0');
-                localStorage.setItem('webar_use_node_api', this.state.useNodeApi ? '1' : '0');
-                this.updateAuthModeUI();
-            });
-        }
-        this.updateAuthModeUI();
+        this.state.useNodeApi = true;
+        this.state.useLocalDb = false;
 
         // Check for session
         const session = sessionStorage.getItem('webar_session');
         if (session) {
-            const creds = JSON.parse(session);
-            if (creds && creds.node) {
-                this.loginNode();
-            } else if (creds && creds.local) {
-                this.loginLocal();
-            } else {
-                this.login(creds.user, creds.repo, creds.token, creds.branch);
+            try {
+                const creds = JSON.parse(session);
+                if (creds && creds.node) this.loginNode();
+                else sessionStorage.removeItem('webar_session');
+            } catch (e) {
+                sessionStorage.removeItem('webar_session');
             }
         }
 
-        this.elements.loginForm.addEventListener('submit', (e) => {
+        if (this.elements.loginForm) this.elements.loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
             
-            // Assets Repo Details
-            const user = document.getElementById('gh-user').value;
-            const repo = document.getElementById('gh-repo').value;
-            const token = document.getElementById('gh-token').value;
-            const branch = window.CONFIG?.assets?.branch || 'main';
-            
             // Simple mock authentication for panel access
-            const panelUser = document.getElementById('username').value;
-            const panelPass = document.getElementById('password').value;
+            const panelUser = document.getElementById('username')?.value;
+            const panelPass = document.getElementById('password')?.value;
 
             if (panelUser === 'admin' && panelPass === 'admin123') {
-                if (this.state.useNodeApi) {
-                    this.loginNode();
-                } else if (this.state.useLocalDb) {
-                    this.loginLocal();
-                } else {
-                    this.login(user, repo, token, branch);
-                }
+                this.loginNode();
             } else {
                 alert('Usuario o contraseña del panel incorrectos');
             }
         });
 
-        this.elements.btnAdd.addEventListener('click', () => this.addNew());
-        this.elements.btnDelete.addEventListener('click', () => this.deleteCurrent());
+        if (this.elements.btnAdd) this.elements.btnAdd.addEventListener('click', () => this.addNew());
+        if (this.elements.btnDelete) this.elements.btnDelete.addEventListener('click', () => this.deleteCurrent());
         if (this.elements.btnBuildTargets) {
             this.elements.btnBuildTargets.addEventListener('click', () => this.buildAndUploadTargetsMind());
         }
@@ -549,34 +499,13 @@ const UI = {
         if (this.elements.btnCleanOrphans) {
             this.elements.btnCleanOrphans.addEventListener('click', () => this.cleanupOrphans());
         }
-        this.elements.btnLogout.addEventListener('click', () => {
+        if (this.elements.btnLogout) this.elements.btnLogout.addEventListener('click', () => {
             sessionStorage.removeItem('webar_session');
             location.reload();
         });
 
-        this.elements.productForm.addEventListener('submit', (e) => this.saveProduct(e));
+        if (this.elements.productForm) this.elements.productForm.addEventListener('submit', (e) => this.saveProduct(e));
         this.updateBulkPreview();
-    },
-
-    updateAuthModeUI() {
-        const user = document.getElementById('gh-user');
-        const repo = document.getElementById('gh-repo');
-        const token = document.getElementById('gh-token');
-        const disabled = !!this.state.useLocalDb || !!this.state.useNodeApi;
-        if (user) user.disabled = disabled;
-        if (repo) repo.disabled = disabled;
-        if (token) token.disabled = disabled;
-
-        const showGitHub = !this.state.useLocalDb && !this.state.useNodeApi;
-        const setRowVisible = (inputEl, visible) => {
-            if (!inputEl) return;
-            const row = inputEl.closest('.mb-3');
-            if (!row) return;
-            row.style.display = visible ? '' : 'none';
-        };
-        setRowVisible(user, showGitHub);
-        setRowVisible(repo, showGitHub);
-        setRowVisible(token, showGitHub);
     },
 
     async loginNode() {
@@ -601,20 +530,6 @@ const UI = {
             console.error(error);
             this.setServerStatus('Servidor: desconectado');
             this.setServerStats('');
-            const host = String(location.hostname || '').toLowerCase();
-            const isLocalHost = host === 'localhost' || host === '127.0.0.1';
-            if (!isLocalHost) {
-                this.state.useNodeApi = false;
-                this.state.useLocalDb = true;
-                if (this.elements.useNodeApi) this.elements.useNodeApi.checked = false;
-                if (this.elements.useLocalDb) this.elements.useLocalDb.checked = true;
-                localStorage.setItem('webar_use_node_api', '0');
-                localStorage.setItem('webar_use_local_db', '1');
-                this.updateAuthModeUI();
-                alert('En hosting estático (Netlify) no hay servidor Node. Cambié a base local del navegador.');
-                await this.loginLocal();
-                return;
-            }
             alert('Error conectando al servidor: ' + error.message);
         } finally {
             this.hideLoading();
@@ -1214,7 +1129,7 @@ const UI = {
                 await this.state.github.uploadFile('catalog/catalog.json', jsonContent, 'Update catalog (targets)', catalogSha);
 
                 localStorage.setItem('ar_catalog_data', JSON.stringify(this.state.catalog));
-                if (this.elements.targetsStatus) this.elements.targetsStatus.innerText = 'targets.mind actualizado en GitHub.';
+                if (this.elements.targetsStatus) this.elements.targetsStatus.innerText = 'targets.mind actualizado.';
             } else {
                 const blob = new Blob([exportedBuffer], { type: 'application/octet-stream' });
                 await this.putLocalBlob('targets.mind', blob);
@@ -1241,7 +1156,7 @@ const UI = {
 
     async deleteCurrent() {
         if (this.state.selectedIndex === -1) return;
-        if (!confirm('¿Seguro que deseas eliminar este producto? Los archivos en GitHub no se borrarán automáticamente, pero el registro sí.')) return;
+        if (!confirm('¿Seguro que deseas eliminar este producto?')) return;
 
         this.showLoading('Eliminando...');
         

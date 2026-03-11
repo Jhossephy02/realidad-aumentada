@@ -79,38 +79,6 @@
                     <label class="form-label">Contraseña</label>
                     <input type="password" class="form-control" id="password" required>
                 </div>
-                <hr>
-                <h6 class="text-muted mb-3">Configuración de Repositorio de ASSETS</h6>
-                <div class="alert alert-info small">
-                    <i class="fas fa-info-circle"></i> Ingresa los datos del repositorio donde se guardarán los modelos y el catálogo.
-                </div>
-                <div class="form-check mb-3">
-                    <input class="form-check-input" type="checkbox" id="use-node-api" checked>
-                    <label class="form-check-label" for="use-node-api">
-                        Usar base de datos en servidor (Node.js)
-                    </label>
-                    <div class="form-text">Guarda el catálogo y archivos en el servidor (recomendado).</div>
-                </div>
-                <div class="form-check mb-3">
-                    <input class="form-check-input" type="checkbox" id="use-local-db">
-                    <label class="form-check-label" for="use-local-db">
-                        Usar base de datos local (sin GitHub)
-                    </label>
-                    <div class="form-text">Guarda el catálogo y archivos en este navegador.</div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Usuario GitHub (Owner)</label>
-                    <input type="text" class="form-control" id="gh-user" value="Jhossephy02">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Repositorio de Assets</label>
-                    <input type="text" class="form-control" id="gh-repo" value="realidadaumentada_imagen">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Personal Access Token (Classic)</label>
-                    <input type="password" class="form-control" id="gh-token" placeholder="github_pat_...">
-                    <div class="form-text">Solo si usas GitHub como storage.</div>
-                </div>
                 <div class="d-grid">
                     <button type="submit" class="btn btn-primary">Ingresar</button>
                 </div>
@@ -235,7 +203,7 @@
                                 </div>
 
                                 <hr>
-                                <h5 class="mb-3">Archivos (GitHub)</h5>
+                                <h5 class="mb-3">Archivos (Servidor)</h5>
 
                                 <div class="mb-3">
                                     <label class="form-label">Modelo 3D (.glb)</label>
@@ -280,7 +248,7 @@
 
                                 <div class="d-grid gap-2">
                                     <button type="submit" class="btn btn-success btn-lg">
-                                        <i class="fas fa-save me-2"></i>Guardar y Sincronizar con GitHub
+                                        <i class="fas fa-save me-2"></i>Guardar en servidor
                                     </button>
                                 </div>
                             </form>

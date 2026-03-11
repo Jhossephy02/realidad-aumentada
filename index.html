@@ -229,7 +229,7 @@
         border-radius: 999px;
         background: rgba(0,0,0,0.6);
         color: #fff;
-        display: flex;
+        display: none;
         align-items: center;
         justify-content: center;
         font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -672,12 +672,6 @@
       };
       armUserGestureStart();
 
-      if (adminBtn) {
-        adminBtn.addEventListener('click', () => {
-          setAdminVisible(true);
-          stopAr();
-        });
-      }
       if (adminClose) {
         adminClose.addEventListener('click', () => {
           setAdminVisible(false);
@@ -685,7 +679,9 @@
       }
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') setAdminVisible(false);
-        if (e.key === 'a' || e.key === 'A') {
+        const isA = e.key === 'a' || e.key === 'A';
+        const isCtrlShiftA = isA && !!e.ctrlKey && !!e.shiftKey;
+        if (isCtrlShiftA) {
           setAdminVisible(!overlayOpen);
           if (overlayOpen) stopAr();
         }

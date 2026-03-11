@@ -642,29 +642,35 @@
         startArIfReady();
       });
 
-      sceneEl.addEventListener('loaded', () => {
-          console.log("Scene loaded");
-          arSystem = sceneEl.systems && sceneEl.systems["mindar-image-system"];
-          if (sceneEl.renderer) {
-            const mem = Number(navigator.deviceMemory || 0);
-            const cores = Number(navigator.hardwareConcurrency || 0);
-            const dpr = Math.max(1, Math.min(3, Number(window.devicePixelRatio || 1)));
-            let cap = 2;
-            if (mem && mem <= 4) cap = 1.5;
-            if (cores && cores <= 4) cap = Math.min(cap, 1.5);
-            sceneEl.renderer.setPixelRatio(Math.min(dpr, cap));
-            if ('physicallyCorrectLights' in sceneEl.renderer) sceneEl.renderer.physicallyCorrectLights = true;
-            if ('toneMapping' in sceneEl.renderer && typeof THREE !== 'undefined') sceneEl.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            if ('toneMappingExposure' in sceneEl.renderer) sceneEl.renderer.toneMappingExposure = 1.0;
-          }
-          startArIfReady();
-          if (!catalogReady || !targetsReady) setStatus('loading', 'Preparando...');
-          const loader = document.getElementById('loader-overlay');
-          if(loader) {
-              loader.style.opacity = '0';
-              setTimeout(() => loader.style.display = 'none', 500);
-          }
-      });
+      const onSceneLoaded = () => {
+        console.log("Scene loaded");
+        arSystem = sceneEl.systems && sceneEl.systems["mindar-image-system"];
+        if (sceneEl.renderer) {
+          const mem = Number(navigator.deviceMemory || 0);
+          const cores = Number(navigator.hardwareConcurrency || 0);
+          const dpr = Math.max(1, Math.min(3, Number(window.devicePixelRatio || 1)));
+          let cap = 2;
+          if (mem && mem <= 4) cap = 1.5;
+          if (cores && cores <= 4) cap = Math.min(cap, 1.5);
+          sceneEl.renderer.setPixelRatio(Math.min(dpr, cap));
+          if ('physicallyCorrectLights' in sceneEl.renderer) sceneEl.renderer.physicallyCorrectLights = true;
+          if ('toneMapping' in sceneEl.renderer && typeof THREE !== 'undefined') sceneEl.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+          if ('toneMappingExposure' in sceneEl.renderer) sceneEl.renderer.toneMappingExposure = 1.0;
+        }
+        startArIfReady();
+        if (!catalogReady || !targetsReady) setStatus('loading', 'Preparando...');
+        const loader = document.getElementById('loader-overlay');
+        if (loader) {
+          loader.style.opacity = '0';
+          setTimeout(() => loader.style.display = 'none', 500);
+        }
+      };
+
+      if (sceneEl && sceneEl.hasLoaded) {
+        onSceneLoaded();
+      } else {
+        sceneEl.addEventListener('loaded', onSceneLoaded, { once: true });
+      }
 
       if (retryBtn) {
         retryBtn.addEventListener('click', () => {

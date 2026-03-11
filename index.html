@@ -491,9 +491,6 @@
           const base = CONFIG.getApiBaseUrl();
           if (base) return `${base}/api/targets.mind`;
         }
-        if (typeof CONFIG !== 'undefined' && CONFIG && typeof CONFIG.getRawUrl === 'function') {
-          return CONFIG.getRawUrl('targets.mind');
-        }
         return 'targets.mind';
       };
 
@@ -520,6 +517,19 @@
         });
       };
 
+      const canFetchWithTimeout = async (url, timeoutMs = 1200) => {
+        try {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), timeoutMs);
+          const res = await fetch(url, { method: 'HEAD', cache: 'no-store', signal: controller.signal });
+          clearTimeout(timer);
+          if (res.status === 405) return true;
+          return res.ok;
+        } catch (e) {
+          return false;
+        }
+      };
+
       const initTargetsMind = async () => {
         setStatus('loading', 'Cargando targets...');
         let src = getTargetsMindSrc();
@@ -539,6 +549,15 @@
               src = '/api/targets.mind';
             }
           } catch (e) {}
+
+          if (src === getTargetsMindSrc()) {
+            const localOk = await canFetchWithTimeout('targets.mind', 1200);
+            if (!localOk && typeof CONFIG !== 'undefined' && CONFIG && typeof CONFIG.getRawUrl === 'function') {
+              const raw = CONFIG.getRawUrl('targets.mind');
+              const rawOk = await canFetchWithTimeout(raw, 1500);
+              if (rawOk) src = raw;
+            }
+          }
         }
         sceneEl.setAttribute('mindar-image', `imageTargetSrc: ${src}; autoStart: false; uiLoading: no; uiScanning: no; uiError: no;`);
         targetsReady = true;
@@ -587,7 +606,14 @@
           .catch((err) => {
             arStarted = false;
             console.error(err);
-            setStatus('error', 'Error de cámara. Toca reintentar.');
+            const msg = String(err?.message || err || '').toLowerCase();
+            if (msg.includes('notallowed') || msg.includes('permission') || msg.includes('denied')) {
+              setStatus('error', 'Permiso de cámara denegado. Habilítalo y reintenta.');
+            } else if (msg.includes('target') || msg.includes('mind') || msg.includes('compile')) {
+              setStatus('error', 'No se pudo cargar targets.mind. Revisa que exista y reintenta.');
+            } else {
+              setStatus('error', 'Error de cámara. Toca reintentar.');
+            }
             if (retryBtn) retryBtn.innerText = 'Reintentar cámara';
             setRetryVisible(true);
           });
@@ -633,6 +659,18 @@
           startArIfReady();
         });
       }
+
+      const armUserGestureStart = () => {
+        const once = () => {
+          if (!arUserActivated) arUserActivated = true;
+          startArIfReady();
+          window.removeEventListener('pointerdown', once, { capture: true });
+          window.removeEventListener('touchstart', once, { capture: true });
+        };
+        window.addEventListener('pointerdown', once, { capture: true, passive: true });
+        window.addEventListener('touchstart', once, { capture: true, passive: true });
+      };
+      armUserGestureStart();
 
       if (adminBtn) {
         adminBtn.addEventListener('click', () => {

@@ -238,39 +238,6 @@
         user-select: none;
       }
 
-      #admin-overlay {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.86);
-        z-index: 10000;
-        pointer-events: auto;
-      }
-      #admin-overlay.active { display: block; }
-      #admin-iframe {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        border: 0;
-        background: transparent;
-      }
-      #admin-close {
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        width: 40px;
-        height: 40px;
-        border-radius: 999px;
-        border: 0;
-        background: rgba(0,0,0,0.6);
-        color: #fff;
-        font-size: 22px;
-        line-height: 40px;
-        cursor: pointer;
-        z-index: 10001;
-      }
-
       #admin-hotspot {
         position: fixed;
         top: 0;
@@ -363,11 +330,6 @@
     <div class="info-btn" id="info-btn">i</div>
     <div class="admin-btn" id="admin-btn">⚙</div>
     <div id="admin-hotspot"></div>
-
-    <div id="admin-overlay">
-      <button id="admin-close" type="button">×</button>
-      <iframe id="admin-iframe" src="about:blank" data-src="admin/panel.html"></iframe>
-    </div>
 
     <!-- Detailed Modal -->
     <div class="modal-overlay" id="detail-modal">
@@ -467,8 +429,6 @@
       const retryWrap = document.getElementById('ar-retry');
       const adminBtn = document.getElementById('admin-btn');
       const adminHotspot = document.getElementById('admin-hotspot');
-      const adminOverlay = document.getElementById('admin-overlay');
-      const adminClose = document.getElementById('admin-close');
 
       const setStatus = (state, text) => {
         if (statusIndicator) statusIndicator.dataset.state = String(state || '');
@@ -518,6 +478,7 @@
         }
       })();
       if (debugText && !debugEnabled) debugText.style.display = 'none';
+      if (adminBtn) adminBtn.style.display = debugEnabled ? 'flex' : 'none';
 
       const hideLoader = () => {
         const loader = document.getElementById('loader-overlay');
@@ -635,30 +596,16 @@
       let cameraStartAttempts = 0;
       let autoRetryTimer = null;
       let autoRetryDelayMs = 800;
-      let overlayOpen = false;
       let adminShiftCount = 0;
       let adminShiftLastTs = 0;
 
-      const setAdminVisible = (visible) => {
-        overlayOpen = !!visible;
-        if (!adminOverlay) return;
-        adminOverlay.classList.toggle('active', overlayOpen);
-        if (overlayOpen) {
-          const frame = document.getElementById('admin-iframe');
-          const current = frame ? String(frame.getAttribute('src') || '') : '';
-          const desired = frame ? String(frame.getAttribute('data-src') || '') : '';
-          if (frame && desired && (current === '' || current === 'about:blank')) {
-            frame.setAttribute('src', desired);
-          }
-        }
-      };
-
-      const stopAr = () => {
-        if (!arSystem) return;
+      const openAdminPanel = () => {
         try {
-          if (arStarted && typeof arSystem.stop === 'function') arSystem.stop();
+          const url = 'admin/panel.html';
+          const win = window.open(url, '_blank', 'noopener,noreferrer');
+          if (win && typeof win.focus === 'function') win.focus();
+          if (!win) location.href = url;
         } catch (e) {}
-        arStarted = false;
       };
 
       const preflightCameraPermission = async () => {
@@ -696,7 +643,6 @@
           return;
         }
         if (!canUseCamera()) return;
-        if (overlayOpen) return;
         cameraStartAttempts += 1;
         arStarted = true;
         setStatus('scanning', 'Solicitando cámara...');
@@ -808,14 +754,7 @@
         window.addEventListener('touchstart', once, { capture: true, passive: true });
       };
       armUserGestureStart();
-
-      if (adminClose) {
-        adminClose.addEventListener('click', () => {
-          setAdminVisible(false);
-        });
-      }
       document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') setAdminVisible(false);
         const el = e.target;
         const tag = el && el.tagName ? String(el.tagName).toLowerCase() : '';
         const isTypingContext =
@@ -831,9 +770,14 @@
         adminShiftCount += 1;
         if (adminShiftCount < 3) return;
         adminShiftCount = 0;
-        setAdminVisible(!overlayOpen);
-        if (overlayOpen) stopAr();
+        openAdminPanel();
       });
+
+      if (adminBtn) {
+        adminBtn.addEventListener('click', () => {
+          openAdminPanel();
+        }, { passive: true });
+      }
 
       if (adminHotspot) {
         let tapCount = 0;
@@ -845,8 +789,7 @@
           tapCount += 1;
           if (tapCount < 6) return;
           tapCount = 0;
-          setAdminVisible(!overlayOpen);
-          if (overlayOpen) stopAr();
+          openAdminPanel();
         }, { passive: true });
       }
 
@@ -854,7 +797,13 @@
         const data = event && event.data ? event.data : null;
         const type = data && typeof data.type === 'string' ? data.type : '';
         if (type === 'RELOAD_TARGETS' || type === 'RELOAD_ALL') {
-          setAdminVisible(false);
+          location.reload();
+        }
+      });
+
+      window.addEventListener('storage', (e) => {
+        const key = e && typeof e.key === 'string' ? e.key : '';
+        if (key === 'ar_catalog_data' || key === 'webar_targets_updated_at') {
           location.reload();
         }
       });

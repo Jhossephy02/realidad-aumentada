@@ -397,6 +397,8 @@ const UI = {
         loginScreen: document.getElementById('login-screen'),
         dashboardScreen: document.getElementById('dashboard-screen'),
         loginForm: document.getElementById('login-form'),
+        loginNotice: document.getElementById('login-notice'),
+        apiBaseUrl: document.getElementById('api-base-url'),
         loadingOverlay: document.getElementById('loading-overlay'),
         loadingText: document.getElementById('loading-text'),
         serverStatus: document.getElementById('server-status'),
@@ -453,6 +455,8 @@ const UI = {
         this.state.useNodeApi = true;
         this.state.useLocalDb = false;
 
+        this.syncApiBaseUrlInput();
+
         // Check for session
         const session = sessionStorage.getItem('webar_session');
         if (session) {
@@ -462,8 +466,11 @@ const UI = {
                     const baseUrl = (window.CONFIG && typeof window.CONFIG.getApiBaseUrl === 'function') ? window.CONFIG.getApiBaseUrl() : '';
                     const host = String(location.hostname || '').toLowerCase();
                     const isLocalHost = host === 'localhost' || host === '127.0.0.1';
-                    if (baseUrl || isLocalHost) this.loginNode();
-                    else sessionStorage.removeItem('webar_session');
+                    if (baseUrl || isLocalHost) this.loginNode({ allowFallbackLocal: true });
+                    else {
+                        sessionStorage.removeItem('webar_session');
+                        this.loginLocal({ notice: 'Modo local: no hay servidor configurado.' });
+                    }
                 } else sessionStorage.removeItem('webar_session');
             } catch (e) {
                 sessionStorage.removeItem('webar_session');
@@ -478,9 +485,10 @@ const UI = {
             const panelPass = document.getElementById('password')?.value;
 
             if (panelUser === 'admin' && panelPass === 'admin123') {
-                this.loginNode();
+                this.persistApiBaseUrlOverride();
+                this.loginNode({ allowFallbackLocal: true });
             } else {
-                alert('Usuario o contraseña del panel incorrectos');
+                this.setLoginNotice('danger', 'Usuario o contraseña del panel incorrectos.');
             }
         });
 
@@ -513,14 +521,51 @@ const UI = {
         this.updateBulkPreview();
     },
 
-    async loginNode() {
+    syncApiBaseUrlInput() {
+        if (!this.elements.apiBaseUrl) return;
+        try {
+            const baseUrl = (window.CONFIG && typeof window.CONFIG.getApiBaseUrl === 'function')
+                ? window.CONFIG.getApiBaseUrl()
+                : '';
+            this.elements.apiBaseUrl.value = String(baseUrl || '');
+        } catch (e) {}
+    },
+
+    persistApiBaseUrlOverride() {
+        if (!this.elements.apiBaseUrl) return;
+        try {
+            const raw = String(this.elements.apiBaseUrl.value || '').trim();
+            if (!raw) localStorage.removeItem('webar_api_base_url');
+            else localStorage.setItem('webar_api_base_url', raw.replace(/\/+$/, ''));
+        } catch (e) {}
+    },
+
+    setLoginNotice(kind, text) {
+        const el = this.elements.loginNotice;
+        if (!el) return;
+        const msg = String(text || '').trim();
+        if (!msg) {
+            el.style.display = 'none';
+            el.innerText = '';
+            return;
+        }
+        el.className = `alert alert-${kind || 'warning'} py-2 px-3`;
+        el.innerText = msg;
+        el.style.display = 'block';
+    },
+
+    async loginNode(options = {}) {
         this.showLoading('Conectando con el servidor...');
         try {
             const baseUrl = (window.CONFIG && typeof window.CONFIG.getApiBaseUrl === 'function') ? window.CONFIG.getApiBaseUrl() : '';
             const host = String(location.hostname || '').toLowerCase();
             const isLocalHost = host === 'localhost' || host === '127.0.0.1';
             if (!baseUrl && !isLocalHost) {
-                throw new Error('No hay backend Node configurado para este sitio. Configura CONFIG.api.baseUrl o localStorage "webar_api_base_url".');
+                if (options.allowFallbackLocal) {
+                    await this.loginLocal({ notice: 'No hay backend Node configurado. Entraste en modo local (los cambios se guardan en este navegador).' });
+                    return;
+                }
+                throw new Error('No hay backend Node configurado para este sitio.');
             }
             this.state.api = new ApiService(baseUrl);
             await this.state.api.health();
@@ -541,20 +586,21 @@ const UI = {
             this.setServerStatus('Servidor: desconectado');
             this.setServerStats('');
             sessionStorage.removeItem('webar_session');
-            if (this.elements.loginScreen) this.elements.loginScreen.style.display = 'block';
-            if (this.elements.dashboardScreen) this.elements.dashboardScreen.style.display = 'none';
             const msg = String(error?.message || '');
-            if (msg.includes('API Error (404)')) {
-                alert('No se encontró la API (/api/*). Este panel solo funciona si tu backend Node está corriendo y la URL está configurada.');
-            } else {
-                alert('Error conectando al servidor: ' + msg);
+            if (options.allowFallbackLocal) {
+                const hint = msg.includes('API Error (404)')
+                    ? 'No se encontró la API (/api/*). Entraste en modo local (este navegador).'
+                    : `No se pudo conectar al servidor. Entraste en modo local (este navegador).\n\nDetalle: ${msg}`;
+                await this.loginLocal({ notice: hint });
+                return;
             }
+            this.setLoginNotice('danger', `Error conectando al servidor: ${msg}`);
         } finally {
             this.hideLoading();
         }
     },
 
-    async loginLocal() {
+    async loginLocal(options = {}) {
         this.showLoading('Cargando base de datos local...');
         try {
             const stored = localStorage.getItem('ar_catalog_data');
@@ -568,11 +614,14 @@ const UI = {
             this.elements.loginScreen.style.display = 'none';
             this.elements.dashboardScreen.style.display = 'block';
             this.renderList();
-            this.setServerStatus('');
+            this.setServerStatus('Modo local');
             this.setServerStats('');
+            this.setLoginNotice('', '');
+            const notice = String(options.notice || '').trim();
+            if (notice) this.setServerStatus(`Modo local · ${notice}`);
         } catch (error) {
             console.error(error);
-            alert('Error cargando base local: ' + error.message);
+            this.setLoginNotice('danger', 'Error cargando base local: ' + error.message);
         } finally {
             this.hideLoading();
         }
@@ -1154,6 +1203,10 @@ const UI = {
                 localStorage.setItem('ar_catalog_data', JSON.stringify(this.state.catalog));
                 if (this.elements.targetsStatus) this.elements.targetsStatus.innerText = 'targets.mind actualizado localmente.';
             }
+
+            try {
+                localStorage.setItem('webar_targets_updated_at', String(Date.now()));
+            } catch (e) {}
 
             try {
                 if (window.parent && window.parent !== window) {

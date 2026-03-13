@@ -6,6 +6,7 @@ import fs from 'fs/promises';
 import crypto from 'crypto';
 import { Low } from 'lowdb';
 import { JSONFile } from 'lowdb/node';
+import { generateMarkerArtifactsFromFile } from './backend-api/src/utils/markerGenerator.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,19 +20,26 @@ function resolveDir(envValue, fallbackAbs) {
   return path.isAbsolute(raw) ? raw : path.join(__dirname, raw);
 }
 
-const DATA_DIR = resolveDir(process.env.DATA_DIR, path.join(__dirname, 'data'));
+const DATA_DIR = resolveDir(process.env.DATA_DIR, path.join(__dirname, 'storage', 'data'));
 const DB_PATH = path.join(DATA_DIR, 'db.json');
 
-const UPLOADS_DIR = resolveDir(process.env.UPLOADS_DIR, path.join(__dirname, 'uploads'));
+const UPLOADS_DIR = resolveDir(process.env.UPLOADS_DIR, path.join(__dirname, 'storage', 'uploads'));
 const MODELS_DIR = path.join(UPLOADS_DIR, 'models');
 const MARKERS_DIR = path.join(UPLOADS_DIR, 'markers');
+const PATTERNS_DIR = path.join(UPLOADS_DIR, 'patterns');
+const MARKER_PREVIEWS_DIR = path.join(UPLOADS_DIR, 'marker-previews');
 const TARGETS_DIR = path.join(UPLOADS_DIR, 'targets');
 const TARGETS_PATH = path.join(TARGETS_DIR, 'targets.mind');
+
+const FRONTEND_DIR = resolveDir(process.env.FRONTEND_DIR, path.join(__dirname, 'frontend-ar'));
+const ADMIN_DIST_DIR = resolveDir(process.env.ADMIN_DIST_DIR, path.join(__dirname, 'admin-dashboard', 'dist'));
 
 async function ensureDirs() {
   await fs.mkdir(DATA_DIR, { recursive: true });
   await fs.mkdir(MODELS_DIR, { recursive: true });
   await fs.mkdir(MARKERS_DIR, { recursive: true });
+  await fs.mkdir(PATTERNS_DIR, { recursive: true });
+  await fs.mkdir(MARKER_PREVIEWS_DIR, { recursive: true });
   await fs.mkdir(TARGETS_DIR, { recursive: true });
   try {
     await fs.access(DB_PATH);
@@ -73,7 +81,9 @@ function normalizeProductForResponse(product) {
   return {
     ...product,
     model: normalizeUploadValue(product.model),
-    marker: normalizeUploadValue(product.marker)
+    marker: normalizeUploadValue(product.marker),
+    markerPatt: normalizeUploadValue(product.markerPatt),
+    markerPreview: normalizeUploadValue(product.markerPreview)
   };
 }
 
@@ -109,6 +119,34 @@ app.get('/api/catalog', async (req, res) => {
   res.json((db.data.products || []).map(normalizeProductForResponse));
 });
 
+app.get('/api/ar-objects', async (req, res) => {
+  await db.read();
+  res.setHeader('Cache-Control', 'no-store');
+  const out = (db.data.products || []).map((p) => {
+    const n = normalizeProductForResponse(p);
+    return {
+      id: n.id,
+      name: n.name,
+      description: n.description ?? '',
+      price: n.price ?? 0,
+      barcodeValue: n.barcodeValue ?? null,
+      targetIndex: n.targetIndex ?? null,
+      model: n.model,
+      marker: n.marker,
+      markerImage: n.marker,
+      markerPatt: n.markerPatt || '',
+      markerPreview: n.markerPreview || '',
+      scale: n.scale || '1 1 1',
+      rotation: n.rotation || '0 0 0',
+      position: n.position || '0 0 0',
+      details: n.details ?? null,
+      createdAt: n.createdAt ?? null,
+      updatedAt: n.updatedAt ?? null
+    };
+  });
+  res.json(out);
+});
+
 function uploadBasenameFromValue(value) {
   if (!value || typeof value !== 'string') return null;
   let pathname = '';
@@ -123,7 +161,7 @@ function uploadBasenameFromValue(value) {
   const folder = parts[1];
   const filename = parts.slice(2).join('/');
   if (filename.includes('/') || filename.includes('\\')) return null;
-  if (folder !== 'models' && folder !== 'markers') return null;
+  if (folder !== 'models' && folder !== 'markers' && folder !== 'patterns' && folder !== 'marker-previews') return null;
   return { folder, filename };
 }
 
@@ -301,6 +339,8 @@ app.post('/api/products', async (req, res) => {
     description: typeof body.description === 'string' ? body.description : '',
     model: normalizeUploadValue(typeof body.model === 'string' ? body.model : ''),
     marker: normalizeUploadValue(typeof body.marker === 'string' ? body.marker : ''),
+    markerPatt: normalizeUploadValue(typeof body.markerPatt === 'string' ? body.markerPatt : ''),
+    markerPreview: normalizeUploadValue(typeof body.markerPreview === 'string' ? body.markerPreview : ''),
     scale: typeof body.scale === 'string' ? body.scale : '1 1 1',
     rotation: typeof body.rotation === 'string' ? body.rotation : '0 0 0',
     position: typeof body.position === 'string' ? body.position : '0 0 0',
@@ -333,6 +373,8 @@ app.put('/api/products/:id', async (req, res) => {
     id,
     model: normalizeUploadValue(typeof body.model === 'string' ? body.model : prev.model),
     marker: normalizeUploadValue(typeof body.marker === 'string' ? body.marker : prev.marker),
+    markerPatt: normalizeUploadValue(typeof body.markerPatt === 'string' ? body.markerPatt : prev.markerPatt),
+    markerPreview: normalizeUploadValue(typeof body.markerPreview === 'string' ? body.markerPreview : prev.markerPreview),
     updatedAt: Date.now()
   };
   db.data.products[idx] = next;
@@ -365,7 +407,12 @@ app.delete('/api/products/:id', async (req, res) => {
         await fs.unlink(abs);
       } catch (e) {}
     };
-    await Promise.all([tryDeleteUpload(existing.model), tryDeleteUpload(existing.marker)]);
+    await Promise.all([
+      tryDeleteUpload(existing.model),
+      tryDeleteUpload(existing.marker),
+      tryDeleteUpload(existing.markerPatt),
+      tryDeleteUpload(existing.markerPreview)
+    ]);
   }
   res.json({ ok: true, removed: before - after });
 });
@@ -398,22 +445,36 @@ async function saveUpload(req, file, kind) {
   const filename = `${Date.now()}_${newId()}_${safeName(base)}${ext}`;
   const dir = kind === 'model' ? MODELS_DIR : MARKERS_DIR;
   const rel = kind === 'model' ? `/uploads/models/${filename}` : `/uploads/markers/${filename}`;
-  await fs.writeFile(path.join(dir, filename), file.buffer);
-  return absoluteUrl(req, rel);
+  const abs = path.join(dir, filename);
+  await fs.writeFile(abs, file.buffer);
+  if (kind !== 'marker') return { url: absoluteUrl(req, rel) };
+
+  const markerBase = path.basename(filename, path.extname(filename));
+  const artifacts = await generateMarkerArtifactsFromFile({
+    markerAbsPath: abs,
+    patternsDir: PATTERNS_DIR,
+    previewsDir: MARKER_PREVIEWS_DIR,
+    baseName: markerBase
+  });
+  return {
+    url: absoluteUrl(req, rel),
+    markerPatt: absoluteUrl(req, `/uploads/patterns/${artifacts.pattFilename}`),
+    markerPreview: absoluteUrl(req, `/uploads/marker-previews/${artifacts.previewFilename}`)
+  };
 }
 
 app.post('/api/upload/model', uploadModel.single('file'), async (req, res) => {
   const file = req.file;
   if (!file) return res.status(400).json({ message: 'Missing file' });
-  const url = await saveUpload(req, file, 'model');
-  res.json({ url });
+  const out = await saveUpload(req, file, 'model');
+  res.json(out);
 });
 
 app.post('/api/upload/marker', uploadMarker.single('file'), async (req, res) => {
   const file = req.file;
   if (!file) return res.status(400).json({ message: 'Missing file' });
-  const url = await saveUpload(req, file, 'marker');
-  res.json({ url });
+  const out = await saveUpload(req, file, 'marker');
+  res.json(out);
 });
 
 app.post('/api/upload/targets', express.json({ limit: '50mb' }), async (req, res) => {
@@ -437,7 +498,8 @@ app.get('/api/targets.mind', async (req, res) => {
 });
 
 app.use('/uploads', express.static(UPLOADS_DIR, { fallthrough: false, maxAge: '30d', immutable: true }));
-app.use(express.static(__dirname, { maxAge: '1h' }));
+app.use('/admin', express.static(ADMIN_DIST_DIR, { maxAge: '1h' }));
+app.use(express.static(FRONTEND_DIR, { maxAge: '1h' }));
 
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {

@@ -95,7 +95,10 @@ async function fetchCatalog() {
             }
         }
         
-        alert("Error cargando el catálogo. Ver consola.");
+        try {
+            const msg = error && typeof error.message === 'string' ? error.message : String(error || 'Error cargando el catálogo');
+            document.dispatchEvent(new CustomEvent('catalogerror', { detail: { message: msg } }));
+        } catch (e) {}
     }
 }
 

@@ -331,7 +331,13 @@ class ApiService {
     }
 
     async health() {
-        await this.request('/api/health', { cache: 'no-store' });
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 1800);
+        try {
+            await this.request('/api/health', { cache: 'no-store', signal: controller.signal });
+        } finally {
+            clearTimeout(timer);
+        }
         return true;
     }
 
@@ -403,6 +409,7 @@ const UI = {
         loadingText: document.getElementById('loading-text'),
         serverStatus: document.getElementById('server-status'),
         serverStats: document.getElementById('server-stats'),
+        dashboardNotice: document.getElementById('dashboard-notice'),
         btnCleanOrphans: document.getElementById('btn-clean-orphans'),
         productList: document.getElementById('product-list'),
         productForm: document.getElementById('product-form'),
@@ -428,6 +435,7 @@ const UI = {
 
         fileMarkersBulk: document.getElementById('file-markers-bulk'),
         fileModelsBulk: document.getElementById('file-models-bulk'),
+        fileTargetsMind: document.getElementById('file-targets-mind'),
         btnCreateDemo4: document.getElementById('btn-create-demo-4'),
         bulkReplaceCatalog: document.getElementById('bulk-replace-catalog'),
         bulkPreview: document.getElementById('bulk-preview'),
@@ -450,6 +458,7 @@ const UI = {
         useNodeApi: true,
         useLocalDb: false
     },
+    noticeTimer: null,
 
     init() {
         this.state.useNodeApi = true;
@@ -506,6 +515,9 @@ const UI = {
         if (this.elements.fileModelsBulk) {
             this.elements.fileModelsBulk.addEventListener('change', () => this.updateBulkPreview());
         }
+        if (this.elements.fileTargetsMind) {
+            this.elements.fileTargetsMind.addEventListener('change', () => this.handleTargetsMindUpload());
+        }
         if (this.elements.bulkReplaceCatalog) {
             this.elements.bulkReplaceCatalog.addEventListener('change', () => this.updateBulkPreview());
         }
@@ -519,6 +531,67 @@ const UI = {
 
         if (this.elements.productForm) this.elements.productForm.addEventListener('submit', (e) => this.saveProduct(e));
         this.updateBulkPreview();
+    },
+
+    async tryLoadMindArCompiler() {
+        if (window.__MindARCompiler) return true;
+        const candidates = [
+            'https://esm.sh/mind-ar@1.2.5/src/image-target/compiler.js',
+            'https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/src/image-target/compiler.js',
+            'https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/src/image-target/compiler.js',
+            'https://unpkg.com/mind-ar@1.2.5/src/image-target/compiler.js'
+        ];
+        for (const url of candidates) {
+            try {
+                const mod = await import(url);
+                const Compiler = mod?.Compiler || mod?.default?.Compiler || mod?.default;
+                if (Compiler) {
+                    window.__MindARCompiler = Compiler;
+                    return true;
+                }
+            } catch (e) {}
+        }
+        return false;
+    },
+
+    async handleTargetsMindUpload() {
+        const file = this.elements.fileTargetsMind?.files?.[0];
+        if (!file) return;
+        await this.uploadTargetsMindFromFile(file);
+    },
+
+    async uploadTargetsMindFromFile(file, options = {}) {
+        const silent = !!options.silent;
+        const updateCatalog = options.updateCatalog !== false;
+        this.showLoading('Guardando targets.mind...');
+        if (this.elements.targetsStatus) this.elements.targetsStatus.innerText = '';
+        try {
+            if (this.state.api) {
+                const base64 = await this.toBase64(file);
+                await this.state.api.uploadTargets(base64);
+                if (updateCatalog) {
+                    await this.state.api.replaceCatalog(this.state.catalog);
+                    localStorage.setItem('ar_catalog_data', JSON.stringify(this.state.catalog));
+                }
+                if (this.elements.targetsStatus) this.elements.targetsStatus.innerText = 'targets.mind actualizado en el servidor.';
+                await this.refreshServerStats();
+            } else {
+                await this.putLocalBlob('targets.mind', file);
+                if (this.elements.targetsStatus) this.elements.targetsStatus.innerText = 'targets.mind actualizado localmente.';
+            }
+            try {
+                localStorage.setItem('webar_targets_updated_at', String(Date.now()));
+            } catch (e) {}
+            if (this.elements.demoStatus) this.elements.demoStatus.innerText = 'Listo: targets.mind actualizado.';
+        } catch (error) {
+            console.error(error);
+            const msg = String(error?.message || error || '');
+            if (this.elements.targetsStatus) this.elements.targetsStatus.innerText = `Error guardando targets.mind: ${msg}`;
+            if (this.elements.demoStatus) this.elements.demoStatus.innerText = 'Error guardando targets.mind.';
+            if (!silent) this.setLoginNotice('danger', `Error guardando targets.mind: ${msg}`);
+        } finally {
+            this.hideLoading();
+        }
     },
 
     syncApiBaseUrlInput() {
@@ -554,20 +627,37 @@ const UI = {
         el.style.display = 'block';
     },
 
+    setDashboardNotice(kind, text, options = {}) {
+        const el = this.elements.dashboardNotice;
+        if (!el) return;
+        const msg = String(text || '').trim();
+        if (this.noticeTimer) {
+            try { clearTimeout(this.noticeTimer); } catch (e) {}
+            this.noticeTimer = null;
+        }
+        if (!msg) {
+            el.style.display = 'none';
+            el.innerText = '';
+            return;
+        }
+        el.className = `alert alert-${kind || 'info'} py-2 px-3 mt-2`;
+        el.innerText = msg;
+        el.style.display = 'block';
+        const timeoutMs = Number.isFinite(options.timeoutMs) ? options.timeoutMs : 4500;
+        if (timeoutMs > 0) {
+            this.noticeTimer = setTimeout(() => {
+                this.noticeTimer = null;
+                el.style.display = 'none';
+                el.innerText = '';
+            }, timeoutMs);
+        }
+    },
+
     async loginNode(options = {}) {
         this.showLoading('Conectando con el servidor...');
         try {
             const baseUrl = (window.CONFIG && typeof window.CONFIG.getApiBaseUrl === 'function') ? window.CONFIG.getApiBaseUrl() : '';
-            const host = String(location.hostname || '').toLowerCase();
-            const isLocalHost = host === 'localhost' || host === '127.0.0.1';
-            if (!baseUrl && !isLocalHost) {
-                if (options.allowFallbackLocal) {
-                    await this.loginLocal({ notice: 'No hay backend Node configurado. Entraste en modo local (los cambios se guardan en este navegador).' });
-                    return;
-                }
-                throw new Error('No hay backend Node configurado para este sitio.');
-            }
-            this.state.api = new ApiService(baseUrl);
+            this.state.api = new ApiService(baseUrl || '');
             await this.state.api.health();
             const catalog = await this.state.api.getCatalog();
             this.state.catalog = Array.isArray(catalog) ? catalog : [];
@@ -589,8 +679,8 @@ const UI = {
             const msg = String(error?.message || '');
             if (options.allowFallbackLocal) {
                 const hint = msg.includes('API Error (404)')
-                    ? 'No se encontró la API (/api/*). Entraste en modo local (este navegador).'
-                    : `No se pudo conectar al servidor. Entraste en modo local (este navegador).\n\nDetalle: ${msg}`;
+                    ? 'No se encontró la API (/api/*) en este sitio. Si tu backend está en otra URL, escríbela en “Servidor (opcional)”. Entraste en modo local (este navegador).'
+                    : `No se pudo conectar al servidor. Si tu backend está en otra URL, escríbela en “Servidor (opcional)”. Entraste en modo local (este navegador).\n\nDetalle: ${msg}`;
                 await this.loginLocal({ notice: hint });
                 return;
             }
@@ -641,12 +731,7 @@ const UI = {
             await this.state.github.getRepo();
 
             if (this.state.viewerLogin && String(user).toLowerCase() !== this.state.viewerLogin.toLowerCase()) {
-                alert(
-                    `Aviso: el token pertenece a "${this.state.viewerLogin}" pero el repo configurado es "${user}/${repo}".\n\n` +
-                    `Para poder subir archivos necesitas:\n` +
-                    `- Que "${this.state.viewerLogin}" tenga permisos de escritura en ese repo, o\n` +
-                    `- Usar un token del owner del repo.`
-                );
+                this.setLoginNotice('warning', `Aviso: el token pertenece a "${this.state.viewerLogin}" pero el repo configurado es "${user}/${repo}".`);
             }
             
             // Test connection by fetching catalog from ASSETS repo
@@ -673,7 +758,7 @@ const UI = {
 
         } catch (error) {
             console.error(error);
-            alert('Error de conexión con GitHub: ' + this.getGitHubHint(error.message));
+            this.setLoginNotice('danger', 'Error de conexión con GitHub: ' + this.getGitHubHint(error.message));
             this.hideLoading();
         }
     },
@@ -828,7 +913,7 @@ const UI = {
                 if (shouldRebuildTargets) {
                     await this.buildAndUploadTargetsMind({ silent: true });
                 }
-                alert('Guardado en el servidor.');
+                this.setDashboardNotice('success', 'Guardado en el servidor.');
                 this.renderList();
                 await this.refreshServerStats();
             } else if (this.state.github) {
@@ -872,7 +957,7 @@ const UI = {
                 if (shouldRebuildTargets) {
                     await this.buildAndUploadTargetsMind({ silent: true });
                 }
-                alert('Guardado correctamente en GitHub!');
+                this.setDashboardNotice('success', 'Guardado correctamente en GitHub.');
                 this.renderList();
             } else {
                 const modelFile = this.elements.fileModel.files[0];
@@ -898,13 +983,14 @@ const UI = {
                 if (shouldRebuildTargets) {
                     await this.buildAndUploadTargetsMind({ silent: true });
                 }
-                alert('Guardado localmente.');
+                this.setDashboardNotice('success', 'Guardado localmente.');
                 this.renderList();
             }
 
         } catch (error) {
             console.error(error);
-            alert('Error guardando: ' + (this.state.github ? this.getGitHubHintWithViewer(error.message) : error.message));
+            const msg = String(error?.message || error || '');
+            this.setDashboardNotice('danger', `Error guardando: ${this.state.github ? this.getGitHubHintWithViewer(msg) : msg}`, { timeoutMs: 0 });
         } finally {
             this.hideLoading();
         }
@@ -1004,14 +1090,14 @@ const UI = {
         const replaceCatalog = !!this.elements.bulkReplaceCatalog?.checked;
 
         if (markerFiles.length === 0 || modelFiles.length === 0) {
-            alert('Selecciona imágenes y modelos.');
+            if (this.elements.demoStatus) this.elements.demoStatus.innerText = 'Selecciona imágenes y modelos.';
             return;
         }
 
         const pairing = this.computeBulkPairs(markerFiles, modelFiles);
         const pairs = pairing.pairs;
         if (pairs.length === 0) {
-            alert('No se pudo emparejar. Sube la misma cantidad o usa nombres iguales para emparejar.');
+            if (this.elements.demoStatus) this.elements.demoStatus.innerText = 'No se pudo emparejar. Sube la misma cantidad o usa nombres iguales.';
             return;
         }
 
@@ -1099,14 +1185,25 @@ const UI = {
 
             localStorage.setItem('ar_catalog_data', JSON.stringify(this.state.catalog));
 
-            if (this.elements.demoStatus) this.elements.demoStatus.innerText = 'Generando targets.mind...';
-            await this.buildAndUploadTargetsMind({ silent: true });
+            if (this.state.api) {
+                if (this.elements.demoStatus) this.elements.demoStatus.innerText = 'Guardando catálogo en el servidor...';
+                await this.state.api.replaceCatalog(this.state.catalog);
+                await this.refreshServerStats();
+            }
 
-            if (this.elements.demoStatus) this.elements.demoStatus.innerText = 'Listo: targets.mind actualizado.';
-            alert('Listo. Se importaron productos y se generó targets.mind.');
+            if (this.elements.demoStatus) this.elements.demoStatus.innerText = 'Generando targets.mind...';
+            const okTargets = await this.buildAndUploadTargetsMind({ silent: true });
+
+            if (this.elements.demoStatus) {
+                this.elements.demoStatus.innerText = okTargets
+                    ? 'Listo: importación completa y targets actualizados.'
+                    : 'Listo: importación completa. Falta actualizar targets.mind (sube el archivo o usa otro navegador).';
+            }
         } catch (error) {
             console.error(error);
-            alert('Error importando: ' + (this.state.github ? this.getGitHubHintWithViewer(error.message) : error.message));
+            if (this.elements.demoStatus) this.elements.demoStatus.innerText = 'Error importando archivos.';
+            const msg = String(error?.message || error || '');
+            this.setLoginNotice('danger', `Error importando: ${msg}`);
         } finally {
             this.hideLoading();
         }
@@ -1119,7 +1216,18 @@ const UI = {
 
         try {
             if (!window.__MindARCompiler) {
-                throw new Error('MindAR Compiler no está disponible en este navegador.');
+                await this.tryLoadMindArCompiler();
+            }
+            if (!window.__MindARCompiler) {
+                const file = this.elements.fileTargetsMind?.files?.[0];
+                if (file) {
+                    await this.uploadTargetsMindFromFile(file, { silent: true, updateCatalog: true });
+                    return true;
+                }
+                const msg = 'Este navegador no puede generar targets.mind. Sube un archivo targets.mind o prueba Chrome/Edge.';
+                if (this.elements.targetsStatus) this.elements.targetsStatus.innerText = msg;
+                if (this.elements.demoStatus) this.elements.demoStatus.innerText = msg;
+                return false;
             }
 
             const candidates = this.state.catalog.filter((i) => i && i.marker && i.model);
@@ -1220,12 +1328,17 @@ const UI = {
                     : '';
             }
 
-            if (!silent) {
-                alert('targets.mind actualizado. Abre la experiencia AR y escanea la imagen target.');
+            if (!silent && this.elements.targetsStatus) {
+                this.elements.targetsStatus.innerText = 'targets.mind actualizado. Abre la experiencia AR y escanea la imagen target.';
             }
+            return true;
         } catch (error) {
             console.error(error);
-            alert('Error generando targets.mind: ' + (this.state.github ? this.getGitHubHintWithViewer(error.message) : error.message));
+            const msg = String(error?.message || error || '');
+            if (this.elements.targetsStatus) this.elements.targetsStatus.innerText = `Error generando targets.mind: ${msg}`;
+            if (this.elements.demoStatus) this.elements.demoStatus.innerText = 'Error generando targets.mind.';
+            if (!silent) this.setLoginNotice('danger', `Error generando targets.mind: ${msg}`);
+            return false;
         } finally {
             this.hideLoading();
         }
@@ -1259,7 +1372,8 @@ const UI = {
             await this.refreshServerStats();
             
         } catch (error) {
-            alert('Error eliminando: ' + (this.state.github ? this.getGitHubHintWithViewer(error.message) : error.message));
+            const msg = String(error?.message || error || '');
+            this.setDashboardNotice('danger', `Error eliminando: ${this.state.github ? this.getGitHubHintWithViewer(msg) : msg}`, { timeoutMs: 0 });
         } finally {
             this.hideLoading();
         }
@@ -1496,7 +1610,7 @@ const UI = {
             const preview = await this.state.api.cleanupUploads({ dryRun: true });
             const previewCount = (Number(preview?.models?.count) || 0) + (Number(preview?.markers?.count) || 0);
             if (previewCount === 0) {
-                alert('No hay huérfanos para limpiar.');
+                this.setDashboardNotice('info', 'No hay huérfanos para limpiar.');
                 await this.refreshServerStats();
                 return;
             }
@@ -1506,13 +1620,13 @@ const UI = {
             const result = await this.state.api.cleanupUploads({ dryRun: false });
             const deleted = (Number(result?.deletedModels) || 0) + (Number(result?.deletedMarkers) || 0);
             if (result?.ok) {
-                alert(`Listo: eliminados ${deleted} archivos (${this.formatBytes(result?.deletedBytes)}).`);
+                this.setDashboardNotice('success', `Listo: eliminados ${deleted} archivos (${this.formatBytes(result?.deletedBytes)}).`);
             } else {
-                alert(`Parcial: eliminados ${deleted} archivos (${this.formatBytes(result?.deletedBytes)}).`);
+                this.setDashboardNotice('warning', `Parcial: eliminados ${deleted} archivos (${this.formatBytes(result?.deletedBytes)}).`, { timeoutMs: 0 });
             }
             await this.refreshServerStats();
         } catch (e) {
-            alert('No se pudo limpiar huérfanos: ' + (e?.message ? String(e.message) : 'error'));
+            this.setDashboardNotice('danger', 'No se pudo limpiar huérfanos: ' + (e?.message ? String(e.message) : 'error'), { timeoutMs: 0 });
         }
     }
 };

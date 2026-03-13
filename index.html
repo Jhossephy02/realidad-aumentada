@@ -697,6 +697,13 @@
         setStatus('ready', targetsReady ? 'Iniciando cámara...' : 'Catálogo listo');
         startArIfReady();
       });
+      document.addEventListener('catalogerror', (e) => {
+        catalogReady = false;
+        const msg = e && e.detail && typeof e.detail.message === 'string' ? e.detail.message : 'No se pudo cargar el catálogo';
+        setStatus('error', `Catálogo: ${msg}`);
+        setRetryVisible(false);
+        hideLoader();
+      });
 
       const onSceneLoaded = () => {
         console.log("Scene loaded");

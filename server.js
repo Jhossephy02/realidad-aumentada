@@ -13,10 +13,16 @@ const __dirname = path.dirname(__filename);
 const PORT = Number(process.env.PORT) || 8000;
 const HOST = process.env.HOST || '0.0.0.0';
 
-const DATA_DIR = path.join(__dirname, 'data');
+function resolveDir(envValue, fallbackAbs) {
+  const raw = String(envValue || '').trim();
+  if (!raw) return fallbackAbs;
+  return path.isAbsolute(raw) ? raw : path.join(__dirname, raw);
+}
+
+const DATA_DIR = resolveDir(process.env.DATA_DIR, path.join(__dirname, 'data'));
 const DB_PATH = path.join(DATA_DIR, 'db.json');
 
-const UPLOADS_DIR = path.join(__dirname, 'uploads');
+const UPLOADS_DIR = resolveDir(process.env.UPLOADS_DIR, path.join(__dirname, 'uploads'));
 const MODELS_DIR = path.join(UPLOADS_DIR, 'models');
 const MARKERS_DIR = path.join(UPLOADS_DIR, 'markers');
 const TARGETS_DIR = path.join(UPLOADS_DIR, 'targets');
@@ -50,6 +56,27 @@ function absoluteUrl(req, pathname) {
   return `${proto}://${host}${pathname.startsWith('/') ? pathname : `/${pathname}`}`;
 }
 
+function normalizeUploadValue(value) {
+  if (!value || typeof value !== 'string') return '';
+  let pathname = '';
+  try {
+    pathname = value.startsWith('http') ? new URL(value).pathname : value;
+  } catch (e) {
+    pathname = value;
+  }
+  if (pathname.startsWith('/uploads/')) return pathname;
+  return value;
+}
+
+function normalizeProductForResponse(product) {
+  if (!product || typeof product !== 'object') return product;
+  return {
+    ...product,
+    model: normalizeUploadValue(product.model),
+    marker: normalizeUploadValue(product.marker)
+  };
+}
+
 await ensureDirs();
 const db = new Low(new JSONFile(DB_PATH), { products: [] });
 await db.read();
@@ -79,7 +106,7 @@ app.get('/api/health', (req, res) => {
 app.get('/api/catalog', async (req, res) => {
   await db.read();
   res.setHeader('Cache-Control', 'no-store');
-  res.json(db.data.products || []);
+  res.json((db.data.products || []).map(normalizeProductForResponse));
 });
 
 function uploadBasenameFromValue(value) {
@@ -244,8 +271,8 @@ app.put('/api/catalog', async (req, res) => {
         name: typeof p.name === 'string' ? p.name : '',
         price: p.price ?? 0,
         description: typeof p.description === 'string' ? p.description : '',
-        model: typeof p.model === 'string' ? p.model : '',
-        marker: typeof p.marker === 'string' ? p.marker : '',
+        model: normalizeUploadValue(typeof p.model === 'string' ? p.model : ''),
+        marker: normalizeUploadValue(typeof p.marker === 'string' ? p.marker : ''),
         scale: typeof p.scale === 'string' ? p.scale : '1 1 1',
         rotation: typeof p.rotation === 'string' ? p.rotation : '0 0 0',
         position: typeof p.position === 'string' ? p.position : '0 0 0',
@@ -257,7 +284,7 @@ app.put('/api/catalog', async (req, res) => {
   await db.read();
   db.data.products = products;
   await db.write();
-  res.json(products);
+  res.json(products.map(normalizeProductForResponse));
 });
 
 app.post('/api/products', async (req, res) => {
@@ -272,8 +299,8 @@ app.post('/api/products', async (req, res) => {
     name: typeof body.name === 'string' ? body.name : '',
     price: body.price ?? 0,
     description: typeof body.description === 'string' ? body.description : '',
-    model: typeof body.model === 'string' ? body.model : '',
-    marker: typeof body.marker === 'string' ? body.marker : '',
+    model: normalizeUploadValue(typeof body.model === 'string' ? body.model : ''),
+    marker: normalizeUploadValue(typeof body.marker === 'string' ? body.marker : ''),
     scale: typeof body.scale === 'string' ? body.scale : '1 1 1',
     rotation: typeof body.rotation === 'string' ? body.rotation : '0 0 0',
     position: typeof body.position === 'string' ? body.position : '0 0 0',
@@ -289,7 +316,7 @@ app.post('/api/products', async (req, res) => {
   }
 
   await db.write();
-  res.json(product);
+  res.json(normalizeProductForResponse(product));
 });
 
 app.put('/api/products/:id', async (req, res) => {
@@ -304,11 +331,13 @@ app.put('/api/products/:id', async (req, res) => {
     ...prev,
     ...body,
     id,
+    model: normalizeUploadValue(typeof body.model === 'string' ? body.model : prev.model),
+    marker: normalizeUploadValue(typeof body.marker === 'string' ? body.marker : prev.marker),
     updatedAt: Date.now()
   };
   db.data.products[idx] = next;
   await db.write();
-  res.json(next);
+  res.json(normalizeProductForResponse(next));
 });
 
 app.delete('/api/products/:id', async (req, res) => {

@@ -82,8 +82,8 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Servidor (opcional)</label>
-                    <input type="url" class="form-control" id="api-base-url" placeholder="https://tu-backend.com">
-                    <div class="form-text">Si lo dejas vacío, el panel trabaja en modo local (este navegador).</div>
+                    <input type="url" class="form-control" id="api-base-url" placeholder="http://localhost:8031">
+                    <div class="form-text">Para guardar en Node.js, coloca la URL del servidor. Si lo dejas vacío, el panel trabaja en modo local (este navegador).</div>
                 </div>
                 <div class="d-grid">
                     <button type="submit" class="btn btn-primary">Ingresar</button>
@@ -101,6 +101,7 @@
                 <div class="small mb-3">
                     <div id="server-status" class="text-muted"></div>
                     <div id="server-stats" class="text-muted" style="white-space: pre-wrap;"></div>
+                    <div id="dashboard-notice" class="alert alert-info py-2 px-3 mt-2" style="display:none;"></div>
                     <div class="d-grid mt-2">
                         <button class="btn btn-outline-secondary btn-sm" type="button" id="btn-clean-orphans">
                             Limpiar huérfanos
@@ -139,6 +140,11 @@
                                 <label class="form-label">Modelos 3D (.glb)</label>
                                 <input type="file" class="form-control" id="file-models-bulk" accept=".glb" multiple>
                                 <div class="form-text">Selecciona la misma cantidad de modelos que imágenes.</div>
+                            </div>
+                            <div class="col-12 col-lg-6">
+                                <label class="form-label">targets.mind (opcional)</label>
+                                <input type="file" class="form-control" id="file-targets-mind" accept=".mind,application/octet-stream">
+                                <div class="form-text">Si tu navegador no puede generar targets, sube aquí el archivo targets.mind.</div>
                             </div>
                             <div class="col-12">
                                 <div class="form-check">

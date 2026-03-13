@@ -1,3 +1,19 @@
 {
-  "products": []
+  "products": [
+    {
+      "id": "captura_de_pantalla_2026-03-10_093801-1773379137636-0",
+      "barcodeValue": 0,
+      "targetIndex": null,
+      "name": "sushi",
+      "price": "15",
+      "description": "degustaciones de sushi y blablabla",
+      "model": "http://localhost:8031/uploads/models/1773379138041_334c4a8ac2aeb07a_sushi.glb",
+      "marker": "http://localhost:8031/uploads/markers/1773379137755_7521f1791d5f37ab_Captura_de_pantalla_2026-03-10_093801.png",
+      "scale": "1 1 1",
+      "rotation": "0 0 0",
+      "position": "0 0 0",
+      "createdAt": 1773379189994,
+      "updatedAt": 1773379189994
+    }
+  ]
 }

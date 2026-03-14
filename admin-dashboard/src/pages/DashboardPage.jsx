@@ -38,7 +38,6 @@ export function DashboardPage() {
   const [modelsCount, setModelsCount] = useState(0);
   const [uploads, setUploads] = useState(null);
   const [analytics, setAnalytics] = useState(null);
-  const [hourly, setHourly] = useState(null);
 
   useEffect(() => {
     let alive = true;
@@ -49,12 +48,10 @@ export function DashboardPage() {
         const models = await apiFetch('/api/models', { token });
         const stats = await apiFetch('/api/uploads/stats', { token });
         const summary = await apiFetch('/api/analytics/summary?days=7', { token });
-        const hourlyData = await apiFetch('/api/analytics/hourly?hours=48&tz=America%2FLima', { token });
         if (!alive) return;
         setModelsCount(Array.isArray(models) ? models.length : 0);
         setUploads(stats || null);
         setAnalytics(summary || null);
-        setHourly(hourlyData || null);
       } catch (e) {
         if (!alive) return;
         setError(e?.message ? String(e.message) : 'Error cargando dashboard');
@@ -91,7 +88,7 @@ export function DashboardPage() {
         tone: uploads?.targets?.exists ? 'emerald' : 'default'
       },
       {
-        label: 'Usuarios (7 días)',
+        label: 'Usuarios únicos (7 días)',
         value: analytics ? String(analytics.uniqueUsersLastNDays ?? 0) : '—',
         sub: analytics ? `Hoy: ${analytics.uniqueUsersToday ?? 0}` : '',
         tone: 'sky'
@@ -109,15 +106,6 @@ export function DashboardPage() {
       h: Math.round((Number(r.uniqueUsers || 0) / max) * 100)
     }));
   }, [analytics]);
-
-  const hourlyRows = useMemo(() => {
-    const rows = Array.isArray(hourly?.hourly) ? hourly.hourly : [];
-    const mapped = rows.map((r) => ({
-      hour: String(r.hour || ''),
-      uniqueUsers: Number(r.uniqueUsers || 0)
-    }));
-    return mapped.reverse();
-  }, [hourly]);
 
   return (
     <div>
@@ -147,11 +135,11 @@ export function DashboardPage() {
       <div className="mt-6 rounded-2xl border border-slate-900 bg-slate-950 p-5">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <div className="text-sm font-medium text-white">Uso WebAR</div>
-            <div className="mt-0.5 text-xs text-slate-400">Clientes asistidos (usuarios únicos) por día</div>
+            <div className="text-sm font-medium text-white">Usuarios únicos por día</div>
+            <div className="mt-0.5 text-xs text-slate-400">Cuenta dispositivos/navegadores únicos que usaron la app</div>
           </div>
           <div className="text-right text-xs text-slate-400">
-            <div>Total: {loading ? '…' : String(analytics?.totalUniqueUsers ?? 0)}</div>
+            <div>Total histórico: {loading ? '…' : String(analytics?.totalUniqueUsers ?? 0)}</div>
           </div>
         </div>
 
@@ -165,40 +153,6 @@ export function DashboardPage() {
               <div className="text-[10px] text-slate-400">{d.value}</div>
             </div>
           ))}
-        </div>
-      </div>
-
-      <div className="mt-6 overflow-hidden rounded-2xl border border-slate-900 bg-slate-950">
-        <div className="border-b border-slate-900 px-5 py-4">
-          <div className="text-sm font-medium text-white">Clientes asistidos por hora</div>
-            <div className="mt-0.5 text-xs text-slate-400">Día, hora y cuántas personas usaron (Pucallpa)</div>
-        </div>
-        <div className="overflow-auto">
-          <table className="min-w-full text-left text-sm">
-            <thead className="bg-slate-950">
-              <tr className="border-b border-slate-900 text-xs text-slate-400">
-                <th className="px-5 py-3">Día</th>
-                <th className="px-5 py-3">Hora</th>
-                <th className="px-5 py-3">Personas</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(loading ? [] : hourlyRows).map((r) => (
-                <tr key={r.hour} className="border-b border-slate-900/70 last:border-b-0">
-                  <td className="px-5 py-3 text-slate-200">{r.hour ? r.hour.slice(0, 10) : '—'}</td>
-                  <td className="px-5 py-3 text-slate-400">{r.hour ? r.hour.slice(11) : '—'}</td>
-                  <td className="px-5 py-3 text-slate-200">{String(r.uniqueUsers)}</td>
-                </tr>
-              ))}
-              {!loading && hourlyRows.length === 0 ? (
-                <tr>
-                  <td colSpan={3} className="px-5 py-6 text-sm text-slate-500">
-                    Aún no hay registros.
-                  </td>
-                </tr>
-              ) : null}
-            </tbody>
-          </table>
         </div>
       </div>
     </div>

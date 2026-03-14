@@ -126,12 +126,15 @@
       <div class="status-dot"></div>
       <div id="status-text">Preparando...</div>
     </div>
+    <div id="tap-overlay">
+      Toca la pantalla para activar la cámara
+    </div>
 
     <a-scene
       vr-mode-ui="enabled: false;"
       renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true;"
       embedded
-      mindar-image="imageTargetSrc: targets.mind; autoStart: false; uiLoading: no; uiScanning: no; uiError: no;"
+      mindar-image="imageTargetSrc: targets.mind; autoStart: false; uiLoading: no; uiScanning: no; uiError: no; maxTrack: 1;"
       background="transparent: true">
       <a-light type="hemisphere" groundColor="#443333" color="#FFFAFA" intensity="1.6"></a-light>
       <a-light type="directional" position="1 4 2" intensity="1.2" color="#FFF"></a-light>
@@ -273,37 +276,36 @@
 
         const preflightCameraPermission = async () => {
           if (!canUseCamera()) return { ok: false, reason: 'insecure' };
-          const md = navigator && navigator.mediaDevices ? navigator.mediaDevices : null;
-          if (!md || typeof md.getUserMedia !== 'function') return { ok: false, reason: 'unsupported' };
           try {
-            const stream = await md.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
-            try {
-              for (const track of stream.getTracks()) {
-                try { track.stop(); } catch (e) {}
-              }
-            } catch (e) {}
+            const md = navigator && navigator.mediaDevices ? navigator.mediaDevices : null;
+            if (!md || typeof md.getUserMedia !== 'function') return { ok: false, reason: 'unsupported' };
+            const perms = navigator && navigator.permissions ? navigator.permissions : null;
+            if (perms && typeof perms.query === 'function') {
+              const res = await perms.query({ name: 'camera' });
+              const state = String(res && res.state ? res.state : '');
+              if (state === 'denied') return { ok: false, reason: 'denied', error: new Error('denied') };
+            }
             return { ok: true };
           } catch (err) {
-            const msg = String(err?.name || err?.message || err || '').toLowerCase();
-            if (msg.includes('notallowed') || msg.includes('permission') || msg.includes('denied')) return { ok: false, reason: 'denied', error: err };
-            if (msg.includes('notfound') || msg.includes('overconstrained')) return { ok: false, reason: 'notfound', error: err };
-            return { ok: false, reason: 'error', error: err };
+            return { ok: true };
           }
         };
 
         const setTapVisible = (visible) => {
           if (!tapOverlay) return;
-          tapOverlay.classList.remove('visible');
+          if (visible) tapOverlay.classList.add('visible');
+          else tapOverlay.classList.remove('visible');
         };
 
         const tryStart = async () => {
           if (arStarted) return;
           if (!arSystem) return;
-          if (!catalogReady || !targetsReady) return;
+          if (!targetsReady) return;
           if (!canUseCamera()) return;
 
           arStarted = true;
           setStatus('scanning', 'Solicitando cámara...');
+          setTapVisible(false);
           try {
             const pre = await preflightCameraPermission();
             if (!pre?.ok) {
@@ -325,7 +327,8 @@
             arStarted = false;
             const msg = String(err?.message || err || '').toLowerCase();
             if (msg.includes('permission_denied') || msg.includes('notallowed') || msg.includes('permission') || msg.includes('denied')) {
-              setStatus('scanning', 'Activando cámara...');
+              setStatus('scanning', 'Toca para activar la cámara');
+              setTapVisible(true);
             } else if (msg.includes('media_unsupported')) {
               setStatus('error', 'Tu navegador no soporta cámara en esta página.');
             } else if (msg.includes('camera_not_found') || msg.includes('notfound')) {
@@ -376,7 +379,7 @@
             hideLoader();
             return;
           }
-          sceneEl.setAttribute('mindar-image', `imageTargetSrc: ${src}; autoStart: false; uiLoading: no; uiScanning: no; uiError: no;`);
+          sceneEl.setAttribute('mindar-image', `imageTargetSrc: ${src}; autoStart: false; uiLoading: no; uiScanning: no; uiError: no; maxTrack: 1;`);
           targetsReady = true;
           tryStart();
         };

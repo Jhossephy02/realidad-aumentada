@@ -219,6 +219,9 @@ export function ModelFormModal({ open, token, mode, model, onClose, onSaved }) {
         onProgress: (p) => setTargetsStatus(`Generando targets.mind… ${Number(p).toFixed(0)}%`)
       });
       setTargetsStatus('targets.mind actualizado');
+      try {
+        localStorage.setItem('webar_targets_updated_at', String(Date.now()));
+      } catch (e) {}
       onSaved(saved);
       onClose();
     } catch (e2) {

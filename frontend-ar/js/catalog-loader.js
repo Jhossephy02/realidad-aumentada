@@ -1,14 +1,12 @@
 // catalog-loader.js
 // Handles fetching the catalog data and initializing the AR scene
 
-// Use configuration to determine catalog source
-const CATALOG_PATH = 'catalog/catalog.json';
 const API_BASE = (typeof CONFIG !== 'undefined' && CONFIG && typeof CONFIG.getApiBaseUrl === 'function')
     ? CONFIG.getApiBaseUrl()
     : '';
 let CATALOG_URL = API_BASE
-    ? `${API_BASE}/api/ar-objects`
-    : ((typeof CONFIG !== 'undefined' && CONFIG && typeof CONFIG.getRawUrl === 'function') ? CONFIG.getRawUrl(CATALOG_PATH) : 'catalog/catalog.json');
+    ? `${API_BASE}/api/catalog`
+    : '/api/catalog';
 
 // Global object to store app data (compatible with existing components)
 window.APP_DATA = {
@@ -19,86 +17,47 @@ document.addEventListener('DOMContentLoaded', () => {
     initCatalog();
 });
 
+function shouldIgnoreLocalOverride(data) {
+    try {
+        const items = Array.isArray(data) ? data : [];
+        if (!items.length) return true;
+        const currentHost = String(location.host || '').toLowerCase();
+        for (const item of items) {
+            const model = item && typeof item.model === 'string' ? item.model : '';
+            const marker = item && typeof item.marker === 'string' ? item.marker : '';
+            for (const value of [model, marker]) {
+                if (!value || typeof value !== 'string') continue;
+                if (!/^https?:\/\//i.test(value)) continue;
+                let urlHost = '';
+                try {
+                    urlHost = String(new URL(value).host || '').toLowerCase();
+                } catch (e) {
+                    urlHost = '';
+                }
+                if (urlHost && currentHost && urlHost !== currentHost) return true;
+            }
+        }
+        return false;
+    } catch (e) {
+        return true;
+    }
+}
+
 async function initCatalog() {
     console.log("Initializing Catalog Loader...");
     console.log("Configured Catalog URL:", CATALOG_URL);
-    
-    // Check for admin override (local storage from admin panel)
-    const localOverride = localStorage.getItem('ar_catalog_data');
-    
-    if (localOverride) {
-        console.log("Loading catalog from LocalStorage (Admin Override)");
-        try {
-            const data = JSON.parse(localOverride);
-            await processCatalogDataAsync(data);
-        } catch (e) {
-            console.error("Error parsing local catalog:", e);
-            await fetchCatalog();
-        }
-    } else {
-        if (!API_BASE) {
-            try {
-                const controller = new AbortController();
-                const timer = setTimeout(() => controller.abort(), 600);
-                const res = await fetch('/api/health', { cache: 'no-store', signal: controller.signal });
-                clearTimeout(timer);
-                if (res.ok) {
-                    CATALOG_URL = '/api/ar-objects';
-                    console.log("Detected local Node API, using:", CATALOG_URL);
-                }
-            } catch (e) {}
-        }
-        await fetchCatalog();
-    }
+    await fetchCatalog();
 }
 
 async function fetchCatalog() {
     console.log(`Fetching catalog from ${CATALOG_URL}...`);
     try {
-        const isApi = typeof CATALOG_URL === 'string' && (CATALOG_URL.includes('/api/') || CATALOG_URL.startsWith('/api/'));
-        let response = await fetch(CATALOG_URL, isApi ? { cache: 'no-store' } : undefined);
-        if (!response.ok && isApi && typeof CATALOG_URL === 'string' && CATALOG_URL.includes('/api/ar-objects')) {
-            const alt = CATALOG_URL.replace('/api/ar-objects', '/api/catalog');
-            response = await fetch(alt, { cache: 'no-store' });
-        }
+        const response = await fetch(CATALOG_URL, { cache: 'no-store' });
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
-        await processCatalogDataAsync(data, { assetsFromRepo: CATALOG_URL.startsWith('http') && !API_BASE });
+        await processCatalogDataAsync(data, { assetsFromRepo: false });
     } catch (error) {
         console.error("Failed to load catalog:", error);
-        
-        // If API fails, try GitHub/raw catalog; then local fallback for dev
-        if (typeof CATALOG_URL === 'string' && (CATALOG_URL.includes('/api/') || CATALOG_URL.startsWith('/api/') || (API_BASE && CATALOG_URL.startsWith(API_BASE)))) {
-            try {
-                const rawUrl = (typeof CONFIG !== 'undefined' && CONFIG && typeof CONFIG.getRawUrl === 'function')
-                    ? CONFIG.getRawUrl(CATALOG_PATH)
-                    : '';
-                if (rawUrl) {
-                    console.log("API failed, trying raw catalog:", rawUrl);
-                    const response = await fetch(rawUrl);
-                    if (response.ok) {
-                        const data = await response.json();
-                        await processCatalogDataAsync(data, { assetsFromRepo: true });
-                        return;
-                    }
-                }
-            } catch (e) {}
-        }
-
-        if (typeof CATALOG_URL === 'string' && CATALOG_URL.startsWith('http')) {
-            console.log("External load failed, trying local fallback 'catalog/catalog.json'...");
-            try {
-                const response = await fetch('catalog/catalog.json', { cache: 'no-store' });
-                if (response.ok) {
-                    const data = await response.json();
-                    await processCatalogDataAsync(data, { assetsFromRepo: true });
-                    return;
-                }
-            } catch (e) {
-                console.error("Local fallback also failed", e);
-            }
-        }
-        
         try {
             const msg = error && typeof error.message === 'string' ? error.message : String(error || 'Error cargando el catálogo');
             document.dispatchEvent(new CustomEvent('catalogerror', { detail: { message: msg } }));
@@ -175,13 +134,8 @@ async function resolveAssetUrlAsync(pathOrUrl, assetsFromRepo) {
 }
 
 async function processCatalogDataAsync(data, options = {}) {
-    const items = (Array.isArray(data) ? data : []).filter((item) => item && item.model && item.marker);
-    const shouldResolveFromRepo = items.some((item) => {
-        const value = item && typeof item.model === 'string' ? item.model : '';
-        return value && !value.startsWith('idb://') && !value.startsWith('/') && !/^https?:\/\//i.test(value);
-    });
-
-    const assetsFromRepo = options.assetsFromRepo ?? (CATALOG_URL.startsWith('http') && shouldResolveFromRepo);
+    const items = Array.isArray(data) ? data : [];
+    const assetsFromRepo = options.assetsFromRepo ?? false;
 
     // Map the JSON data to the structure our app expects
     // The JSON has "id" as string, but we need numeric ID for barcodes if we stick to barcode system.
@@ -222,9 +176,46 @@ async function processCatalogDataAsync(data, options = {}) {
     }));
 
     // Update Global State
+    processedModels.forEach((m) => {
+        if (!m) return;
+        const missingModel = !m.modelSrc;
+        const missingMarker = !m.markerSrc;
+        if (missingModel || missingMarker) {
+            console.error(`Modelo descartado: ${m.name || m.originalId || m.id} | model=${m.modelSrc} | marker=${m.markerSrc}`);
+        }
+    });
     const filteredModels = processedModels.filter((m) => m && m.modelSrc && m.markerSrc);
     window.APP_DATA.models = filteredModels;
+
+    if (!filteredModels.length) {
+        console.error('Catálogo cargado pero sin modelos válidos (modelSrc/markerSrc nulos).');
+        try {
+            document.dispatchEvent(new CustomEvent('catalogerror', { detail: { message: 'Catálogo sin modelos válidos' } }));
+        } catch (e) {}
+        return;
+    }
     
+    const toPrefetch = filteredModels
+        .map((m) => m && typeof m.modelSrc === 'string' ? m.modelSrc : '')
+        .filter(Boolean)
+        .slice(0, 4);
+    if (toPrefetch.length) {
+        setTimeout(() => {
+            Promise.allSettled(
+                toPrefetch.map((url) => {
+                    try {
+                        if (!url || typeof url !== 'string') return Promise.resolve();
+                        if (url.startsWith('blob:')) return Promise.resolve();
+                        if (url.startsWith('idb://')) return Promise.resolve();
+                        return fetch(url, { cache: 'force-cache' }).then(() => {});
+                    } catch (e) {
+                        return Promise.resolve();
+                    }
+                })
+            ).catch(() => {});
+        }, 0);
+    }
+
     // Generate the AR Scene
     generateARScene(filteredModels);
 
@@ -292,6 +283,7 @@ function generateARScene(models) {
         modelEnt.setAttribute('position', model.position);
         modelEnt.setAttribute('rotation', model.rotation);
         modelEnt.setAttribute('scale', model.scale);
+        modelEnt.setAttribute('gltf-model', model.modelSrc);
         modelEnt.setAttribute('data-gltf-src', model.modelSrc);
         modelEnt.setAttribute('click-handler', '');
         modelEnt.setAttribute('model-controller', `minScale: ${model.minScale}; maxScale: ${model.maxScale}; rotationSpeed: ${model.rotationSpeed}`);

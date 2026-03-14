@@ -184,6 +184,7 @@
             if (pathOrUrl.startsWith('/') && typeof CONFIG !== 'undefined' && CONFIG && typeof CONFIG.getApiBaseUrl === 'function') {
                 const base = CONFIG.getApiBaseUrl();
                 if (base) return `${base}${pathOrUrl}`;
+                return pathOrUrl;
             }
             if (typeof CONFIG !== 'undefined' && CONFIG && typeof CONFIG.getRawUrl === 'function') return CONFIG.getRawUrl(pathOrUrl.replace(/^\/+/, ''));
             return pathOrUrl;

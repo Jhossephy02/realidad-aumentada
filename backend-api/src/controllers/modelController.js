@@ -12,10 +12,10 @@ function toCatalogItem(doc) {
     name: doc.name,
     price: doc.price ?? 0,
     description: doc.description ?? '',
-    model: doc.glb,
-    marker: doc.markerImage,
-    markerPatt: doc.markerPatt || '',
-    markerPreview: doc.markerPreview || '',
+    model: normalizeUploadValue(doc.glb),
+    marker: normalizeUploadValue(doc.markerImage),
+    markerPatt: normalizeUploadValue(doc.markerPatt || ''),
+    markerPreview: normalizeUploadValue(doc.markerPreview || ''),
     scale: doc.scale || '1 1 1',
     rotation: doc.rotation || '0 0 0',
     position: doc.position || '0 0 0',
@@ -41,8 +41,11 @@ function normalizeUploadValue(value) {
   } catch (e) {
     pathname = value;
   }
-  if (pathname.startsWith('/uploads/')) return pathname;
-  return value;
+  if (value.startsWith('http')) {
+    if (pathname && pathname.startsWith('/')) return pathname;
+    return '';
+  }
+  return pathname;
 }
 
 async function deleteUploadByUrl(url) {
@@ -65,7 +68,13 @@ export async function listModels(req, res) {
 
 export async function listCatalog(req, res) {
   const docs = await ArModel.find({}).sort({ createdAt: 1 }).lean();
-  res.json(docs.map(toCatalogItem));
+  const items = docs.map(toCatalogItem);
+  for (let i = 0; i < items.length; i += 1) {
+    const it = items[i];
+    if (!it) continue;
+    if (!Number.isFinite(Number(it.targetIndex))) it.targetIndex = i;
+  }
+  res.json(items);
 }
 
 export async function listArObjects(req, res) {
@@ -77,11 +86,11 @@ export async function listArObjects(req, res) {
     price: d.price ?? 0,
     barcodeValue: d.barcodeValue ?? null,
     targetIndex: d.targetIndex ?? null,
-    model: d.glb,
-    marker: d.markerImage,
-    markerImage: d.markerImage,
-    markerPatt: d.markerPatt || '',
-    markerPreview: d.markerPreview || '',
+    model: normalizeUploadValue(d.glb),
+    marker: normalizeUploadValue(d.markerImage),
+    markerImage: normalizeUploadValue(d.markerImage),
+    markerPatt: normalizeUploadValue(d.markerPatt || ''),
+    markerPreview: normalizeUploadValue(d.markerPreview || ''),
     scale: d.scale || '1 1 1',
     rotation: d.rotation || '0 0 0',
     position: d.position || '0 0 0',
@@ -298,6 +307,13 @@ export async function createProduct(req, res) {
   if (!model) return res.status(400).json({ message: 'Missing model' });
   if (!marker) return res.status(400).json({ message: 'Missing marker' });
 
+  let targetIndex = Number.isFinite(Number(body?.targetIndex)) ? Number(body.targetIndex) : null;
+  if (targetIndex === null) {
+    const max = await ArModel.find({ targetIndex: { $ne: null } }).sort({ targetIndex: -1 }).select({ targetIndex: 1 }).lean();
+    const maxVal = max && max[0] && Number.isFinite(max[0].targetIndex) ? Number(max[0].targetIndex) : -1;
+    targetIndex = maxVal + 1;
+  }
+
   const doc = await ArModel.create({
     name,
     description: typeof body?.description === 'string' ? body.description : '',
@@ -306,7 +322,7 @@ export async function createProduct(req, res) {
     markerImage: marker,
     markerPattern: typeof body?.markerPattern === 'string' ? body.markerPattern : '',
     barcodeValue: Number.isFinite(Number(body?.barcodeValue)) ? Number(body.barcodeValue) : null,
-    targetIndex: Number.isFinite(Number(body?.targetIndex)) ? Number(body.targetIndex) : null,
+    targetIndex,
     scale: typeof body?.scale === 'string' ? body.scale : '1 1 1',
     rotation: typeof body?.rotation === 'string' ? body.rotation : '0 0 0',
     position: typeof body?.position === 'string' ? body.position : '0 0 0',
@@ -334,6 +350,12 @@ export async function updateProduct(req, res) {
   if (typeof body?.rotation === 'string') doc.rotation = body.rotation;
   if (typeof body?.position === 'string') doc.position = body.position;
   if (body?.details != null) doc.details = body.details;
+
+  if (doc.targetIndex == null) {
+    const max = await ArModel.find({ targetIndex: { $ne: null }, arId: { $ne: arId } }).sort({ targetIndex: -1 }).select({ targetIndex: 1 }).lean();
+    const maxVal = max && max[0] && Number.isFinite(max[0].targetIndex) ? Number(max[0].targetIndex) : -1;
+    doc.targetIndex = maxVal + 1;
+  }
 
   await doc.save();
   res.json(toCatalogItem(doc.toObject()));

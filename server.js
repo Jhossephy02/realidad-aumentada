@@ -92,6 +92,82 @@ const db = new Low(new JSONFile(DB_PATH), { products: [] });
 await db.read();
 db.data ||= { products: [] };
 
+async function tryRepairMissingUploads() {
+  const products = Array.isArray(db.data.products) ? db.data.products : [];
+  if (!products.length) return;
+
+  let modelEntries = [];
+  let markerEntries = [];
+  try {
+    modelEntries = await fs.readdir(MODELS_DIR, { withFileTypes: true });
+  } catch (e) {}
+  try {
+    markerEntries = await fs.readdir(MARKERS_DIR, { withFileTypes: true });
+  } catch (e) {}
+
+  const modelFiles = await Promise.all(
+    modelEntries
+      .filter((e) => e && e.isFile() && e.name.toLowerCase().endsWith('.glb'))
+      .map(async (e) => {
+        const abs = path.join(MODELS_DIR, e.name);
+        try {
+          const st = await fs.stat(abs);
+          return { name: e.name, mtimeMs: Number(st.mtimeMs) || 0 };
+        } catch (err) {
+          return null;
+        }
+      })
+  );
+  const markerFiles = await Promise.all(
+    markerEntries
+      .filter((e) => e && e.isFile() && (e.name.toLowerCase().endsWith('.png') || e.name.toLowerCase().endsWith('.jpg') || e.name.toLowerCase().endsWith('.jpeg')))
+      .map(async (e) => {
+        const abs = path.join(MARKERS_DIR, e.name);
+        try {
+          const st = await fs.stat(abs);
+          return { name: e.name, mtimeMs: Number(st.mtimeMs) || 0 };
+        } catch (err) {
+          return null;
+        }
+      })
+  );
+
+  const latestModel = modelFiles.filter(Boolean).sort((a, b) => (b.mtimeMs - a.mtimeMs))[0]?.name || null;
+  const latestMarker = markerFiles.filter(Boolean).sort((a, b) => (b.mtimeMs - a.mtimeMs))[0]?.name || null;
+  if (!latestModel && !latestMarker) return;
+
+  let changed = false;
+  for (const p of products) {
+    if (!p || typeof p !== 'object') continue;
+
+    const modelInfo = uploadBasenameFromValue(p.model);
+    if (latestModel && modelInfo && modelInfo.folder === 'models') {
+      const abs = path.join(MODELS_DIR, modelInfo.filename);
+      try {
+        await fs.access(abs);
+      } catch (e) {
+        p.model = `/uploads/models/${latestModel}`;
+        changed = true;
+      }
+    }
+
+    const markerInfo = uploadBasenameFromValue(p.marker);
+    if (latestMarker && markerInfo && markerInfo.folder === 'markers') {
+      const abs = path.join(MARKERS_DIR, markerInfo.filename);
+      try {
+        await fs.access(abs);
+      } catch (e) {
+        p.marker = `/uploads/markers/${latestMarker}`;
+        changed = true;
+      }
+    }
+  }
+
+  if (changed) await db.write();
+}
+
+await tryRepairMissingUploads();
+
 const app = express();
 app.disable('x-powered-by');
 
@@ -100,7 +176,7 @@ app.use((req, res, next) => {
   res.setHeader('Referrer-Policy', 'no-referrer');
   res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,POST,PUT,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
@@ -487,11 +563,27 @@ app.post('/api/upload/targets', express.json({ limit: '50mb' }), async (req, res
 });
 
 app.get('/api/targets.mind', async (req, res) => {
+  const fallbackAbs = path.join(FRONTEND_DIR, 'targets.mind');
   try {
-    await fs.access(TARGETS_PATH);
+    let abs = TARGETS_PATH;
+    let size = 0;
+    try {
+      const st = await fs.stat(abs);
+      size = Number(st.size) || 0;
+    } catch (e) {
+      size = 0;
+    }
+
+    if (size < 1024) {
+      abs = fallbackAbs;
+      const st2 = await fs.stat(abs);
+      size = Number(st2.size) || 0;
+      if (size < 1024) throw new Error('targets.mind too small');
+    }
+
     res.setHeader('Content-Type', 'application/octet-stream');
     res.setHeader('Cache-Control', 'no-store');
-    res.sendFile(TARGETS_PATH);
+    res.sendFile(abs);
   } catch (e) {
     res.status(404).json({ message: 'targets.mind not found' });
   }
@@ -505,6 +597,11 @@ app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') return res.status(413).json({ message: 'File too large' });
     return res.status(400).json({ message: 'Invalid upload' });
+  }
+  const status = Number(err?.status || err?.statusCode || 0) || 500;
+  if (status >= 400 && status < 600 && status !== 500) {
+    if (typeof err?.message === 'string' && err.message) return res.status(status).json({ message: err.message });
+    return res.sendStatus(status);
   }
   if (err && typeof err.message === 'string') {
     return res.status(500).json({ message: err.message });

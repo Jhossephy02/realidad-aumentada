@@ -1,86 +1,18 @@
 [
-    {
-        "id": "ramen-001",
-        "barcodeValue": 0,
-        "name": "Zelva Ramen",
-        "description": "Ramen especial de la casa con camarones frescos, huevo y vegetales.",
-        "price": "$12.99",
-        "model": "models/shrimp_ramen_bowl.glb",
-        "marker": "markers/ramen.png",
-        "scale": "0.8 0.8 0.8",
-        "rotation": "0 45 0",
-        "position": "0 0.1 0",
-        "minScale": 0.2,
-        "maxScale": 4,
-        "rotationSpeed": 1.5,
-        "details": {
-            "ingredients": "Caldo tonkotsu, fideos artesanos, camarones tigre, huevo marinado, nori, cebollín.",
-            "calories": "650 kcal",
-            "time": "15-20 min",
-            "chefNote": "Nuestro caldo se cocina a fuego lento durante 12 horas para lograr ese sabor umami profundo."
-        }
-    },
-    {
-        "id": "sushi-roll-002",
-        "barcodeValue": 1,
-        "name": "Sushi Roll",
-        "description": "Roll clásico de salmón y aguacate con semillas de sésamo.",
-        "price": "$8.50",
-        "model": "models/sushi_rolls.glb",
-        "marker": "markers/sushi_roll.png",
-        "scale": "2.5 2.5 2.5",
-        "rotation": "0 45 0",
-        "position": "0 0.1 0",
-        "minScale": 0.5,
-        "maxScale": 8,
-        "rotationSpeed": 1.5,
-        "details": {
-            "ingredients": "Arroz de sushi, salmón fresco, aguacate, alga nori, sésamo tostado.",
-            "calories": "320 kcal",
-            "time": "10 min",
-            "chefNote": "Perfecto para compartir o como entrada ligera."
-        }
-    },
-    {
-        "id": "nigiri-003",
-        "barcodeValue": 2,
-        "name": "Nigiri Salmón",
-        "description": "Nigiri tradicional con corte premium de salmón noruego.",
-        "price": "$5.00",
-        "model": "models/salmon_nigiri.glb",
-        "marker": "markers/sushi_salmon.png",
-        "scale": "0.5 0.5 0.5",
-        "rotation": "0 45 0",
-        "position": "0 0.1 0",
-        "minScale": 0.1,
-        "maxScale": 3,
-        "rotationSpeed": 1.5,
-        "details": {
-            "ingredients": "Arroz avinagrado, lomo de salmón premium, toque de wasabi.",
-            "calories": "180 kcal (2 piezas)",
-            "time": "5 min",
-            "chefNote": "El corte del pescado es la clave, realizado por nuestros maestros sushiman."
-        }
-    },
-    {
-        "id": "bento-004",
-        "barcodeValue": 3,
-        "name": "Bento Box",
-        "description": "Caja completa con variedad de sushi y acompañamientos.",
-        "price": "$15.00",
-        "model": "models/sushi.glb",
-        "marker": "markers/sushi.png",
-        "scale": "3.5 3.5 3.5",
-        "rotation": "0 45 0",
-        "position": "0 0.1 0",
-        "minScale": 1.0,
-        "maxScale": 10,
-        "rotationSpeed": 1.5,
-        "details": {
-            "ingredients": "Surtido de nigiris y makis, ensalada de algas, edamame, fruta de temporada.",
-            "calories": "850 kcal",
-            "time": "20 min",
-            "chefNote": "La experiencia completa de la cocina japonesa en una sola caja."
-        }
-    }
+  {
+    "id": "salmon-nigiri-test",
+    "barcodeValue": 0,
+    "targetIndex": 0,
+    "name": "Salmon Nigiri",
+    "description": "Test",
+    "price": 0,
+    "model": "/to-move-assets/models/salmon_nigiri.glb",
+    "marker": "/to-move-assets/markers/Captura%20de%20pantalla%202026-03-10%20093801.png",
+    "scale": "1 1 1",
+    "rotation": "0 0 0",
+    "position": "0 0 0",
+    "minScale": 0.1,
+    "maxScale": 5,
+    "rotationSpeed": 0
+  }
 ]

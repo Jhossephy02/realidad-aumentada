@@ -6,7 +6,7 @@ import mongoose from 'mongoose';
 import { PROJECT_ROOT, UPLOADS_DIR } from './config/paths.js';
 import { authRoutes } from './routes/authRoutes.js';
 import { modelRoutes } from './routes/modelRoutes.js';
-
+  
 function resolveRootFromEnv(name) {
   const raw = String(process.env[name] || '').trim();
   if (!raw) return '';
@@ -60,11 +60,24 @@ export function createApp() {
   app.use('/api', authRoutes);
   app.use('/api', modelRoutes);
 
+  const testAssetsDir = path.join(PROJECT_ROOT, 'to-move-assets');
+  app.use('/to-move-assets', express.static(testAssetsDir, { fallthrough: false, maxAge: '1h' }));
+
   app.use('/uploads', express.static(UPLOADS_DIR, { fallthrough: false, maxAge: '30d', immutable: true }));
   const adminDist = resolveRootFromEnv('ADMIN_DIST_DIR') || path.join(PROJECT_ROOT, 'admin-dashboard', 'dist');
   app.use('/admin', express.static(adminDist, { maxAge: '1h' }));
   const frontendDir = resolveRootFromEnv('FRONTEND_DIR') || path.join(PROJECT_ROOT, 'frontend-ar');
-  app.use(express.static(frontendDir, { maxAge: '1h' }));
+  app.use(
+    express.static(frontendDir, {
+      maxAge: '1h',
+      setHeaders(res, filePath) {
+        const p = String(filePath || '').toLowerCase();
+        if (p.endsWith('.html') || p.endsWith('.js') || p.endsWith('.css') || p.endsWith('.mind')) {
+          res.setHeader('Cache-Control', 'no-store');
+        }
+      }
+    })
+  );
 
   app.use((err, req, res, next) => {
     if (err instanceof multer.MulterError) {

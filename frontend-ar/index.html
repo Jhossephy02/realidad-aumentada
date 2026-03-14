@@ -13,14 +13,14 @@
 
     <style>
       html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: sans-serif; touch-action: none; background: #000; }
-      a-scene, canvas, .a-canvas, video {
+      a-scene, .a-canvas, video {
         position: fixed !important;
         inset: 0 !important;
         width: 100vw !important;
         height: 100vh !important;
       }
       video { z-index: 0 !important; }
-      canvas, .a-canvas { z-index: 1 !important; background: transparent !important; }
+      .a-canvas { z-index: 1 !important; background: transparent !important; }
       video { object-fit: cover !important; }
       
       .capture-button {
@@ -150,45 +150,54 @@
         100% { transform: rotate(360deg); }
       }
 
-      #status-indicator {
-        position: fixed;
-        top: 14px;
-        right: 14px;
-        z-index: 9998;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 10px 12px;
-        border-radius: 999px;
-        background: rgba(0, 0, 0, 0.55);
-        color: #fff;
-        font-size: 0.9rem;
-        backdrop-filter: blur(6px);
-        -webkit-backdrop-filter: blur(6px);
-        user-select: none;
-        pointer-events: none;
-        max-width: 70vw;
-      }
-      .status-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: #9e9e9e;
-        flex: 0 0 10px;
-      }
-      #status-indicator[data-state="loading"] .status-dot { background: #ff9800; }
-      #status-indicator[data-state="ready"] .status-dot { background: #4caf50; }
-      #status-indicator[data-state="scanning"] .status-dot { background: #03a9f4; }
-      #status-indicator[data-state="tracking"] .status-dot { background: #8bc34a; }
-      #status-indicator[data-state="error"] .status-dot { background: #f44336; }
-
       #ar-retry {
         position: fixed;
         inset: 0;
         z-index: 9997;
         display: none;
+        align-items: center;
+        justify-content: center;
         pointer-events: auto;
-        background: rgba(0,0,0,0.01);
+        padding: 22px;
+        box-sizing: border-box;
+        background: rgba(0,0,0,0.35);
+      }
+      #ar-retry .retry-card {
+        width: min(520px, 92vw);
+        background: rgba(0, 0, 0, 0.78);
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.18);
+        border-radius: 16px;
+        padding: 18px 16px;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        text-align: center;
+      }
+      #ar-retry .retry-title {
+        font-size: 1.1rem;
+        font-weight: 800;
+        margin: 0 0 6px 0;
+      }
+      #ar-retry .retry-sub {
+        font-size: 0.92rem;
+        opacity: 0.92;
+        margin: 0 0 14px 0;
+        line-height: 1.35;
+      }
+      #ar-retry .retry-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 16px;
+        border-radius: 999px;
+        background: rgba(255, 152, 0, 0.95);
+        color: #111;
+        font-weight: 800;
+        border: none;
+        min-width: 220px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
       }
 
       /* Info Button (i) */
@@ -215,27 +224,6 @@
       }
       .info-btn.visible {
         opacity: 1;
-      }
-
-      .admin-btn {
-        position: fixed;
-        top: 60px;
-        right: 14px;
-        width: 44px;
-        height: 44px;
-        border-radius: 999px;
-        background: rgba(0,0,0,0.6);
-        color: #fff;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-        font-size: 18px;
-        z-index: 9999;
-        cursor: pointer;
-        opacity: 0.92;
-        pointer-events: auto;
-        user-select: none;
       }
 
       #admin-hotspot {
@@ -317,18 +305,10 @@
       <div class="loader-text">Cargando Experiencia AR...</div>
     </div>
 
-    <!-- Status Indicator -->
-    <div id="status-indicator">
-      <div class="status-dot" id="status-dot"></div>
-      <span id="status-text">Esperando...</span>
-    </div>
     <div id="ar-retry"></div>
-
-    <div id="debug-text" style="position: fixed; top: 10px; left: 10px; color: yellow; background: rgba(0,0,0,0.6); z-index: 9999; font-family: monospace; font-size: 14px; pointer-events: none; padding: 5px; border-radius: 4px;">Debug: Esperando touch...</div>
     
     <!-- Info Button -->
     <div class="info-btn" id="info-btn">i</div>
-    <div class="admin-btn" id="admin-btn">⚙</div>
     <div id="admin-hotspot"></div>
 
     <!-- Detailed Modal -->
@@ -376,8 +356,8 @@
     
     <a-scene 
       embedded 
-      mindar-image="imageTargetSrc: targets.mind; autoStart: false; uiLoading: no; uiScanning: no; uiError: no;"
-      renderer="colorManagement: true; precision: highp; antialias: true; alpha: true; pixelRatio: 2; powerPreference: high-performance; sortObjects: true; physicallyCorrectLights: true;"
+      mindar-image="imageTargetSrc: /api/targets.mind; autoStart: false; uiLoading: no; uiScanning: no; uiError: no; maxTrack: 1;"
+      renderer="colorManagement: true; precision: highp; antialias: true; alpha: true; preserveDrawingBuffer: true; pixelRatio: 2; powerPreference: high-performance; sortObjects: true; physicallyCorrectLights: true;"
       background="transparent: true"
       vr-mode-ui="enabled: false"
       device-orientation-permission-ui="enabled: false"
@@ -436,35 +416,108 @@
       };
       const setRetryVisible = (visible) => {
         if (!retryWrap) return;
-        retryWrap.style.display = 'none';
+        if (visible) {
+          if (!retryWrap.dataset.ready) {
+            retryWrap.dataset.ready = '1';
+            retryWrap.innerHTML = `
+              <div class="retry-card" role="dialog" aria-modal="true">
+                <div class="retry-title" id="retry-title">Activa la cámara</div>
+                <div class="retry-sub" id="retry-sub">Toca el botón para pedir permiso y comenzar.</div>
+                <button class="retry-btn" id="retry-btn" type="button">Activar cámara</button>
+              </div>
+            `;
+            const btn = retryWrap.querySelector('#retry-btn');
+            const onTry = (e) => {
+              try { e?.preventDefault?.(); } catch (err) {}
+              arUserActivated = true;
+              startArIfReady();
+            };
+            if (btn) btn.addEventListener('click', onTry, { passive: false });
+            retryWrap.addEventListener('click', (e) => {
+              const target = e && e.target ? e.target : null;
+              if (target && target.id === 'retry-btn') return;
+            }, { passive: true });
+          }
+          retryWrap.style.display = 'flex';
+        } else {
+          retryWrap.style.display = 'none';
+        }
       };
 
       const forceCameraLayers = () => {
-        try {
-          const videos = document.querySelectorAll('video');
-          for (const v of videos) {
-            v.style.position = 'fixed';
-            v.style.inset = '0';
-            v.style.width = '100vw';
-            v.style.height = '100vh';
-            v.style.objectFit = 'cover';
-            v.style.zIndex = '0';
-            v.style.display = 'block';
-            v.setAttribute('playsinline', '');
-            v.setAttribute('webkit-playsinline', '');
-            v.muted = true;
-            v.autoplay = true;
-          }
-          const canvases = document.querySelectorAll('canvas');
-          for (const c of canvases) {
-            c.style.position = 'fixed';
-            c.style.inset = '0';
-            c.style.width = '100vw';
-            c.style.height = '100vh';
-            c.style.zIndex = '1';
-            c.style.background = 'transparent';
-          }
-        } catch (e) {}
+        const apply = () => {
+          try {
+            const videos = document.querySelectorAll('video');
+            for (const v of videos) {
+              v.style.position = 'fixed';
+              v.style.inset = '0';
+              v.style.width = '100vw';
+              v.style.height = '100vh';
+              v.style.objectFit = 'cover';
+              v.style.zIndex = '0';
+              v.style.display = 'block';
+              v.style.pointerEvents = 'none';
+              v.setAttribute('playsinline', '');
+              v.setAttribute('webkit-playsinline', '');
+              v.muted = true;
+              v.autoplay = true;
+            }
+
+            const canvases = document.querySelectorAll('.a-canvas, canvas.a-canvas');
+            for (const c of canvases) {
+              c.style.position = 'fixed';
+              c.style.inset = '0';
+              c.style.width = '100vw';
+              c.style.height = '100vh';
+              c.style.zIndex = '5';
+              c.style.background = 'transparent';
+              c.style.display = 'block';
+              c.style.visibility = 'visible';
+              c.style.opacity = '1';
+              c.style.pointerEvents = 'none';
+            }
+            try {
+              const scene = document.querySelector('a-scene');
+              const c = scene && scene.canvas ? scene.canvas : null;
+              if (c) {
+                c.style.position = 'fixed';
+                c.style.inset = '0';
+                c.style.width = '100vw';
+                c.style.height = '100vh';
+                c.style.zIndex = '5';
+                c.style.background = 'transparent';
+                c.style.display = 'block';
+                c.style.visibility = 'visible';
+                c.style.opacity = '1';
+                c.style.pointerEvents = 'none';
+              }
+            } catch (e) {}
+
+            if (debugEnabled) {
+              const debugEl = document.getElementById('debug-text');
+              const scene = document.querySelector('a-scene');
+              const c = scene && scene.canvas ? scene.canvas : null;
+              const v = document.querySelector('video');
+              if (debugEl) {
+                const cz = c ? (c.style.zIndex || '') : '';
+                const vz = v ? (v.style.zIndex || '') : '';
+                const cc = c ? `canvas:${cz || '?'} ${c.clientWidth}x${c.clientHeight}` : 'canvas:NA';
+                const vv = v ? `video:${vz || '?'} ${v.clientWidth}x${v.clientHeight}` : 'video:NA';
+                debugEl.innerText = `${cc} | ${vv}`;
+              }
+            }
+          } catch (e) {}
+        };
+
+        apply();
+        let tries = 0;
+        const maxTries = 120;
+        const tick = () => {
+          tries += 1;
+          apply();
+          if (tries < maxTries) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
       };
 
       const host = String(location.hostname || '').toLowerCase();
@@ -590,44 +643,36 @@
         }
       };
 
+      const verifyTargetsMind = async (url) => {
+        if (!url || typeof url !== 'string') return false;
+        if (url.startsWith('blob:')) return true;
+        try {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 1500);
+          const res = await fetch(url, { method: 'HEAD', cache: 'no-store', signal: controller.signal });
+          clearTimeout(timer);
+          if (res.status === 405) return true;
+          if (!res.ok) return false;
+          const len = Number(res.headers.get('content-length') || 0);
+          if (Number.isFinite(len) && len > 0 && len < 1000) return false;
+          return true;
+        } catch (e) {
+          return false;
+        }
+      };
+
       const initTargetsMind = async () => {
         setStatus('loading', 'Cargando targets...');
         let src = getTargetsMindSrc();
-        try {
-          const blob = await getLocalBlob('targets.mind');
-          if (blob) {
-            src = URL.createObjectURL(blob);
-          }
-        } catch (e) {}
-        if (src === getTargetsMindSrc()) {
-          try {
-            const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), 600);
-            const res = await fetch('/api/health', { cache: 'no-store', signal: controller.signal });
-            clearTimeout(timer);
-            if (res.ok) {
-              src = '/api/targets.mind';
-            }
-          } catch (e) {}
-
-          if (src === getTargetsMindSrc()) {
-            const localOk = await canFetchWithTimeout('targets.mind', 1200);
-            if (!localOk && typeof CONFIG !== 'undefined' && CONFIG && typeof CONFIG.getRawUrl === 'function') {
-              const raw = CONFIG.getRawUrl('targets.mind');
-              const rawOk = await canFetchWithTimeout(raw, 1500);
-              if (rawOk) src = raw;
-            }
-          }
-        }
-        const ok = await canFetchWithTimeout(src, 1800);
+        const ok = await verifyTargetsMind(src);
         if (!ok) {
           targetsReady = false;
-          setStatus('error', 'No se encontró targets.mind');
-          setRetryVisible(false);
+          setStatus('error', 'No se pudo cargar targets.mind');
+          setRetryVisible(true);
           hideLoader();
           return;
         }
-        sceneEl.setAttribute('mindar-image', `imageTargetSrc: ${src}; autoStart: false; uiLoading: no; uiScanning: no; uiError: no;`);
+        sceneEl.setAttribute('mindar-image', `imageTargetSrc: ${src}; autoStart: false; uiLoading: no; uiScanning: no; uiError: no; maxTrack: 1;`);
         targetsReady = true;
         setStatus('ready', 'Targets listos');
         startArIfReady();
@@ -655,21 +700,56 @@
 
       const preflightCameraPermission = async () => {
         if (!canUseCamera()) return { ok: false, reason: 'insecure' };
-        const md = navigator && navigator.mediaDevices ? navigator.mediaDevices : null;
-        if (!md || typeof md.getUserMedia !== 'function') return { ok: false, reason: 'unsupported' };
         try {
-          const stream = await md.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
-          try {
-            for (const track of stream.getTracks()) {
-              try { track.stop(); } catch (e) {}
-            }
-          } catch (e) {}
+          const md = navigator && navigator.mediaDevices ? navigator.mediaDevices : null;
+          if (!md || typeof md.getUserMedia !== 'function') return { ok: false, reason: 'unsupported' };
+          const perms = navigator && navigator.permissions ? navigator.permissions : null;
+          if (perms && typeof perms.query === 'function') {
+            const res = await perms.query({ name: 'camera' });
+            const state = String(res && res.state ? res.state : '');
+            if (state === 'denied') return { ok: false, reason: 'denied' };
+          }
           return { ok: true };
         } catch (err) {
-          const msg = String(err?.name || err?.message || err || '').toLowerCase();
-          if (msg.includes('notallowed') || msg.includes('permission') || msg.includes('denied')) return { ok: false, reason: 'denied' };
-          if (msg.includes('notfound') || msg.includes('overconstrained')) return { ok: false, reason: 'notfound' };
-          return { ok: false, reason: 'error', error: err };
+          return { ok: true };
+        }
+      };
+
+      const withTimeout = (promise, timeoutMs, timeoutMessage) => {
+        let timer = null;
+        const timeout = new Promise((_, reject) => {
+          timer = setTimeout(() => reject(new Error(timeoutMessage || 'timeout')), timeoutMs);
+        });
+        return Promise.race([promise, timeout]).finally(() => {
+          if (timer) clearTimeout(timer);
+        });
+      };
+
+      let warmupDone = false;
+      const warmupCameraOnce = async () => {
+        if (warmupDone) return true;
+        const md = navigator && navigator.mediaDevices ? navigator.mediaDevices : null;
+        if (!md || typeof md.getUserMedia !== 'function') return false;
+        let stream = null;
+        try {
+          const constraints = { video: { facingMode: { ideal: 'environment' } }, audio: false };
+          stream = await withTimeout(md.getUserMedia(constraints), 8000, 'camera_warmup_timeout');
+          const tracks = stream && typeof stream.getTracks === 'function' ? stream.getTracks() : [];
+          for (const t of tracks) {
+            try { t.stop(); } catch (e) {}
+          }
+          warmupDone = true;
+          return true;
+        } catch (e) {
+          if (stream) {
+            try {
+              const tracks = stream.getTracks ? stream.getTracks() : [];
+              for (const t of tracks) {
+                try { t.stop(); } catch (e2) {}
+              }
+            } catch (e2) {}
+          }
+          return false;
         }
       };
 
@@ -677,10 +757,6 @@
         if (arStarted) return;
         if (!arSystem) {
           setStatus('loading', 'Cargando motor AR...');
-          return;
-        }
-        if (!catalogReady) {
-          setStatus('loading', 'Cargando catálogo...');
           return;
         }
         if (!targetsReady) {
@@ -691,6 +767,7 @@
         cameraStartAttempts += 1;
         arStarted = true;
         setStatus('scanning', 'Solicitando cámara...');
+        setRetryVisible(false);
         Promise.resolve(preflightCameraPermission())
           .then((pre) => {
             if (!pre?.ok) {
@@ -699,7 +776,7 @@
               if (r === 'unsupported') throw new Error('media_unsupported');
               if (r === 'notfound') throw new Error('camera_not_found');
             }
-            return arSystem.start();
+            return warmupCameraOnce().catch(() => false).then(() => withTimeout(Promise.resolve(arSystem.start()), 12000, 'camera_start_timeout'));
           })
           .then(() => {
             setStatus('scanning', 'Escaneando...');
@@ -714,8 +791,13 @@
             arStarted = false;
             console.error(err);
             const msg = String(err?.message || err || '').toLowerCase();
-            if (msg.includes('notallowed') || msg.includes('permission') || msg.includes('denied') || msg.includes('permission_denied')) {
+            if (msg.includes('camera_start_timeout')) {
               setStatus('scanning', 'Activando cámara...');
+              setRetryVisible(false);
+            }
+            if (msg.includes('notallowed') || msg.includes('permission') || msg.includes('denied') || msg.includes('permission_denied')) {
+              setStatus('scanning', 'Permite el acceso a la cámara');
+              setRetryVisible(false);
             } else if (msg.includes('media_unsupported')) {
               setStatus('error', 'Tu navegador no soporta cámara en esta página.');
             } else if (msg.includes('camera_not_found') || msg.includes('notfound')) {
@@ -793,7 +875,7 @@
           setStatus('ready', 'Activando cámara...');
           startArIfReady();
         }
-      }, 6000);
+      }, 2500);
 
       const armUserGestureStart = () => {
         const once = () => {
@@ -895,24 +977,149 @@
           
           this.el.addEventListener('targetFound', () => {
              const modelEl = document.getElementById('model-' + markerId);
-             if (modelEl && !modelEl.getAttribute('gltf-model')) {
+             const placeholderEl = document.getElementById('placeholder-' + markerId);
+             if (placeholderEl) {
+               placeholderEl.setAttribute('visible', true);
+             }
+             try { this.el.object3D.visible = true; } catch (e) {}
+             if (modelEl) {
+               try { modelEl.setAttribute('visible', true); } catch (e) {}
+               try { modelEl.object3D.visible = true; } catch (e) {}
+               if (debugEnabled) {
+                 try {
+                   const id = `debug-cube-${markerId}`;
+                   if (!document.getElementById(id)) {
+                     const cube = document.createElement('a-box');
+                     cube.setAttribute('id', id);
+                     cube.setAttribute('position', '0 0 -0.03');
+                     cube.setAttribute('width', '0.08');
+                     cube.setAttribute('height', '0.08');
+                     cube.setAttribute('depth', '0.08');
+                     cube.setAttribute('color', '#ff00ff');
+                     cube.setAttribute('material', 'opacity: 0.9; transparent: true');
+                     this.el.appendChild(cube);
+                   }
+                 } catch (e) {}
+               }
+
+               const normalizeLoadedModel = () => {
+                 try {
+                   if (typeof THREE === 'undefined') return;
+                   const root = modelEl.getObject3D('mesh');
+                   if (!root) return;
+                   if (modelEl.dataset.modelNormalized === '1') return;
+
+                   try {
+                     root.traverse((o) => {
+                       if (o && o.isMesh) {
+                         o.frustumCulled = false;
+                         if (o.material) {
+                           if (Array.isArray(o.material)) {
+                             for (const m of o.material) {
+                               if (m) {
+                                 m.depthWrite = true;
+                                 m.needsUpdate = true;
+                               }
+                             }
+                           } else {
+                             o.material.depthWrite = true;
+                             o.material.needsUpdate = true;
+                           }
+                         }
+                       }
+                     });
+                   } catch (e) {}
+
+                   root.updateWorldMatrix(true, true);
+                   const box = new THREE.Box3().setFromObject(root);
+                   const size = new THREE.Vector3();
+                   const center = new THREE.Vector3();
+                   box.getSize(size);
+                   box.getCenter(center);
+
+                   const maxDim = Math.max(size.x, size.y, size.z);
+                   if (!Number.isFinite(maxDim) || maxDim <= 0) return;
+
+                   const desired = 0.6;
+                   const scale = modelEl.object3D.scale.clone();
+                   const currentUniform = Number.isFinite(scale.x) && scale.x !== 0 ? scale.x : 1;
+                   const factor = desired / maxDim;
+                   let next = currentUniform * factor;
+                   if (!Number.isFinite(next) || next <= 0) next = factor;
+                   next = Math.max(0.001, Math.min(50, next));
+                   modelEl.object3D.scale.set(next, next, next);
+
+                  root.updateWorldMatrix(true, true);
+                  const box2 = new THREE.Box3().setFromObject(root);
+                  const min = box2.min;
+                  const c2 = new THREE.Vector3();
+                  box2.getCenter(c2);
+
+                  if (root.position) {
+                    root.position.x -= c2.x;
+                    root.position.y -= min.y;
+                    root.position.z -= c2.z;
+                    root.position.z -= 0.03;
+                    root.position.y += 0.02;
+                  }
+
+                   modelEl.dataset.modelNormalized = '1';
+                 } catch (e) {}
+               };
+
+               const applyLoadedState = () => {
+                 normalizeLoadedModel();
+                 if (placeholderEl) {
+                   try { placeholderEl.setAttribute('visible', false); } catch (e) {}
+                 }
+                if (debugEnabled) {
+                  const debugEl = document.getElementById('debug-text');
+                  try {
+                    const src = String(modelEl.getAttribute('gltf-model') || modelEl.getAttribute('data-gltf-src') || '').slice(0, 80);
+                    const s = modelEl.object3D && modelEl.object3D.scale ? modelEl.object3D.scale.x : 0;
+                    const p = modelEl.object3D && modelEl.object3D.position ? modelEl.object3D.position : null;
+                    const meshOk = Boolean(modelEl.getObject3D && modelEl.getObject3D('mesh'));
+                    if (debugEl) debugEl.innerText = `M${markerId} mesh:${meshOk ? '1' : '0'} s:${Number(s || 0).toFixed(2)} p:${p ? `${p.x.toFixed(2)},${p.y.toFixed(2)},${p.z.toFixed(2)}` : 'na'} src:${src}`;
+                  } catch (e) {}
+                }
+                 setStatus('tracking', `Target ${markerId}`);
+               };
+
+               if (!modelEl.dataset.modelWired) {
+                 modelEl.dataset.modelWired = '1';
+                 modelEl.addEventListener('model-loaded', () => {
+                   applyLoadedState();
+                 });
+                 modelEl.addEventListener('model-error', (ev) => {
+                   const detail = ev && ev.detail ? ev.detail : null;
+                   const raw = detail && (detail.src || detail.error || detail.message) ? (detail.src || detail.error || detail.message) : '';
+                   const text = raw ? String(raw).slice(0, 160) : '';
+                   setStatus('error', text ? `Modelo no cargó: ${text}` : 'Modelo no cargó');
+                 });
+               }
+
+               const hasMesh = Boolean(modelEl.getObject3D && modelEl.getObject3D('mesh'));
+               if (hasMesh) {
+                 applyLoadedState();
+               }
+
                const src = modelEl.getAttribute('data-gltf-src');
-               if (src) {
+               const current = modelEl.getAttribute('gltf-model');
+               if (src && (!current || String(current) !== String(src))) {
+                 try { delete modelEl.dataset.modelNormalized; } catch (e) {}
+                 try { modelEl.dataset.modelNormalized = '0'; } catch (e) {}
                  setStatus('loading', 'Cargando modelo...');
                  modelEl.setAttribute('gltf-model', src);
-                 if (!modelEl.dataset.modelWired) {
-                   modelEl.dataset.modelWired = '1';
-                   modelEl.addEventListener('model-loaded', () => {
-                     setStatus('tracking', `Target ${markerId}`);
-                   });
-                   modelEl.addEventListener('model-error', () => {
-                     setStatus('error', 'Error cargando modelo');
-                   });
-                 }
+               } else if (!hasMesh) {
+                 setStatus('loading', 'Cargando modelo...');
                }
              }
              setRetryVisible(false);
-             setStatus('tracking', `Target ${markerId}`);
+             const canTrackNow =
+               !modelEl ||
+               (modelEl.getObject3D && modelEl.getObject3D('mesh')) ||
+               (!modelEl.getAttribute('gltf-model') && !modelEl.getAttribute('data-gltf-src'));
+             if (canTrackNow) setStatus('tracking', `Target ${markerId}`);
              // First marker found becomes active automatically
              if (activeMarkerId === null) {
                  activeMarkerId = markerId;
@@ -933,6 +1140,10 @@
                  // Debug
                  const debugEl = document.getElementById('debug-text');
                  if(debugEnabled && debugEl) debugEl.innerText = `Lost: ${markerId}`;
+             }
+             const placeholderEl = document.getElementById('placeholder-' + markerId);
+             if (placeholderEl) {
+               try { placeholderEl.setAttribute('visible', false); } catch (e) {}
              }
           });
         }

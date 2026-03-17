@@ -793,11 +793,16 @@
       const host = String(location.hostname || '').toLowerCase();
       const isLocalHost = host === 'localhost' || host === '127.0.0.1';
       const debugEnabled = (() => {
-        if (isLocalHost) return true;
+        let fromConfig = false;
         try {
-          return new URLSearchParams(location.search).get('debug') === '1';
+          fromConfig = Boolean(typeof CONFIG !== 'undefined' && CONFIG && CONFIG.system && CONFIG.system.debug === true);
         } catch (e) {
-          return false;
+          fromConfig = false;
+        }
+        try {
+          return fromConfig || new URLSearchParams(location.search).get('debug') === '1';
+        } catch (e) {
+          return fromConfig;
         }
       })();
 
@@ -1334,6 +1339,12 @@
         catalogReady = true;
         setStatus('ready', targetsReady ? 'Iniciando cámara...' : 'Catálogo listo');
         startArIfReady();
+      });
+      document.addEventListener('catalogempty', () => {
+        catalogReady = true;
+        setStatus('ready', 'Sin modelos en la base de datos');
+        setRetryVisible(false);
+        hideLoader();
       });
       document.addEventListener('catalogerror', (e) => {
         catalogReady = false;

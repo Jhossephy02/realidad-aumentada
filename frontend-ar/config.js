@@ -14,7 +14,7 @@ const CONFIG = {
     // System Settings
     system: {
         version: '1.0.0',
-        debug: true, // Set to false in production
+        debug: false,
     },
 
     api: {

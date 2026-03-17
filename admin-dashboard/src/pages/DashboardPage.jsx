@@ -41,11 +41,21 @@ export function DashboardPage() {
   const [cleanup, setCleanup] = useState(null);
   const [cleanupBusy, setCleanupBusy] = useState(false);
   const [cleanupError, setCleanupError] = useState('');
+  const [admins, setAdmins] = useState([]);
+  const [adminBusy, setAdminBusy] = useState(false);
+  const [adminError, setAdminError] = useState('');
+  const [newAdminUser, setNewAdminUser] = useState('');
+  const [newAdminPass, setNewAdminPass] = useState('');
 
   const toast = (detail) => {
     try {
       window.dispatchEvent(new CustomEvent('webar:toast', { detail }));
     } catch (e) {}
+  };
+
+  const loadAdmins = async () => {
+    const list = await apiFetch('/api/admin/users', { token });
+    setAdmins(Array.isArray(list) ? list : []);
   };
 
   useEffect(() => {
@@ -57,10 +67,12 @@ export function DashboardPage() {
         const models = await apiFetch('/api/models', { token });
         const stats = await apiFetch('/api/uploads/stats', { token });
         const summary = await apiFetch('/api/analytics/summary?days=7', { token });
+        const adminsList = await apiFetch('/api/admin/users', { token });
         if (!alive) return;
         setModelsCount(Array.isArray(models) ? models.length : 0);
         setUploads(stats || null);
         setAnalytics(summary || null);
+        setAdmins(Array.isArray(adminsList) ? adminsList : []);
       } catch (e) {
         if (!alive) return;
         setError(e?.message ? String(e.message) : 'Error cargando dashboard');
@@ -72,6 +84,59 @@ export function DashboardPage() {
       alive = false;
     };
   }, [token]);
+
+  const createAdmin = async () => {
+    const username = String(newAdminUser || '').trim();
+    const password = String(newAdminPass || '');
+    if (!username || !password) {
+      setAdminError('Completa usuario y contraseña');
+      return;
+    }
+    setAdminBusy(true);
+    setAdminError('');
+    try {
+      await apiFetch('/api/admin/users', { method: 'POST', token, json: { username, password } });
+      setNewAdminUser('');
+      setNewAdminPass('');
+      await loadAdmins();
+      toast({ tone: 'success', message: 'Administrador creado', ttl: 2500 });
+    } catch (e) {
+      setAdminError(e?.message ? String(e.message) : 'No se pudo crear');
+    } finally {
+      setAdminBusy(false);
+    }
+  };
+
+  const resetAdminPassword = async (username) => {
+    const nextPass = prompt(`Nueva contraseña para ${username}`);
+    if (nextPass === null) return;
+    setAdminBusy(true);
+    setAdminError('');
+    try {
+      await apiFetch(`/api/admin/users/${encodeURIComponent(username)}`, { method: 'PUT', token, json: { password: String(nextPass || '') } });
+      await loadAdmins();
+      toast({ tone: 'success', message: 'Contraseña actualizada', ttl: 2500 });
+    } catch (e) {
+      setAdminError(e?.message ? String(e.message) : 'No se pudo actualizar');
+    } finally {
+      setAdminBusy(false);
+    }
+  };
+
+  const deleteAdmin = async (username) => {
+    if (!confirm(`Eliminar administrador ${username}?`)) return;
+    setAdminBusy(true);
+    setAdminError('');
+    try {
+      await apiFetch(`/api/admin/users/${encodeURIComponent(username)}`, { method: 'DELETE', token });
+      await loadAdmins();
+      toast({ tone: 'success', message: 'Administrador eliminado', ttl: 2500 });
+    } catch (e) {
+      setAdminError(e?.message ? String(e.message) : 'No se pudo eliminar');
+    } finally {
+      setAdminBusy(false);
+    }
+  };
 
   const analyzeCleanup = async () => {
     setCleanupBusy(true);
@@ -263,6 +328,83 @@ export function DashboardPage() {
         ) : (
           <div className="mt-3 text-sm text-slate-400">Tip: primero usa “Analizar” para ver qué se eliminaría.</div>
         )}
+      </div>
+
+      <div className="mt-6 rounded-2xl border border-slate-900 bg-slate-950 p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <div className="text-sm font-medium text-white">Administradores</div>
+            <div className="mt-0.5 text-xs text-slate-400">Crea usuarios para que otras personas entren al panel</div>
+          </div>
+        </div>
+
+        {adminError ? (
+          <div className="mt-3 rounded-lg border border-red-900/60 bg-red-950/50 px-3 py-2 text-sm text-red-200">{adminError}</div>
+        ) : null}
+
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          <div>
+            <div className="mb-1 text-xs font-medium text-slate-300">Usuario</div>
+            <input
+              value={newAdminUser}
+              onChange={(e) => setNewAdminUser(e.target.value)}
+              className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white outline-none ring-sky-500/30 focus:ring-4"
+              autoComplete="off"
+            />
+          </div>
+          <div>
+            <div className="mb-1 text-xs font-medium text-slate-300">Contraseña</div>
+            <input
+              value={newAdminPass}
+              onChange={(e) => setNewAdminPass(e.target.value)}
+              type="password"
+              className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white outline-none ring-sky-500/30 focus:ring-4"
+              autoComplete="new-password"
+            />
+          </div>
+          <div className="flex items-end">
+            <button
+              onClick={createAdmin}
+              disabled={adminBusy}
+              className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-200 hover:bg-slate-900 disabled:opacity-60"
+            >
+              {adminBusy ? 'Creando…' : 'Crear admin'}
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-4 overflow-hidden rounded-2xl border border-slate-900">
+          <div className="grid grid-cols-12 bg-slate-950 px-4 py-2 text-xs text-slate-500">
+            <div className="col-span-7">Usuario</div>
+            <div className="col-span-5 text-right">Acciones</div>
+          </div>
+          <div className="divide-y divide-slate-900">
+            {(admins || []).map((a) => (
+              <div key={a.username} className="grid grid-cols-12 items-center px-4 py-3">
+                <div className="col-span-7 text-sm text-slate-200">{a.username}</div>
+                <div className="col-span-5 flex justify-end gap-2">
+                  <button
+                    onClick={() => resetAdminPassword(a.username)}
+                    disabled={adminBusy}
+                    className="rounded-lg border border-slate-800 bg-slate-950 px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-900 disabled:opacity-60"
+                  >
+                    Cambiar contraseña
+                  </button>
+                  <button
+                    onClick={() => deleteAdmin(a.username)}
+                    disabled={adminBusy || (admins || []).length <= 1}
+                    className="rounded-lg border border-red-900/60 bg-red-950/20 px-3 py-1.5 text-xs text-red-200 hover:bg-red-950/40 disabled:opacity-60"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </div>
+            ))}
+            {!loading && (!admins || admins.length === 0) ? (
+              <div className="px-4 py-3 text-sm text-slate-400">No hay administradores registrados.</div>
+            ) : null}
+          </div>
+        </div>
       </div>
     </div>
   );

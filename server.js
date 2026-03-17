@@ -21,6 +21,12 @@ const ADMIN_PASSWORD = String(process.env.ADMIN_PASSWORD || '') || 'admin123';
 const ADMIN_TOKEN_TTL_MS = Number(process.env.ADMIN_TOKEN_TTL_MS || 1000 * 60 * 60 * 24 * 7);
 const adminTokens = new Map();
 
+const IS_PROD = String(process.env.NODE_ENV || '').toLowerCase() === 'production';
+if (IS_PROD && ADMIN_USERNAME === 'admin' && ADMIN_PASSWORD === 'admin123') {
+  console.error('Producción: configura ADMIN_USERNAME y ADMIN_PASSWORD (no uses credenciales por defecto).');
+  process.exit(1);
+}
+
 function resolveDir(envValue, fallbackAbs) {
   const raw = String(envValue || '').trim();
   if (!raw) return fallbackAbs;
@@ -54,7 +60,7 @@ async function ensureDirs() {
   try {
     await fs.access(DB_PATH);
   } catch (e) {
-    await fs.writeFile(DB_PATH, JSON.stringify({ products: [] }, null, 2), 'utf8');
+    await fs.writeFile(DB_PATH, JSON.stringify({ products: [], admins: [] }, null, 2), 'utf8');
   }
 }
 
@@ -178,7 +184,8 @@ function parseBearerToken(req) {
 function isAdminTokenValid(token) {
   const t = String(token || '').trim();
   if (!t) return false;
-  const exp = adminTokens.get(t);
+  const v = adminTokens.get(t);
+  const exp = typeof v === 'object' && v ? v.exp : v;
   if (!Number.isFinite(Number(exp))) return false;
   if (Date.now() > Number(exp)) {
     adminTokens.delete(t);
@@ -229,9 +236,104 @@ function normalizeProductForResponse(product) {
 }
 
 await ensureDirs();
-const db = new Low(new JSONFile(DB_PATH), { products: [] });
+const db = new Low(new JSONFile(DB_PATH), { products: [], admins: [] });
 await db.read();
-db.data ||= { products: [] };
+db.data ||= { products: [], admins: [] };
+db.data.products ||= [];
+db.data.admins ||= [];
+
+function normalizeAdminUsername(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function makePasswordHash(password, salt = crypto.randomBytes(16).toString('hex')) {
+  const p = String(password || '');
+  const s = String(salt || '');
+  const hash = crypto.scryptSync(p, s, 64).toString('hex');
+  return `scrypt:${s}:${hash}`;
+}
+
+function verifyPassword(password, stored) {
+  const raw = String(stored || '');
+  if (!raw.startsWith('scrypt:')) return false;
+  const parts = raw.split(':');
+  if (parts.length !== 3) return false;
+  const salt = String(parts[1] || '');
+  const expected = String(parts[2] || '');
+  if (!salt || !expected) return false;
+  const actual = crypto.scryptSync(String(password || ''), salt, 64).toString('hex');
+  try {
+    return crypto.timingSafeEqual(Buffer.from(expected, 'hex'), Buffer.from(actual, 'hex'));
+  } catch (e) {
+    return false;
+  }
+}
+
+function ensureAdminBootstrap() {
+  const admins = Array.isArray(db.data.admins) ? db.data.admins : [];
+  if (admins.length) return false;
+  const now = Date.now();
+  const username = IS_PROD ? ADMIN_USERNAME : 'admin';
+  const password = IS_PROD ? ADMIN_PASSWORD : 'admin123';
+  const user = { username: normalizeAdminUsername(username), passwordHash: makePasswordHash(password), createdAt: now, updatedAt: now };
+  db.data.admins = [user];
+  return true;
+}
+
+{
+  const created = ensureAdminBootstrap();
+  if (IS_PROD) {
+    const admins = Array.isArray(db.data.admins) ? db.data.admins : [];
+    const maybeDefault = admins.find((a) => normalizeAdminUsername(a?.username) === 'admin');
+    if (maybeDefault && verifyPassword('admin123', maybeDefault.passwordHash)) {
+      console.error('Producción: cambia/elimina el usuario admin con contraseña admin123.');
+      process.exit(1);
+    }
+  }
+  if (created) await db.write();
+}
+
+function autoReindexProducts(products) {
+  const list = Array.isArray(products) ? products.filter((p) => p && typeof p === 'object') : [];
+  const sortable = list.map((p, idx) => {
+    const ti = Number(p.targetIndex);
+    const hasTi = Number.isFinite(ti);
+    const createdAt = Number(p.createdAt);
+    const created = Number.isFinite(createdAt) ? createdAt : 0;
+    const name = typeof p.name === 'string' ? p.name.toLowerCase() : '';
+    const id = typeof p.id === 'string' ? p.id : '';
+    return { p, idx, hasTi, ti: hasTi ? ti : Number.POSITIVE_INFINITY, created, name, id };
+  });
+
+  sortable.sort((a, b) => {
+    if (a.ti !== b.ti) return a.ti - b.ti;
+    if (a.created !== b.created) return a.created - b.created;
+    if (a.name !== b.name) return a.name < b.name ? -1 : 1;
+    if (a.id !== b.id) return a.id < b.id ? -1 : 1;
+    return a.idx - b.idx;
+  });
+
+  let nextIndex = 0;
+  const reindexed = sortable.map(({ p }) => {
+    const hasAssets = typeof p.marker === 'string' && p.marker && typeof p.model === 'string' && p.model;
+    if (!hasAssets) return { ...p, targetIndex: null };
+    const out = { ...p, targetIndex: nextIndex };
+    nextIndex += 1;
+    return out;
+  });
+
+  return reindexed;
+}
+
+{
+  const before = JSON.stringify(db.data.products || []);
+  const next = autoReindexProducts(db.data.products || []);
+  const after = JSON.stringify(next);
+  if (before !== after) {
+    db.data.products = next;
+    await db.write();
+  }
+}
 
 async function tryRepairMissingUploads() {
   const products = Array.isArray(db.data.products) ? db.data.products : [];
@@ -319,7 +421,7 @@ app.use((req, res, next) => {
   res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,POST,PUT,DELETE,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
@@ -331,23 +433,101 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true, now: Date.now() });
 });
 
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
+  await db.read();
   const body = req.body || {};
-  const username = String(body.username || '').trim();
+  const usernameRaw = String(body.username || '').trim();
+  const username = normalizeAdminUsername(usernameRaw);
   const password = String(body.password || '');
-  const ok = username === ADMIN_USERNAME && password === ADMIN_PASSWORD;
+  const admins = Array.isArray(db.data.admins) ? db.data.admins : [];
+  const admin = admins.find((a) => normalizeAdminUsername(a?.username) === username);
+  const ok = Boolean(admin && verifyPassword(password, admin.passwordHash));
   if (!ok) return res.status(401).json({ message: 'Credenciales inválidas' });
   const token = crypto.randomBytes(24).toString('hex');
   const ttl = Number.isFinite(ADMIN_TOKEN_TTL_MS) && ADMIN_TOKEN_TTL_MS > 0 ? ADMIN_TOKEN_TTL_MS : 1000 * 60 * 60 * 24 * 7;
-  adminTokens.set(token, Date.now() + ttl);
+  adminTokens.set(token, { exp: Date.now() + ttl, username });
   res.setHeader('Cache-Control', 'no-store');
-  res.json({ token, user: { username, role: 'admin' } });
+  res.json({ token, user: { username: usernameRaw || username, role: 'admin' } });
+});
+
+app.get('/api/admin/users', requireAdmin, async (req, res) => {
+  await db.read();
+  const admins = Array.isArray(db.data.admins) ? db.data.admins : [];
+  const out = admins
+    .map((a) => ({
+      username: String(a?.username || ''),
+      createdAt: a?.createdAt ?? null,
+      updatedAt: a?.updatedAt ?? null
+    }))
+    .filter((a) => a.username)
+    .sort((a, b) => a.username.localeCompare(b.username));
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(out);
+});
+
+app.post('/api/admin/users', requireAdmin, async (req, res) => {
+  await db.read();
+  const body = req.body || {};
+  const username = normalizeAdminUsername(body.username);
+  const password = String(body.password || '');
+  if (!username) return res.status(400).json({ message: 'Usuario inválido' });
+  if (password.length < 4) return res.status(400).json({ message: 'Contraseña muy corta' });
+  const admins = Array.isArray(db.data.admins) ? db.data.admins : [];
+  if (admins.some((a) => normalizeAdminUsername(a?.username) === username)) return res.status(409).json({ message: 'Usuario ya existe' });
+  const now = Date.now();
+  const user = { username, passwordHash: makePasswordHash(password), createdAt: now, updatedAt: now };
+  db.data.admins = [...admins, user];
+  await db.write();
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ ok: true, username });
+});
+
+app.put('/api/admin/users/:username', requireAdmin, async (req, res) => {
+  await db.read();
+  const username = normalizeAdminUsername(req.params.username);
+  const password = String((req.body || {}).password || '');
+  if (!username) return res.status(400).json({ message: 'Usuario inválido' });
+  if (password.length < 4) return res.status(400).json({ message: 'Contraseña muy corta' });
+  const admins = Array.isArray(db.data.admins) ? db.data.admins : [];
+  const idx = admins.findIndex((a) => normalizeAdminUsername(a?.username) === username);
+  if (idx < 0) return res.status(404).json({ message: 'Usuario no existe' });
+  const prev = admins[idx];
+  admins[idx] = { ...prev, username, passwordHash: makePasswordHash(password), updatedAt: Date.now() };
+  db.data.admins = admins;
+  await db.write();
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ ok: true, username });
+});
+
+app.delete('/api/admin/users/:username', requireAdmin, async (req, res) => {
+  await db.read();
+  const username = normalizeAdminUsername(req.params.username);
+  if (!username) return res.status(400).json({ message: 'Usuario inválido' });
+  const admins = Array.isArray(db.data.admins) ? db.data.admins : [];
+  if (admins.length <= 1) return res.status(400).json({ message: 'No puedes eliminar el último admin' });
+  const next = admins.filter((a) => normalizeAdminUsername(a?.username) !== username);
+  if (next.length === admins.length) return res.status(404).json({ message: 'Usuario no existe' });
+  db.data.admins = next;
+  await db.write();
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ ok: true });
 });
 
 app.get('/api/catalog', async (req, res) => {
   await db.read();
   res.setHeader('Cache-Control', 'no-store');
-  res.json((db.data.products || []).map(normalizeProductForResponse));
+  const list = (db.data.products || [])
+    .slice()
+    .sort((a, b) => {
+      const ati = Number.isFinite(Number(a?.targetIndex)) ? Number(a.targetIndex) : Number.POSITIVE_INFINITY;
+      const bti = Number.isFinite(Number(b?.targetIndex)) ? Number(b.targetIndex) : Number.POSITIVE_INFINITY;
+      if (ati !== bti) return ati - bti;
+      const ac = Number.isFinite(Number(a?.createdAt)) ? Number(a.createdAt) : 0;
+      const bc = Number.isFinite(Number(b?.createdAt)) ? Number(b.createdAt) : 0;
+      if (ac !== bc) return ac - bc;
+      return String(a?.id || '').localeCompare(String(b?.id || ''));
+    });
+  res.json(list.map(normalizeProductForResponse));
 });
 
 app.get('/api/ar-objects', async (req, res) => {
@@ -402,7 +582,18 @@ function productToModelResponse(p) {
 app.get('/api/models', requireAdmin, async (req, res) => {
   await db.read();
   res.setHeader('Cache-Control', 'no-store');
-  res.json((db.data.products || []).map(productToModelResponse));
+  const list = (db.data.products || [])
+    .slice()
+    .sort((a, b) => {
+      const ati = Number.isFinite(Number(a?.targetIndex)) ? Number(a.targetIndex) : Number.POSITIVE_INFINITY;
+      const bti = Number.isFinite(Number(b?.targetIndex)) ? Number(b.targetIndex) : Number.POSITIVE_INFINITY;
+      if (ati !== bti) return ati - bti;
+      const ac = Number.isFinite(Number(a?.createdAt)) ? Number(a.createdAt) : 0;
+      const bc = Number.isFinite(Number(b?.createdAt)) ? Number(b.createdAt) : 0;
+      if (ac !== bc) return ac - bc;
+      return String(a?.id || '').localeCompare(String(b?.id || ''));
+    });
+  res.json(list.map(productToModelResponse));
 });
 
 const uploadModelAndMarker = multer({
@@ -463,9 +654,11 @@ app.post('/api/models', requireAdmin, uploadModelAndMarker.fields([{ name: 'glb'
   };
   db.data.products ||= [];
   db.data.products.push(product);
+  db.data.products = autoReindexProducts(db.data.products);
   await db.write();
   res.setHeader('Cache-Control', 'no-store');
-  res.json(productToModelResponse(product));
+  const updated = (db.data.products || []).find((p) => p && p.id === product.id) || product;
+  res.json(productToModelResponse(updated));
 });
 
 app.put('/api/models/:arId', requireAdmin, uploadModelAndMarker.fields([{ name: 'glb', maxCount: 1 }, { name: 'marker', maxCount: 1 }]), async (req, res) => {
@@ -503,9 +696,11 @@ app.put('/api/models/:arId', requireAdmin, uploadModelAndMarker.fields([{ name: 
 
   next.updatedAt = Date.now();
   db.data.products[idx] = next;
+  db.data.products = autoReindexProducts(db.data.products);
   await db.write();
   res.setHeader('Cache-Control', 'no-store');
-  res.json(productToModelResponse(next));
+  const updated = (db.data.products || []).find((p) => p && p.id === next.id) || next;
+  res.json(productToModelResponse(updated));
 });
 
 app.delete('/api/models/:arId', requireAdmin, async (req, res) => {
@@ -514,6 +709,7 @@ app.delete('/api/models/:arId', requireAdmin, async (req, res) => {
   const existing = (db.data.products || []).find((p) => p && p.id === id);
   const before = (db.data.products || []).length;
   db.data.products = (db.data.products || []).filter((p) => p && p.id !== id);
+  db.data.products = autoReindexProducts(db.data.products);
   const after = (db.data.products || []).length;
   await db.write();
   if (existing) {
@@ -719,21 +915,24 @@ app.put('/api/catalog', requireAdmin, async (req, res) => {
         description: typeof p.description === 'string' ? p.description : '',
         model: normalizeUploadValue(typeof p.model === 'string' ? p.model : ''),
         marker: normalizeUploadValue(typeof p.marker === 'string' ? p.marker : ''),
+        markerPatt: normalizeUploadValue(typeof p.markerPatt === 'string' ? p.markerPatt : ''),
+        markerPreview: normalizeUploadValue(typeof p.markerPreview === 'string' ? p.markerPreview : ''),
         scale: typeof p.scale === 'string' ? p.scale : '1 1 1',
         rotation: typeof p.rotation === 'string' ? p.rotation : '0 0 0',
         position: typeof p.position === 'string' ? p.position : '0 0 0',
+        details: p.details ?? null,
         createdAt: Number.isFinite(p.createdAt) ? p.createdAt : now,
         updatedAt: now
       };
     });
 
   await db.read();
-  db.data.products = products;
+  db.data.products = autoReindexProducts(products);
   await db.write();
-  res.json(products.map(normalizeProductForResponse));
+  res.json((db.data.products || []).map(normalizeProductForResponse));
 });
 
-app.post('/api/products', async (req, res) => {
+app.post('/api/products', requireAdmin, async (req, res) => {
   await db.read();
   const body = req.body || {};
   const id = body.id ? String(body.id) : newId();
@@ -763,11 +962,13 @@ app.post('/api/products', async (req, res) => {
     db.data.products.push(product);
   }
 
+  db.data.products = autoReindexProducts(db.data.products);
   await db.write();
-  res.json(normalizeProductForResponse(product));
+  const updated = (db.data.products || []).find((p) => p && p.id === id) || product;
+  res.json(normalizeProductForResponse(updated));
 });
 
-app.put('/api/products/:id', async (req, res) => {
+app.put('/api/products/:id', requireAdmin, async (req, res) => {
   await db.read();
   const id = String(req.params.id);
   const idx = (db.data.products || []).findIndex((p) => p && p.id === id);
@@ -786,16 +987,19 @@ app.put('/api/products/:id', async (req, res) => {
     updatedAt: Date.now()
   };
   db.data.products[idx] = next;
+  db.data.products = autoReindexProducts(db.data.products);
   await db.write();
-  res.json(normalizeProductForResponse(next));
+  const updated = (db.data.products || []).find((p) => p && p.id === id) || next;
+  res.json(normalizeProductForResponse(updated));
 });
 
-app.delete('/api/products/:id', async (req, res) => {
+app.delete('/api/products/:id', requireAdmin, async (req, res) => {
   await db.read();
   const id = String(req.params.id);
   const existing = (db.data.products || []).find((p) => p && p.id === id);
   const before = db.data.products.length;
   db.data.products = (db.data.products || []).filter((p) => p && p.id !== id);
+  db.data.products = autoReindexProducts(db.data.products);
   const after = db.data.products.length;
   await db.write();
   if (existing) {
@@ -1007,8 +1211,16 @@ app.use(
     maxAge: '1h',
     setHeaders(res, filePath) {
       const p = String(filePath || '').toLowerCase();
-      if (p.endsWith('.html') || p.endsWith('.js') || p.endsWith('.css')) {
+      if (p.endsWith('.html')) {
         res.setHeader('Cache-Control', 'no-store');
+        return;
+      }
+      if (p.includes('/assets/') && (p.endsWith('.js') || p.endsWith('.css'))) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        return;
+      }
+      if (p.endsWith('.js') || p.endsWith('.css')) {
+        res.setHeader('Cache-Control', 'public, max-age=3600');
       }
     }
   })
@@ -1029,8 +1241,12 @@ app.use(
     maxAge: '1h',
     setHeaders(res, filePath) {
       const p = String(filePath || '').toLowerCase();
-      if (p.endsWith('.html') || p.endsWith('.js') || p.endsWith('.css')) {
+      if (p.endsWith('.html')) {
         res.setHeader('Cache-Control', 'no-store');
+        return;
+      }
+      if (p.endsWith('.js') || p.endsWith('.css')) {
+        res.setHeader('Cache-Control', 'public, max-age=3600');
       }
     }
   })

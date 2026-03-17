@@ -1,19 +1,27 @@
 {
   "products": [
     {
-      "id": "0fde3125eeef82b5",
+      "id": "68bd72df26b118b3",
       "barcodeValue": null,
       "targetIndex": 0,
-      "name": "salmon",
-      "price": 15,
-      "description": "",
-      "model": "/uploads/models/1773514192405_9c2c11b4e64e7992_salmon_nigiri.glb",
-      "marker": "/uploads/markers/1773514192421_5906c7411a1c3732_Captura_de_pantalla_2026-03-10_093801.png",
-      "scale": "1 1 1",
+      "name": "salmon_nigiri",
+      "price": 10,
+      "description": " compuesto por una bola de arroz que se moldea con la mano sobre la que se sirve un trozo de pescado crudo finamente fileteado",
+      "model": "/uploads/models/1773758473889_dde99a39e3406aa9_salmon_nigiri.glb",
+      "marker": "/uploads/markers/1773758067790_cbb74f945fd9d9fc_Captura_de_pantalla_2026-03-10_093801.png",
+      "scale": "0.2 0.2 0.2",
       "rotation": "0 0 0",
       "position": "0 0 0",
-      "createdAt": 1773514192616,
-      "updatedAt": 1773514192664
+      "createdAt": 1773758067924,
+      "updatedAt": 1773758494596
+    }
+  ],
+  "admins": [
+    {
+      "username": "admin",
+      "passwordHash": "scrypt:df9c775cfc99a5dc87bbf8e90be472ca:e0466ce05442f70e7cedfb0707132eda768e14ef840e1fbea8a5e2524a7a2dfac02fe4133794d6b8a2db0319d2d0895863ab3860a139773308baa126443debc5",
+      "createdAt": 1773759264730,
+      "updatedAt": 1773759264730
     }
   ]
 }

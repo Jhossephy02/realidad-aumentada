@@ -1,77 +1,88 @@
-# Documentación del Proyecto WebAR (MindAR)
+# Producción (deploy)
 
-## Objetivo
+## 1) Requisitos
 
-El proyecto permite que cada imagen “target” (por ejemplo, una hoja/página impresa de un catálogo) sea reconocida por la cámara y muestre un modelo 3D (.glb) encima del celular.
+- Node.js 18+ (recomendado 20+)
+- Un dominio o IP pública
+- (Opcional) Reverse proxy (Nginx / Caddy) para HTTPS
 
-La administración (cambiar/agregar modelos e imágenes target) se hace desde el panel administrativo, sin editar código.
+## 2) Variables de entorno
 
-## URLs principales
+Este proyecto usa un servidor Node (Express) que sirve:
+- AR: `/` (frontend)
+- Panel: `/admin`
+- API: `/api/*`
+- Subidas: `/uploads/*`
 
-- AR: `/` (por ejemplo `http://localhost:8000/`)
-- Admin: `/admin/` (por ejemplo `http://localhost:8000/admin/`)
+Variables:
 
-## Comandos
+- `NODE_ENV=production`
+- `PORT=8000` (o el puerto que uses)
+- `HOST=0.0.0.0`
+- `ADMIN_USERNAME` y `ADMIN_PASSWORD` (obligatorio en producción)
+- (Opcional) `ADMIN_TOKEN_TTL_MS`
+- (Opcional) `DATA_DIR` (default: `storage/data`)
+- (Opcional) `UPLOADS_DIR` (default: `storage/uploads`)
+- (Opcional) `FRONTEND_DIR` (default: `frontend-ar`)
+- (Opcional) `ADMIN_DIST_DIR` (default: `admin-dashboard/dist`)
 
-- `npm run dev` o `npm start`: inicia el servidor (AR + Admin + API)
-- `npm run build`: compila el panel admin (`admin-dashboard/dist`)
+Importante:
+- En producción, el servidor no permite credenciales por defecto (`admin` / `admin123`).
+- El sistema crea el primer admin automáticamente cuando no existe ningún admin guardado en la base.
 
-## Cómo funciona (resumen)
+## 3) Build del panel admin
 
-1. En el panel administrativo (`/admin/`) se sube:
-   - Modelo 3D (.glb)
-   - Imagen target (la foto/imagen que se va a escanear)
-2. El sistema actualiza el catálogo y regenera `targets.mind`.
-3. La experiencia AR carga `targets.mind` desde `/api/targets.mind` y el catálogo desde `/api/catalog`.
-4. Cuando MindAR detecta una imagen target, usa `targetIndex` para mostrar el modelo correcto.
+En el servidor (deploy):
 
-## Conceptos clave
+```bash
+npm ci
+npm run build
+```
 
-- **Imagen target**: la imagen que la cámara reconoce (una hoja del catálogo, una captura, una impresión, etc.).
-- **targets.mind**: archivo “compilado” de todas las imágenes target.
-- **targetIndex**: número entero que enlaza una imagen dentro de `targets.mind` con un producto del catálogo.
+Eso compila el panel en `admin-dashboard/dist` para servirlo desde `/admin`.
 
-## “Cada hoja del catálogo debe ser un target”
+## 4) Ejecutar en producción
 
-Sí se puede, con esta regla:
+Ejemplo (Linux) con variables:
 
-- Cada hoja/página debe existir como **imagen** (PNG/JPG) en el panel.
-- Esa imagen se usa como “Imagen Target”.
+```bash
+export NODE_ENV=production
+export PORT=8000
+export HOST=0.0.0.0
+export ADMIN_USERNAME="admin"
+export ADMIN_PASSWORD="cambia_esto"
 
-Si tu catálogo está en una web, MindAR no puede “usar la web” como target directamente. Necesitas una imagen estable por hoja, por ejemplo:
+npm ci
+npm run build
+node server.js
+```
 
-- Captura de pantalla de cada hoja
-- Exportar el catálogo a PDF y extraer cada página como imagen
+URLs:
+- AR: `https://TU_DOMINIO/`
+- Admin: `https://TU_DOMINIO/admin/`
+- Healthcheck: `https://TU_DOMINIO/api/health`
 
-Para escanear, puedes usar:
+## 5) Reverse proxy (recomendado)
 
-- La hoja impresa
-- La imagen en otra pantalla (tablet/otro celular), idealmente sin reflejos
+Sirve el puerto interno del Node (ej. 8000) detrás de HTTPS.
 
-## Colocación automática de modelos (misma “vista” para todos)
+Notas:
+- La app usa cámara: debe estar en HTTPS o en `localhost`.
+- Si el proxy reescribe headers, asegúrate de pasar `Host` y `X-Forwarded-Proto` para URLs absolutas correctas.
 
-La experiencia AR aplica una colocación estándar para que los modelos:
+## 6) Persistencia de datos
 
-- Salgan “encima” del celular (sobresalen)
-- No queden al revés
+Archivos importantes:
+- Base: `storage/data/db.json`
+- Subidas: `storage/uploads/*` (models, markers, patterns, marker-previews, targets)
 
-Estos valores están centralizados en `MODEL_PLACEMENT` dentro de [index.html](file:///c:/Users/mjhos/OneDrive/Desktop/webAR/frontend-ar/index.html) (tamaño deseado, elevación, rotación base y distancia de sobresalir).
+En producción, monta estos directorios en disco persistente (no efímero).
 
-## Archivos importantes
+## 7) Gestión de admins
 
-- Servidor/API: [server.js](file:///c:/Users/mjhos/OneDrive/Desktop/webAR/server.js)
-- AR (cliente): [index.html](file:///c:/Users/mjhos/OneDrive/Desktop/webAR/frontend-ar/index.html)
-- Carga de catálogo/escena: [catalog-loader.js](file:///c:/Users/mjhos/OneDrive/Desktop/webAR/frontend-ar/js/catalog-loader.js)
-- Base de datos: [db.json](file:///c:/Users/mjhos/OneDrive/Desktop/webAR/storage/data/db.json)
-- Archivos subidos: `storage/uploads/` (models, markers, targets)
+En `/admin` (Dashboard) puedes:
+- Crear nuevos administradores
+- Cambiar contraseñas
 
-## Variables de entorno (opcional)
+El primer admin se crea si no existe ninguno. En producción, define `ADMIN_USERNAME` y `ADMIN_PASSWORD` para el bootstrap inicial.
 
-- `PORT`: puerto inicial (por defecto 8000, usa fallback si está ocupado)
-- `ADMIN_USERNAME`, `ADMIN_PASSWORD`: credenciales del panel
-- `DATA_DIR`, `UPLOADS_DIR`: rutas de almacenamiento
-- `FRONTEND_DIR`, `ADMIN_DIST_DIR`: rutas para servir AR/Admin
-
-## API base (opcional)
-
-Si necesitas apuntar el frontend a otro servidor, puedes configurar un `baseUrl` usando `CONFIG.getApiBaseUrl()` en [config.js](file:///c:/Users/mjhos/OneDrive/Desktop/webAR/frontend-ar/config.js) o usando `localStorage` con la clave `webar_api_base_url`.

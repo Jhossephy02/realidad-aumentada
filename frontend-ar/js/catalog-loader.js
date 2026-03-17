@@ -193,9 +193,15 @@ async function processCatalogDataAsync(data, options = {}) {
     window.APP_DATA.models = filteredModels;
 
     if (!filteredModels.length) {
-        console.error('Catálogo cargado pero sin modelos válidos (modelSrc/markerSrc nulos).');
         try {
-            document.dispatchEvent(new CustomEvent('catalogerror', { detail: { message: 'Catálogo sin modelos válidos' } }));
+            generateARScene([]);
+            const isEmptyCatalog = !items.length;
+            if (isEmptyCatalog) {
+                document.dispatchEvent(new CustomEvent('catalogempty', { detail: { models: [] } }));
+                document.dispatchEvent(new CustomEvent('catalogloaded', { detail: { models: [] } }));
+            } else {
+                document.dispatchEvent(new CustomEvent('catalogerror', { detail: { message: 'Catálogo sin modelos válidos' } }));
+            }
         } catch (e) {}
         return;
     }

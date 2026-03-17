@@ -5,21 +5,12 @@
   "type": "module",
   "scripts": {
     "build": "npm --prefix admin-dashboard run build",
-    "start": "node backend-api/src/server.js",
-    "dev": "node backend-api/src/server.js",
-    "start:legacy": "node server.js",
-    "dev:legacy": "node server.js",
-    "start:mongo": "node backend-api/src/server.js",
-    "dev:mongo": "node backend-api/src/server.js"
+    "start": "node server.js",
+    "dev": "node server.js"
   },
   "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "jsonwebtoken": "^9.0.2",
     "lowdb": "^7.0.1",
-    "mongodb-memory-server": "^10.1.4",
-    "mongoose": "^8.13.0",
     "multer": "^2.0.0",
     "sharp": "^0.34.3"
   }

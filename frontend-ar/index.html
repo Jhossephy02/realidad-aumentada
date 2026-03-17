@@ -20,7 +20,9 @@
         height: 100vh !important;
       }
       video { z-index: 0 !important; }
-      .a-canvas { z-index: 1 !important; background: transparent !important; }
+      a-scene { z-index: 50 !important; }
+      #camera-proxy { position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; z-index: 0 !important; }
+      .a-canvas { z-index: 60 !important; background: transparent !important; }
       video { object-fit: cover !important; }
       
       .capture-button {
@@ -115,6 +117,175 @@
       .flash-active {
         opacity: 0.8 !important;
       }
+
+      #status-indicator {
+        position: fixed;
+        top: 12px;
+        left: 12px;
+        right: 12px;
+        z-index: 1800;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.6);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(6px);
+        pointer-events: auto;
+      }
+      #status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: #bbb;
+        flex: 0 0 auto;
+      }
+      #status-indicator[data-state="loading"] #status-dot { background: #ff9800; }
+      #status-indicator[data-state="scanning"] #status-dot { background: #29b6f6; }
+      #status-indicator[data-state="tracking"] #status-dot { background: #66bb6a; }
+      #status-indicator[data-state="error"] #status-dot { background: #ef5350; }
+      #status-text {
+        flex: 1 1 auto;
+        font-size: 14px;
+        line-height: 1.25;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      #demo-open-btn {
+        flex: 0 0 auto;
+        border: 0;
+        border-radius: 10px;
+        padding: 8px 10px;
+        background: rgba(255, 255, 255, 0.12);
+        color: #fff;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      #demo-open-btn:active { transform: scale(0.98); }
+      #help-open-btn {
+        flex: 0 0 auto;
+        border: 0;
+        border-radius: 10px;
+        padding: 8px 0;
+        width: 34px;
+        background: rgba(255, 255, 255, 0.12);
+        color: #fff;
+        font-weight: 900;
+        cursor: pointer;
+      }
+      #help-open-btn:active { transform: scale(0.98); }
+
+      #demo-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 1900;
+        display: none;
+        background: rgba(0,0,0,0.75);
+        backdrop-filter: blur(6px);
+        pointer-events: auto;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        box-sizing: border-box;
+      }
+      #demo-overlay[data-open="1"] { display: flex; }
+      #demo-card {
+        width: 100%;
+        max-width: 440px;
+        background: rgba(20, 20, 20, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 16px;
+        padding: 16px;
+        color: #fff;
+        box-shadow: 0 14px 40px rgba(0,0,0,0.6);
+      }
+      #demo-title {
+        margin: 0 0 10px 0;
+        font-size: 16px;
+        font-weight: 700;
+      }
+      #demo-marker-img {
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: #111;
+        aspect-ratio: 1 / 1;
+        object-fit: contain;
+      }
+      #demo-urls {
+        margin-top: 10px;
+        font-size: 12px;
+        color: rgba(255,255,255,0.75);
+        word-break: break-all;
+      }
+      #demo-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 12px;
+      }
+      .demo-btn {
+        flex: 1 1 0;
+        border: 0;
+        border-radius: 12px;
+        padding: 10px 12px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      #demo-show-model { background: #4caf50; color: #0b1a0b; }
+      #demo-close { background: rgba(255,255,255,0.14); color: #fff; }
+
+      #help-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 1950;
+        display: none;
+        background: rgba(0,0,0,0.78);
+        backdrop-filter: blur(6px);
+        pointer-events: auto;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        box-sizing: border-box;
+      }
+      #help-overlay[data-open="1"] { display: flex; }
+      #help-card {
+        width: 100%;
+        max-width: 520px;
+        background: rgba(20, 20, 20, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 16px;
+        padding: 16px;
+        color: #fff;
+        box-shadow: 0 14px 40px rgba(0,0,0,0.6);
+      }
+      #help-title {
+        margin: 0 0 10px 0;
+        font-size: 16px;
+        font-weight: 800;
+      }
+      #help-body {
+        font-size: 13px;
+        color: rgba(255,255,255,0.86);
+        line-height: 1.45;
+      }
+      #help-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 12px;
+      }
+      .help-btn {
+        flex: 1 1 0;
+        border: 0;
+        border-radius: 12px;
+        padding: 10px 12px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+      #help-retry { background: #29b6f6; color: #071b22; }
+      #help-close { background: rgba(255,255,255,0.14); color: #fff; }
 
       /* Loading Screen */
       #loader-overlay {
@@ -305,6 +476,44 @@
       <div class="loader-text">Cargando Experiencia AR...</div>
     </div>
 
+    <div id="status-indicator" data-state="loading">
+      <span id="status-dot"></span>
+      <span id="status-text">Cargando...</span>
+      <button id="demo-open-btn" type="button">Prueba</button>
+      <button id="help-open-btn" type="button">!</button>
+    </div>
+
+    <div id="demo-overlay">
+      <div id="demo-card">
+        <div id="demo-title">Prueba rápida (marker + modelo)</div>
+        <img id="demo-marker-img" alt="Marker de prueba" />
+        <div id="demo-urls"></div>
+        <div id="demo-actions">
+          <button class="demo-btn" id="demo-show-model" type="button">Mostrar 3D</button>
+          <button class="demo-btn" id="demo-close" type="button">Cerrar</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="help-overlay">
+      <div id="help-card">
+        <div id="help-title">Ayuda rápida</div>
+        <div id="help-body">
+          <div><b>Si no prende la cámara</b></div>
+          <div>1) Acepta el permiso de cámara cuando aparezca.</div>
+          <div>2) Si quedó bloqueada: candado del navegador → Permisos → Cámara → Permitir → recarga.</div>
+          <div>3) Usa Chrome/Edge. En iPhone casi siempre exige tocar la pantalla para permitir cámara.</div>
+          <div style="margin-top:10px;"><b>Si dice “Falta targets.mind”</b></div>
+          <div>1) Entra a /admin, sube el modelo y espera que termine “Generando targets.mind”.</div>
+          <div>2) Recarga la cámara después.</div>
+        </div>
+        <div id="help-actions">
+          <button class="help-btn" id="help-retry" type="button">Reintentar</button>
+          <button class="help-btn" id="help-close" type="button">Cerrar</button>
+        </div>
+      </div>
+    </div>
+
     <div id="ar-retry"></div>
     
     <!-- Info Button -->
@@ -353,6 +562,8 @@
       <span class="price" id="panel-price">S/ 0.00</span>
       <p style="font-size: 0.7rem; color: #aaa; margin-top: 5px;">(Pellizca para escalar)</p>
     </div>
+
+    <canvas id="camera-proxy"></canvas>
     
     <a-scene 
       embedded 
@@ -409,27 +620,53 @@
       const retryWrap = document.getElementById('ar-retry');
       const adminBtn = document.getElementById('admin-btn');
       const adminHotspot = document.getElementById('admin-hotspot');
+      const demoOpenBtn = document.getElementById('demo-open-btn');
+      const demoOverlay = document.getElementById('demo-overlay');
+      const demoCloseBtn = document.getElementById('demo-close');
+      const demoShowModelBtn = document.getElementById('demo-show-model');
+      const demoMarkerImg = document.getElementById('demo-marker-img');
+      const demoUrls = document.getElementById('demo-urls');
+      const helpOpenBtn = document.getElementById('help-open-btn');
+      const helpOverlay = document.getElementById('help-overlay');
+      const helpCloseBtn = document.getElementById('help-close');
+      const helpRetryBtn = document.getElementById('help-retry');
 
       const setStatus = (state, text) => {
         if (statusIndicator) statusIndicator.dataset.state = String(state || '');
         if (statusText) statusText.innerText = String(text || '');
       };
-      const setRetryVisible = (visible) => {
+      const setDemoOpen = (open) => {
+        if (!demoOverlay) return;
+        demoOverlay.dataset.open = open ? '1' : '0';
+      };
+      const setHelpOpen = (open) => {
+        if (!helpOverlay) return;
+        helpOverlay.dataset.open = open ? '1' : '0';
+      };
+
+      let retryMode = 'camera';
+      const setRetryVisible = (visible, opts = {}) => {
         if (!retryWrap) return;
         if (visible) {
+          retryMode = String(opts?.mode || 'camera');
           if (!retryWrap.dataset.ready) {
             retryWrap.dataset.ready = '1';
             retryWrap.innerHTML = `
               <div class="retry-card" role="dialog" aria-modal="true">
-                <div class="retry-title" id="retry-title">Activa la cámara</div>
-                <div class="retry-sub" id="retry-sub">Toca el botón para pedir permiso y comenzar.</div>
-                <button class="retry-btn" id="retry-btn" type="button">Activar cámara</button>
+                <div class="retry-title" id="retry-title"></div>
+                <div class="retry-sub" id="retry-sub"></div>
+                <button class="retry-btn" id="retry-btn" type="button"></button>
               </div>
             `;
             const btn = retryWrap.querySelector('#retry-btn');
             const onTry = (e) => {
               try { e?.preventDefault?.(); } catch (err) {}
               arUserActivated = true;
+              if (retryMode === 'targets') {
+                setRetryVisible(false);
+                initTargetsMind();
+                return;
+              }
               startArIfReady();
             };
             if (btn) btn.addEventListener('click', onTry, { passive: false });
@@ -438,6 +675,17 @@
               if (target && target.id === 'retry-btn') return;
             }, { passive: true });
           }
+          try {
+            const titleEl = retryWrap.querySelector('#retry-title');
+            const subEl = retryWrap.querySelector('#retry-sub');
+            const btnEl = retryWrap.querySelector('#retry-btn');
+            const title = String(opts?.title || 'Activa la cámara');
+            const sub = String(opts?.sub || 'Toca el botón para pedir permiso y comenzar.');
+            const btnText = String(opts?.btnText || 'Activar cámara');
+            if (titleEl) titleEl.textContent = title;
+            if (subEl) subEl.textContent = sub;
+            if (btnEl) btnEl.textContent = btnText;
+          } catch (e) {}
           retryWrap.style.display = 'flex';
         } else {
           retryWrap.style.display = 'none';
@@ -448,6 +696,7 @@
         const apply = () => {
           try {
             const videos = document.querySelectorAll('video');
+            const useProxy = shouldUseCameraProxy || forceProxyCamera;
             for (const v of videos) {
               v.style.position = 'fixed';
               v.style.inset = '0';
@@ -461,6 +710,27 @@
               v.setAttribute('webkit-playsinline', '');
               v.muted = true;
               v.autoplay = true;
+              if (useProxy) {
+                try { v.style.opacity = '0'; } catch (e) {}
+                try { v.style.zIndex = '-1'; } catch (e) {}
+              } else {
+                try { v.style.opacity = '1'; } catch (e) {}
+              }
+            }
+
+            const proxy = document.getElementById('camera-proxy');
+            if (proxy) {
+              proxy.style.position = 'fixed';
+              proxy.style.inset = '0';
+              proxy.style.width = '100vw';
+              proxy.style.height = '100vh';
+              proxy.style.zIndex = '0';
+              proxy.style.display = useProxy ? 'block' : 'none';
+              proxy.style.pointerEvents = 'none';
+              if (!useProxy) {
+                try { delete proxy.dataset.active; } catch (e) {}
+                try { proxy.width = 0; proxy.height = 0; } catch (e) {}
+              }
             }
 
             const canvases = document.querySelectorAll('.a-canvas, canvas.a-canvas');
@@ -530,6 +800,88 @@
           return false;
         }
       })();
+
+      const MODEL_PLACEMENT = Object.freeze({
+        desiredSize: 0.6,
+        rootLiftY: 0.02,
+        baseRotX: -Math.PI / 2,
+        baseRotY: Math.PI,
+        popoutDistance: 1.8
+      });
+
+      const shouldUseCameraProxy = (() => {
+        try {
+          const qs = new URLSearchParams(location.search);
+          if (qs.get('proxycam') === '1') return true;
+        } catch (e) {}
+        const ua = String(navigator.userAgent || '');
+        const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && Number(navigator.maxTouchPoints || 0) > 1);
+        return isIOS;
+      })();
+      let forceProxyCamera = false;
+
+      const startCameraProxyLoop = () => {
+        if (!(shouldUseCameraProxy || forceProxyCamera)) return;
+        const proxy = document.getElementById('camera-proxy');
+        if (!proxy) return;
+        const ctx = proxy.getContext('2d', { alpha: false });
+        if (!ctx) return;
+        let running = true;
+        const draw = () => {
+          if (!running) return;
+          const video = document.querySelector('video');
+          if (video && Number(video.videoWidth || 0) > 0 && Number(video.videoHeight || 0) > 0) {
+            const dpr = Math.max(1, Number(window.devicePixelRatio || 1));
+            const w = Math.max(1, Math.floor(window.innerWidth * dpr));
+            const h = Math.max(1, Math.floor(window.innerHeight * dpr));
+            if (proxy.width !== w || proxy.height !== h) {
+              proxy.width = w;
+              proxy.height = h;
+            }
+
+            const vw = Number(video.videoWidth);
+            const vh = Number(video.videoHeight);
+            const scale = Math.max(w / vw, h / vh);
+            const sw = w / scale;
+            const sh = h / scale;
+            const sx = (vw - sw) / 2;
+            const sy = (vh - sh) / 2;
+
+            let drew = false;
+            try {
+              ctx.drawImage(video, sx, sy, sw, sh, 0, 0, w, h);
+              drew = true;
+            } catch (e) {}
+            if (drew) {
+              try { proxy.dataset.active = '1'; } catch (e) {}
+            }
+
+            try {
+              video.style.opacity = '0';
+              video.style.zIndex = '-1';
+            } catch (e) {}
+          }
+          requestAnimationFrame(draw);
+        };
+        requestAnimationFrame(draw);
+        return () => {
+          running = false;
+        };
+      };
+
+      const ensureCanvasOnTop = () => {
+        try {
+          const x = Math.floor(window.innerWidth / 2);
+          const y = Math.floor(window.innerHeight / 2);
+          const topEl = document.elementFromPoint(x, y);
+          const isVideoTop = !!(topEl && (String(topEl.tagName || '').toLowerCase() === 'video' || (topEl.closest && topEl.closest('video'))));
+          if (isVideoTop) {
+            forceProxyCamera = true;
+            forceCameraLayers();
+            startCameraProxyLoop();
+          }
+        } catch (e) {}
+      };
 
       const getSessionId = () => {
         const key = 'webar_session_id';
@@ -630,7 +982,7 @@
         });
       };
 
-      const canFetchWithTimeout = async (url, timeoutMs = 1200) => {
+      const canFetchWithTimeout = async (url, timeoutMs = 6000) => {
         try {
           const controller = new AbortController();
           const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -662,13 +1014,29 @@
       };
 
       const initTargetsMind = async () => {
+        setRetryVisible(false);
         setStatus('loading', 'Cargando targets...');
         let src = getTargetsMindSrc();
-        const ok = await verifyTargetsMind(src);
+        let ok = false;
+        let tries = 0;
+        let delay = 450;
+        for (; tries < 7; tries += 1) {
+          ok = await verifyTargetsMind(src);
+          if (ok) break;
+          setStatus('loading', `Esperando targets.mind… (${tries + 1}/7)`);
+          await new Promise((r) => setTimeout(r, delay));
+          delay = Math.min(2800, Math.floor(delay * 1.6));
+          src = getTargetsMindSrc();
+        }
         if (!ok) {
           targetsReady = false;
-          setStatus('error', 'No se pudo cargar targets.mind');
-          setRetryVisible(true);
+          setStatus('error', 'Falta targets.mind');
+          setRetryVisible(true, {
+            mode: 'targets',
+            title: 'Falta targets.mind',
+            sub: 'Abre /admin y espera que termine la generación. Luego reintenta.',
+            btnText: 'Reintentar'
+          });
           hideLoader();
           return;
         }
@@ -688,13 +1056,23 @@
       let autoRetryDelayMs = 800;
       let adminShiftCount = 0;
       let adminShiftLastTs = 0;
+      let adminOpenLastTs = 0;
 
-      const openAdminPanel = () => {
+      const openAdminPanel = (options = {}) => {
         try {
+          const path = location && typeof location.pathname === 'string' ? location.pathname : '';
+          if (path.startsWith('/admin')) return;
+          const now = Date.now();
+          if (now - adminOpenLastTs < 1200) return;
+          adminOpenLastTs = now;
+          try {
+            const key = 'webar_admin_open_lock';
+            const last = Number(localStorage.getItem(key) || 0);
+            if (Number.isFinite(last) && now - last < 2000) return;
+            localStorage.setItem(key, String(now));
+          } catch (e) {}
           const url = '/admin/';
-          const win = window.open(url, '_blank', 'noopener,noreferrer');
-          if (win && typeof win.focus === 'function') win.focus();
-          if (!win) location.href = url;
+          location.href = url;
         } catch (e) {}
       };
 
@@ -753,8 +1131,17 @@
         }
       };
 
+      setTimeout(() => {
+        try {
+          if (!canUseCamera()) return;
+          warmupCameraOnce().catch(() => false);
+        } catch (e) {}
+      }, 60);
+
       function startArIfReady() {
         if (arStarted) return;
+        const qs = new URLSearchParams(location.search);
+        const fastMode = qs.get('fast') === '1';
         if (!arSystem) {
           setStatus('loading', 'Cargando motor AR...');
           return;
@@ -768,7 +1155,7 @@
         arStarted = true;
         setStatus('scanning', 'Solicitando cámara...');
         setRetryVisible(false);
-        Promise.resolve(preflightCameraPermission())
+        Promise.resolve(fastMode ? { ok: true } : preflightCameraPermission())
           .then((pre) => {
             if (!pre?.ok) {
               const r = String(pre?.reason || '');
@@ -776,11 +1163,16 @@
               if (r === 'unsupported') throw new Error('media_unsupported');
               if (r === 'notfound') throw new Error('camera_not_found');
             }
-            return warmupCameraOnce().catch(() => false).then(() => withTimeout(Promise.resolve(arSystem.start()), 12000, 'camera_start_timeout'));
+            const start = () => withTimeout(Promise.resolve(arSystem.start()), fastMode ? 6000 : 12000, 'camera_start_timeout');
+            if (fastMode) return start();
+            return warmupCameraOnce().catch(() => false).then(() => start());
           })
           .then(() => {
             setStatus('scanning', 'Escaneando...');
             forceCameraLayers();
+            startCameraProxyLoop();
+            setTimeout(() => ensureCanvasOnTop(), 300);
+            setTimeout(() => ensureCanvasOnTop(), 1200);
             if (autoRetryTimer) {
               clearTimeout(autoRetryTimer);
               autoRetryTimer = null;
@@ -818,6 +1210,125 @@
       }
 
       initTargetsMind();
+      if (location && location.protocol === 'file:') {
+        setStatus('error', 'Abre esta página desde el servidor (http://TU_IP:8000), no como archivo.');
+        setRetryVisible(false);
+        hideLoader();
+        return;
+      }
+
+      const demoDefaults = {
+        marker: '/uploads/markers/Captura_de_pantalla_2026-03-10_093801.png',
+        model: '/uploads/models/salmon_nigiri.glb'
+      };
+      const getDemoItem = async () => {
+        try {
+          if (typeof APP_DATA !== 'undefined' && APP_DATA && Array.isArray(APP_DATA.models) && APP_DATA.models[0]) {
+            const m = APP_DATA.models[0];
+            return { marker: m.markerSrc || demoDefaults.marker, model: m.modelSrc || demoDefaults.model };
+          }
+        } catch (e) {}
+        try {
+          const res = await fetch('/api/catalog', { cache: 'no-store' });
+          if (!res.ok) throw new Error('catalog');
+          const items = await res.json();
+          const it = Array.isArray(items) && items[0] ? items[0] : null;
+          const marker = it && typeof it.marker === 'string' ? it.marker : demoDefaults.marker;
+          const model = it && typeof it.model === 'string' ? it.model : demoDefaults.model;
+          return { marker, model };
+        } catch (e) {
+          return { marker: demoDefaults.marker, model: demoDefaults.model };
+        }
+      };
+
+      const ensureDemoModelVisible = async () => {
+        const item = await getDemoItem();
+        const scene = document.querySelector('a-scene');
+        const cam = scene ? scene.querySelector('a-camera') : null;
+        if (!scene || !cam) return;
+        let demoEnt = document.getElementById('demo-model-entity');
+        if (!demoEnt) {
+          demoEnt = document.createElement('a-entity');
+          demoEnt.setAttribute('id', 'demo-model-entity');
+          demoEnt.setAttribute('position', '0 -0.2 -1.2');
+          demoEnt.setAttribute('rotation', '0 0 0');
+          demoEnt.setAttribute('scale', '0.6 0.6 0.6');
+          cam.appendChild(demoEnt);
+        }
+        demoEnt.addEventListener('model-error', () => {
+          setStatus('error', 'El modelo 3D no cargó (demo)');
+        }, { once: true });
+        demoEnt.addEventListener('model-loaded', () => {
+          setStatus('tracking', 'Modelo 3D cargado (demo)');
+        }, { once: true });
+        setStatus('loading', 'Cargando modelo 3D (demo)...');
+        demoEnt.setAttribute('gltf-model', item.model);
+        try { demoEnt.setAttribute('visible', true); } catch (e) {}
+      };
+
+      const refreshDemoOverlay = async () => {
+        const item = await getDemoItem();
+        if (demoMarkerImg) demoMarkerImg.src = item.marker;
+        if (demoUrls) {
+          demoUrls.textContent = `Marker: ${item.marker}\nGLB: ${item.model}`;
+        }
+      };
+
+      if (helpOpenBtn) {
+        helpOpenBtn.addEventListener('click', () => setHelpOpen(true), { passive: true });
+      }
+      if (helpCloseBtn) {
+        helpCloseBtn.addEventListener('click', () => setHelpOpen(false), { passive: true });
+      }
+      if (helpOverlay) {
+        helpOverlay.addEventListener('click', (e) => {
+          const t = e && e.target ? e.target : null;
+          if (t && (t.id === 'help-overlay' || t.id === 'help-card')) return;
+        }, { passive: true });
+      }
+      if (helpRetryBtn) {
+        helpRetryBtn.addEventListener('click', () => {
+          setHelpOpen(false);
+          initTargetsMind();
+          startArIfReady();
+        }, { passive: true });
+      }
+
+      if (demoOpenBtn) {
+        demoOpenBtn.addEventListener('click', async () => {
+          await refreshDemoOverlay();
+          setDemoOpen(true);
+        }, { passive: true });
+      }
+      if (demoCloseBtn) {
+        demoCloseBtn.addEventListener('click', () => setDemoOpen(false), { passive: true });
+      }
+      if (demoOverlay) {
+        demoOverlay.addEventListener('click', (e) => {
+          const target = e && e.target ? e.target : null;
+          if (target && target.id === 'demo-overlay') setDemoOpen(false);
+        }, { passive: true });
+      }
+      if (demoShowModelBtn) {
+        demoShowModelBtn.addEventListener('click', async () => {
+          setDemoOpen(false);
+          await ensureDemoModelVisible();
+        }, { passive: true });
+      }
+      try {
+        const qs = new URLSearchParams(location.search);
+        if (qs.get('demo') === '1') {
+          Promise.resolve()
+            .then(() => refreshDemoOverlay())
+            .then(() => setDemoOpen(true))
+            .catch(() => {});
+        }
+        if (qs.get('show3d') === '1') {
+          Promise.resolve()
+            .then(() => ensureDemoModelVisible())
+            .catch(() => {});
+        }
+      } catch (e) {}
 
       document.addEventListener('catalogloaded', () => {
         catalogReady = true;
@@ -897,6 +1408,8 @@
           tag === 'select' ||
           !!(el && el.isContentEditable);
         if (isTypingContext) return;
+        if (e && e.repeat) return;
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
         if (e.key !== 'Shift') return;
         const now = Date.now();
         if (now - adminShiftLastTs > 700) adminShiftCount = 0;
@@ -961,11 +1474,13 @@
       });
 
       let activeMarkerId = null;
+      const assetOkCache = new Map();
 
       // Marker Handler Component
       AFRAME.registerComponent('marker-handler', {
         init: function() {
-          const markerId = parseInt(this.el.id.split('-')[1]);
+          const markerToken = String(this.el && this.el.id ? this.el.id : '').replace(/^marker-/, '');
+          const markerId = Number.isFinite(Number(markerToken)) ? Number(markerToken) : parseInt(markerToken);
           const getVisibleTargetId = () => {
             if (typeof APP_DATA === 'undefined' || !Array.isArray(APP_DATA.models)) return null;
             for (const model of APP_DATA.models) {
@@ -975,9 +1490,24 @@
             return null;
           };
           
-          this.el.addEventListener('targetFound', () => {
-             const modelEl = document.getElementById('model-' + markerId);
-             const placeholderEl = document.getElementById('placeholder-' + markerId);
+          this.el.addEventListener('targetFound', async () => {
+             const modelEl =
+               document.getElementById('model-' + markerId) ||
+               document.getElementById('model-' + markerToken);
+             const placeholderEl =
+               document.getElementById('placeholder-' + markerId) ||
+               document.getElementById('placeholder-' + markerToken);
+             if (!modelEl) {
+               setRetryVisible(false);
+               setStatus('error', `No se encontró model-${markerToken}`);
+               return;
+             }
+             const src = modelEl.getAttribute('data-gltf-src') || modelEl.getAttribute('gltf-model');
+             if (!src) {
+               setRetryVisible(false);
+               setStatus('error', `Modelo sin ruta GLB (M${markerToken})`);
+               return;
+             }
              if (placeholderEl) {
                placeholderEl.setAttribute('visible', true);
              }
@@ -1002,12 +1532,69 @@
                  } catch (e) {}
                }
 
-               const normalizeLoadedModel = () => {
+              const normalizeLoadedModel = (options = {}) => {
                  try {
                    if (typeof THREE === 'undefined') return;
                    const root = modelEl.getObject3D('mesh');
                    if (!root) return;
-                   if (modelEl.dataset.modelNormalized === '1') return;
+                  const force = Boolean(options && options.force);
+
+                  const parseVec3String = (value, fallback) => {
+                    const fb = fallback || { x: 0, y: 0, z: 0 };
+                    if (typeof value !== 'string') return fb;
+                    const parts = value.trim().split(/\s+/).map((n) => Number(n));
+                    if (parts.length < 3) return fb;
+                    const x = Number.isFinite(parts[0]) ? parts[0] : fb.x;
+                    const y = Number.isFinite(parts[1]) ? parts[1] : fb.y;
+                    const z = Number.isFinite(parts[2]) ? parts[2] : fb.z;
+                    return { x, y, z };
+                  };
+
+                  const readVec3Attr = (name, fallback) => {
+                    const v = modelEl.getAttribute(name);
+                    if (v && typeof v === 'object' && Number.isFinite(v.x) && Number.isFinite(v.y) && Number.isFinite(v.z)) return v;
+                    if (typeof v === 'string') return parseVec3String(v, fallback);
+                    return fallback;
+                  };
+
+                  const applyBaseTransform = () => {
+                    const s = parseVec3String(modelEl.dataset.modelBaseScale, { x: 1, y: 1, z: 1 });
+                    const p = parseVec3String(modelEl.dataset.modelBasePosRaw, { x: 0, y: 0, z: 0 });
+                    const rp = parseVec3String(modelEl.dataset.modelBaseRootPos, { x: 0, y: 0, z: 0 });
+                    const rr = parseVec3String(modelEl.dataset.modelBaseRot, { x: 0, y: 0, z: 0 });
+
+                    let pop = { x: 0, y: 0, z: 0 };
+                    try {
+                      const markerObj = this && this.el && this.el.object3D ? this.el.object3D : null;
+                      const sceneEl = this && this.el && this.el.sceneEl ? this.el.sceneEl : (modelEl ? modelEl.sceneEl : null);
+                      const camObj = sceneEl && sceneEl.camera ? sceneEl.camera : null;
+                      if (markerObj && camObj) {
+                        const camPos = new THREE.Vector3();
+                        const markerPos = new THREE.Vector3();
+                        camObj.getWorldPosition(camPos);
+                        markerObj.getWorldPosition(markerPos);
+                        const toCam = camPos.sub(markerPos);
+                        if (toCam.lengthSq() > 0) {
+                          toCam.normalize();
+                          const q = new THREE.Quaternion();
+                          markerObj.getWorldQuaternion(q);
+                          const forward = new THREE.Vector3(0, 0, 1).applyQuaternion(q);
+                          const sign = forward.dot(toCam) >= 0 ? 1 : -1;
+                          pop = { x: 0, y: 0, z: MODEL_PLACEMENT.popoutDistance * sign };
+                        }
+                      }
+                    } catch (e) {}
+
+                    try { modelEl.object3D.scale.set(s.x, s.y, s.z); } catch (e) {}
+                    try { modelEl.object3D.rotation.set(rr.x, rr.y, rr.z); } catch (e) {}
+                    try { modelEl.object3D.position.set(p.x + pop.x, p.y + pop.y, p.z + pop.z); } catch (e) {}
+                    try { root.position.set(rp.x, rp.y, rp.z); } catch (e) {}
+                  };
+
+                  if (modelEl.dataset.modelBaseReady === '1') {
+                    if (force) applyBaseTransform();
+                    return;
+                  }
 
                    try {
                      root.traverse((o) => {
@@ -1030,24 +1617,29 @@
                      });
                    } catch (e) {}
 
+                   try {
+                     if (modelEl.dataset.modelBaseRotApplied !== '1') {
+                       modelEl.object3D.rotation.x += MODEL_PLACEMENT.baseRotX;
+                       modelEl.object3D.rotation.y += MODEL_PLACEMENT.baseRotY;
+                       modelEl.dataset.modelBaseRotApplied = '1';
+                     }
+                   } catch (e) {}
+
                    root.updateWorldMatrix(true, true);
                    const box = new THREE.Box3().setFromObject(root);
                    const size = new THREE.Vector3();
-                   const center = new THREE.Vector3();
                    box.getSize(size);
-                   box.getCenter(center);
 
                    const maxDim = Math.max(size.x, size.y, size.z);
                    if (!Number.isFinite(maxDim) || maxDim <= 0) return;
 
-                   const desired = 0.6;
-                   const scale = modelEl.object3D.scale.clone();
-                   const currentUniform = Number.isFinite(scale.x) && scale.x !== 0 ? scale.x : 1;
-                   const factor = desired / maxDim;
-                   let next = currentUniform * factor;
-                   if (!Number.isFinite(next) || next <= 0) next = factor;
+                   const factor = MODEL_PLACEMENT.desiredSize / maxDim;
+                  let next = factor;
+                  if (!Number.isFinite(next) || next <= 0) next = 1;
                    next = Math.max(0.001, Math.min(50, next));
-                   modelEl.object3D.scale.set(next, next, next);
+                  const baseScale = readVec3Attr('scale', { x: 1, y: 1, z: 1 });
+                  const basePos = readVec3Attr('position', { x: 0, y: 0, z: 0 });
+                  modelEl.object3D.scale.set(baseScale.x * next, baseScale.y * next, baseScale.z * next);
 
                   root.updateWorldMatrix(true, true);
                   const box2 = new THREE.Box3().setFromObject(root);
@@ -1059,16 +1651,23 @@
                     root.position.x -= c2.x;
                     root.position.y -= min.y;
                     root.position.z -= c2.z;
-                    root.position.z -= 0.03;
-                    root.position.y += 0.02;
+                    root.position.y += MODEL_PLACEMENT.rootLiftY;
                   }
 
-                   modelEl.dataset.modelNormalized = '1';
+                  try {
+                    modelEl.dataset.modelBaseScale = `${modelEl.object3D.scale.x} ${modelEl.object3D.scale.y} ${modelEl.object3D.scale.z}`;
+                    modelEl.dataset.modelBasePosRaw = `${basePos.x} ${basePos.y} ${basePos.z}`;
+                    modelEl.dataset.modelBaseRootPos = `${root.position.x} ${root.position.y} ${root.position.z}`;
+                  modelEl.dataset.modelBaseRot = `${modelEl.object3D.rotation.x} ${modelEl.object3D.rotation.y} ${modelEl.object3D.rotation.z}`;
+                    modelEl.dataset.modelBaseReady = '1';
+                  } catch (e) {}
+
+                  applyBaseTransform();
                  } catch (e) {}
                };
 
                const applyLoadedState = () => {
-                 normalizeLoadedModel();
+                normalizeLoadedModel({ force: true });
                  if (placeholderEl) {
                    try { placeholderEl.setAttribute('visible', false); } catch (e) {}
                  }
@@ -1106,12 +1705,46 @@
                const src = modelEl.getAttribute('data-gltf-src');
                const current = modelEl.getAttribute('gltf-model');
                if (src && (!current || String(current) !== String(src))) {
+                 const cached = assetOkCache.has(src) ? assetOkCache.get(src) : null;
+                 let ok = cached;
+                 if (ok === null) {
+                  ok = await canFetchWithTimeout(src, 6000);
+                   assetOkCache.set(src, ok);
+                 }
+                 if (!ok) setStatus('loading', `Cargando modelo...`);
                  try { delete modelEl.dataset.modelNormalized; } catch (e) {}
                  try { modelEl.dataset.modelNormalized = '0'; } catch (e) {}
+                try { delete modelEl.dataset.modelBaseScale; } catch (e) {}
+                try { delete modelEl.dataset.modelBasePosRaw; } catch (e) {}
+                try { delete modelEl.dataset.modelBaseRootPos; } catch (e) {}
+               try { delete modelEl.dataset.modelBaseRot; } catch (e) {}
+               try { delete modelEl.dataset.modelBaseRotApplied; } catch (e) {}
+                try { delete modelEl.dataset.modelBaseReady; } catch (e) {}
                  setStatus('loading', 'Cargando modelo...');
                  modelEl.setAttribute('gltf-model', src);
                } else if (!hasMesh) {
-                 setStatus('loading', 'Cargando modelo...');
+                if (src) {
+                  const cached = assetOkCache.has(src) ? assetOkCache.get(src) : null;
+                  let ok = cached;
+                  if (ok === null) {
+                    ok = await canFetchWithTimeout(src, 6000);
+                    assetOkCache.set(src, ok);
+                  }
+                  if (!ok) setStatus('loading', `Cargando modelo...`);
+                  if (!modelEl.dataset.modelRetrying) {
+                    modelEl.dataset.modelRetrying = '1';
+                    setStatus('loading', 'Cargando modelo...');
+                    try { modelEl.removeAttribute('gltf-model'); } catch (e) {}
+                    setTimeout(() => {
+                      try { modelEl.setAttribute('gltf-model', src); } catch (e2) {}
+                      try { delete modelEl.dataset.modelRetrying; } catch (e3) {}
+                    }, 60);
+                  } else {
+                    setStatus('loading', 'Cargando modelo...');
+                  }
+                } else {
+                  setStatus('loading', 'Cargando modelo...');
+                }
                }
              }
              setRetryVisible(false);
@@ -1356,13 +1989,12 @@
             if (targetId === null || this.el.id !== 'model-' + targetId) return;
             
             this.el.object3D.rotation.y += deltaX * (this.data.rotationSpeed * 0.01);
-
-            // Debug
-            const debugEl = document.getElementById('debug-text');
-            if(debugEl) debugEl.innerText = `Rot: ${this.el.object3D.rotation.y.toFixed(2)} (M${targetId})`;
+            if (debugEnabled) {
+              const debugEl = document.getElementById('debug-text');
+              if (debugEl) debugEl.innerText = `Rot: ${this.el.object3D.rotation.y.toFixed(2)} (M${targetId})`;
+            }
         }
       });
-
 
       // Dish Data (Loaded from app-data.js)
       const dishes = {};
@@ -1430,8 +2062,10 @@
       // SECRET ADMIN PANEL SHORTCUT (CTRL + SHIFT + A)
       document.addEventListener('keydown', function(event) {
           if (event.ctrlKey && event.shiftKey && (event.key === 'A' || event.key === 'a')) {
+              if (event.repeat) return;
               event.preventDefault();
-              window.location.href = '/admin/';
+              try { event.stopPropagation(); } catch (e) {}
+              openAdminPanel({ preferNewTab: true });
           }
       });
 
@@ -1456,7 +2090,10 @@
         const ctx = captureCanvas.getContext('2d');
 
         // 1. Draw Camera Feed (Video) - Handle "object-fit: cover" aspect ratio
-        if (video) {
+        const proxy = document.getElementById('camera-proxy');
+        if (proxy && proxy.dataset && proxy.dataset.active === '1' && proxy.width > 0 && proxy.height > 0) {
+            ctx.drawImage(proxy, 0, 0, captureCanvas.width, captureCanvas.height);
+        } else if (video) {
             const videoRatio = video.videoWidth / video.videoHeight;
             const screenRatio = captureCanvas.width / captureCanvas.height;
             

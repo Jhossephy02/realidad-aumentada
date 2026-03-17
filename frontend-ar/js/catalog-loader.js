@@ -13,6 +13,11 @@ window.APP_DATA = {
     models: []
 };
 
+const DEBUG = Boolean(
+    (typeof CONFIG !== 'undefined' && CONFIG && CONFIG.system && typeof CONFIG.system.debug === 'boolean' && CONFIG.system.debug) ||
+    (typeof window !== 'undefined' && window && window.location && new URLSearchParams(window.location.search).get('debug') === '1')
+);
+
 document.addEventListener('DOMContentLoaded', () => {
     initCatalog();
 });
@@ -242,7 +247,9 @@ function generateARScene(models) {
 
     worldContainer.innerHTML = '';
 
-    console.log(`Generating scene for ${models.length} models...`);
+    if (DEBUG) console.log(`Generating scene for ${models.length} models...`);
+
+    const shouldPreloadModels = models.length <= 6;
 
     models.forEach(model => {
         const target = document.createElement('a-entity');
@@ -255,6 +262,7 @@ function generateARScene(models) {
         // Placeholder (Visual guide when model is not active)
         const placeholder = document.createElement('a-entity');
         placeholder.setAttribute('id', `placeholder-${model.id}`);
+        placeholder.setAttribute('visible', 'false');
         
         // Circle hit area
         const circle = document.createElement('a-circle');
@@ -280,17 +288,20 @@ function generateARScene(models) {
         const modelEnt = document.createElement('a-entity');
         modelEnt.setAttribute('class', 'model-entity clickable');
         modelEnt.setAttribute('id', `model-${model.id}`);
-        modelEnt.setAttribute('position', model.position);
+        modelEnt.setAttribute('position', model.position || '0 0 0');
         modelEnt.setAttribute('rotation', model.rotation);
-        modelEnt.setAttribute('scale', model.scale);
-        modelEnt.setAttribute('gltf-model', model.modelSrc);
+        modelEnt.setAttribute('scale', model.scale || '1 1 1');
         modelEnt.setAttribute('data-gltf-src', model.modelSrc);
+        if (shouldPreloadModels && model.modelSrc) {
+            modelEnt.setAttribute('gltf-model', model.modelSrc);
+        }
         modelEnt.setAttribute('click-handler', '');
         modelEnt.setAttribute('model-controller', `minScale: ${model.minScale}; maxScale: ${model.maxScale}; rotationSpeed: ${model.rotationSpeed}`);
+        modelEnt.setAttribute('visible', 'false');
         
         target.appendChild(modelEnt);
         worldContainer.appendChild(target);
     });
     
-    console.log("Scene generation complete.");
+    if (DEBUG) console.log("Scene generation complete.");
 }

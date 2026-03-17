@@ -70,11 +70,10 @@ export function LoginPage() {
           </form>
 
           <div className="mt-4 text-xs text-slate-500">
-            Usa tu backend en /api. Si corre en otro puerto, exporta VITE_API_BASE en el comando de Vite.
+            Si ves errores 404 dentro del panel, normalmente es porque el backend no está sirviendo /api. En el modo integrado, el mismo servidor sirve /admin y /api.
           </div>
         </div>
       </div>
     </div>
   );
 }
-

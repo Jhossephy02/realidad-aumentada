@@ -39,7 +39,16 @@ const CONFIG = {
             }
         } catch (e) {}
         const base = override || ((this.api && typeof this.api.baseUrl === 'string') ? this.api.baseUrl.trim() : '');
-        return String(base || '').replace(/\/+$/, '');
+        const normalized = String(base || '').replace(/\/+$/, '');
+        try {
+            if (typeof window !== 'undefined' && window && window.location) {
+                const host = String(window.location.hostname || '').toLowerCase();
+                const isLocalHost = host === 'localhost' || host === '127.0.0.1';
+                const pointsToLocal = /\/\/(localhost|127\.0\.0\.1)(:|\/|$)/i.test(normalized);
+                if (!isLocalHost && pointsToLocal) return '';
+            }
+        } catch (e) {}
+        return normalized;
     }
 };
 

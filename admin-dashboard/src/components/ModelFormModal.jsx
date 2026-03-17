@@ -17,28 +17,28 @@ async function ensureMindArCompiler() {
   if (window.__MindARCompiler) return window.__MindARCompiler;
   if (window.__mindarCompilerLoading) return await window.__mindarCompilerLoading;
 
-  window.__mindarCompilerLoading = new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error('MindAR compiler timeout')), 8000);
-    window.__mindarCompilerResolve = (Compiler) => {
-      clearTimeout(timeout);
+  window.__mindarCompilerLoading = Promise.resolve()
+    .then(async () => {
+      if (typeof navigator !== 'undefined' && navigator && navigator.onLine === false) {
+        throw new Error('Sin conexión a internet para generar targets.mind');
+      }
+      const mod = await import('mind-ar/src/image-target/compiler.js');
+      const Compiler = mod && mod.Compiler ? mod.Compiler : null;
+      if (!Compiler) throw new Error('No se pudo cargar el compilador de MindAR');
       window.__MindARCompiler = Compiler;
-      resolve(Compiler);
-    };
-    window.__mindarCompilerReject = (err) => {
-      clearTimeout(timeout);
-      reject(err instanceof Error ? err : new Error('MindAR compiler failed'));
-    };
-    const s = document.createElement('script');
-    s.type = 'module';
-    s.textContent = `
-      import { Compiler } from "https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/src/image-target/compiler.js";
-      window.__mindarCompilerResolve(Compiler);
-    `;
-    s.onerror = () => window.__mindarCompilerReject(new Error('Failed to load MindAR compiler'));
-    document.head.appendChild(s);
-  });
+      return Compiler;
+    })
+    .catch((err) => {
+      throw err instanceof Error ? err : new Error('No se pudo cargar el compilador de MindAR');
+    });
 
   return await window.__mindarCompilerLoading;
+}
+
+function toast(detail) {
+  try {
+    window.dispatchEvent(new CustomEvent('webar:toast', { detail }));
+  } catch (e) {}
 }
 
 async function fetchImageFromUrl(url) {
@@ -68,23 +68,41 @@ async function rebuildTargetsMind({ token, onProgress }) {
   const candidates = list.filter((i) => i && i.marker && i.model);
   if (candidates.length === 0) throw new Error('No hay productos con imagen target y modelo');
 
-  let idx = 0;
+  const withTargets = [];
+  const withoutTargets = [];
+  for (let i = 0; i < list.length; i += 1) {
+    const it = list[i];
+    if (!it || !it.marker || !it.model) continue;
+    const ti = Number(it.targetIndex);
+    if (Number.isFinite(ti)) withTargets.push({ item: it, idx: i, ti });
+    else withoutTargets.push({ item: it, idx: i, ti: null });
+  }
+  withTargets.sort((a, b) => a.ti - b.ti || a.idx - b.idx);
+  const ordered = [...withTargets, ...withoutTargets].map((x) => x.item);
+
+  const targetIndexById = new Map();
+  for (let i = 0; i < ordered.length; i += 1) {
+    const it = ordered[i];
+    const id = it && typeof it.id === 'string' ? it.id : '';
+    if (id) targetIndexById.set(id, i);
+  }
+
   const normalizedCatalog = list.map((item) => {
     if (!item || !item.marker || !item.model) return { ...item, targetIndex: null };
-    const next = { ...item, targetIndex: idx };
-    idx += 1;
-    return next;
+    const id = item && typeof item.id === 'string' ? item.id : '';
+    const nextIndex = id && targetIndexById.has(id) ? targetIndexById.get(id) : null;
+    return { ...item, targetIndex: nextIndex };
   });
 
   await apiFetch('/api/catalog', { method: 'PUT', token, json: normalizedCatalog });
 
   const Compiler = await ensureMindArCompiler();
   const compiler = new Compiler();
-  const ordered = normalizedCatalog.filter((i) => i && i.marker && i.model).sort((a, b) => a.targetIndex - b.targetIndex);
+  const orderedCatalog = normalizedCatalog.filter((i) => i && i.marker && i.model).sort((a, b) => a.targetIndex - b.targetIndex);
 
   const images = [];
-  for (let i = 0; i < ordered.length; i += 1) {
-    const src = absUrl(ordered[i].marker);
+  for (let i = 0; i < orderedCatalog.length; i += 1) {
+    const src = absUrl(orderedCatalog[i].marker);
     images.push(await fetchImageFromUrl(src));
   }
 
@@ -154,6 +172,11 @@ export function ModelFormModal({ open, token, mode, model, onClose, onSaved }) {
   const isEdit = mode === 'edit';
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [price, setPrice] = useState('');
+  const [targetIndex, setTargetIndex] = useState('');
+  const [scale, setScale] = useState('');
+  const [rotation, setRotation] = useState('');
+  const [position, setPosition] = useState('');
   const [glbFile, setGlbFile] = useState(null);
   const [markerFile, setMarkerFile] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -167,6 +190,11 @@ export function ModelFormModal({ open, token, mode, model, onClose, onSaved }) {
     setTargetsStatus('');
     setName(String(model?.name || ''));
     setDescription(String(model?.description || ''));
+    setPrice(model?.price != null ? String(model.price) : '');
+    setTargetIndex(model?.targetIndex != null ? String(model.targetIndex) : '');
+    setScale(String(model?.scale || '1 1 1'));
+    setRotation(String(model?.rotation || '0 0 0'));
+    setPosition(String(model?.position || '0 0 0'));
     setGlbFile(null);
     setMarkerFile(null);
   }, [open, model]);
@@ -206,6 +234,11 @@ export function ModelFormModal({ open, token, mode, model, onClose, onSaved }) {
       const fd = new FormData();
       fd.set('name', String(name).trim());
       fd.set('description', String(description || ''));
+      if (String(price || '').trim()) fd.set('price', String(price).trim());
+      if (String(targetIndex || '').trim()) fd.set('targetIndex', String(targetIndex).trim());
+      if (String(scale || '').trim()) fd.set('scale', String(scale).trim());
+      if (String(rotation || '').trim()) fd.set('rotation', String(rotation).trim());
+      if (String(position || '').trim()) fd.set('position', String(position).trim());
       if (glbFile) fd.set('glb', glbFile);
       if (markerFile) fd.set('marker', markerFile);
 
@@ -213,17 +246,43 @@ export function ModelFormModal({ open, token, mode, model, onClose, onSaved }) {
         ? await apiFetch(`/api/models/${encodeURIComponent(model.arId)}`, { method: 'PUT', token, formData: fd })
         : await apiFetch('/api/models', { method: 'POST', token, formData: fd });
 
-      setTargetsStatus('Generando targets.mind…');
-      await rebuildTargetsMind({
-        token,
-        onProgress: (p) => setTargetsStatus(`Generando targets.mind… ${Number(p).toFixed(0)}%`)
-      });
-      setTargetsStatus('targets.mind actualizado');
-      try {
-        localStorage.setItem('webar_targets_updated_at', String(Date.now()));
-      } catch (e) {}
+      toast({ tone: 'success', message: 'Modelo subido', ttl: 2200 });
       onSaved(saved);
       onClose();
+
+      toast({ tone: 'default', message: 'Generando targets.mind… (puede tardar)', ttl: 4500 });
+      const runRebuild = async () => {
+        await rebuildTargetsMind({ token });
+        try {
+          localStorage.setItem('webar_targets_updated_at', String(Date.now()));
+        } catch (e) {}
+        toast({ tone: 'success', message: 'targets.mind actualizado', ttl: 3500 });
+      };
+      if (window.__webarTargetsRebuildPromise) return;
+      window.__webarTargetsRebuildPromise = Promise.resolve()
+        .then(() => runRebuild())
+        .catch((err) => {
+          let msg = String(err?.message || err || '').trim();
+          if (!msg) msg = 'Error desconocido';
+          if (msg.toLowerCase().includes('failed to fetch')) {
+            msg = 'No se pudo descargar el compilador. Revisa tu conexión a internet.';
+          }
+          if (msg.toLowerCase().includes('dynamically imported module')) {
+            msg = 'El navegador bloqueó el compilador. Reintenta o revisa la conexión.';
+          }
+          toast({
+            tone: 'error',
+            message: `No se pudo generar targets.mind: ${msg.slice(0, 140)}`,
+            ttl: 6000
+          });
+        })
+        .finally(() => {
+          try {
+            delete window.__webarTargetsRebuildPromise;
+          } catch (e) {
+            window.__webarTargetsRebuildPromise = null;
+          }
+        });
     } catch (e2) {
       setError(e2?.message ? String(e2.message) : 'No se pudo guardar');
     } finally {
@@ -258,6 +317,73 @@ export function ModelFormModal({ open, token, mode, model, onClose, onSaved }) {
             />
           </div>
         </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-300">Precio</label>
+            <input
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white outline-none ring-sky-500/30 focus:ring-4"
+              placeholder="0"
+              inputMode="decimal"
+            />
+          </div>
+          <div className="rounded-2xl border border-slate-900 bg-slate-950 px-4 py-3">
+            <div className="text-xs font-medium text-slate-300">Escala y posición</div>
+            <div className="mt-1 text-sm text-slate-200">Automático en cámara</div>
+            <div className="mt-1 text-xs text-slate-500">El sistema centra y ajusta el tamaño del GLB al cargar.</div>
+          </div>
+        </div>
+
+        <details className="rounded-2xl border border-slate-900 bg-slate-950 p-4">
+          <summary className="cursor-pointer text-sm font-medium text-slate-200">Ajustes avanzados</summary>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-300">targetIndex</label>
+              <input
+                value={targetIndex}
+                onChange={(e) => setTargetIndex(e.target.value)}
+                className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white outline-none ring-sky-500/30 focus:ring-4"
+                placeholder="0"
+                inputMode="numeric"
+              />
+              <div className="mt-1 text-xs text-slate-500">Normalmente no es necesario: se recalcula al generar targets.mind.</div>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-300">Rotation</label>
+              <input
+                value={rotation}
+                onChange={(e) => setRotation(e.target.value)}
+                className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white outline-none ring-sky-500/30 focus:ring-4"
+                placeholder="0 0 0"
+              />
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-300">Scale</label>
+              <input
+                value={scale}
+                onChange={(e) => setScale(e.target.value)}
+                className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white outline-none ring-sky-500/30 focus:ring-4"
+                placeholder="1 1 1"
+              />
+              <div className="mt-1 text-xs text-slate-500">En cámara se normaliza al cargar (esto es opcional).</div>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-300">Position</label>
+              <input
+                value={position}
+                onChange={(e) => setPosition(e.target.value)}
+                className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white outline-none ring-sky-500/30 focus:ring-4"
+                placeholder="0 0 0"
+              />
+              <div className="mt-1 text-xs text-slate-500">En cámara se centra automáticamente (esto es opcional).</div>
+            </div>
+          </div>
+        </details>
 
         <div className="grid gap-4 md:grid-cols-2">
           <Dropzone
@@ -296,7 +422,8 @@ export function ModelFormModal({ open, token, mode, model, onClose, onSaved }) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-200 hover:bg-slate-900"
+            disabled={saving}
+            className="rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-200 hover:bg-slate-900 disabled:opacity-60"
           >
             Cancelar
           </button>

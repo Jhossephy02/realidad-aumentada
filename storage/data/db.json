@@ -1,36 +1,19 @@
 {
   "products": [
     {
-      "id": "captura_de_pantalla_2026-03-10_093801-1773379137636-0",
-      "barcodeValue": 0,
-      "targetIndex": null,
-      "name": "sushi",
-      "price": "15",
-      "description": "degustaciones de sushi y blablabla",
-      "model": "/uploads/models/1773452592663_f3b8cd3f5aa40452_salmon_nigiri.glb",
-      "marker": "/uploads/markers/1773452592740_c1ef8d61502a3381_Captura_de_pantalla_2026-03-10_093801.png",
-      "scale": "1 1 1",
-      "rotation": "0 0 0",
-      "position": "0 0 0",
-      "createdAt": 1773379189994,
-      "updatedAt": 1773379189994
-    },
-    {
-      "id": "f68cdf0c1e84723b",
+      "id": "0fde3125eeef82b5",
       "barcodeValue": null,
-      "targetIndex": null,
-      "name": "Sushi Legacy",
-      "price": 0,
+      "targetIndex": 0,
+      "name": "salmon",
+      "price": 15,
       "description": "",
-      "model": "/uploads/models/1773452592663_f3b8cd3f5aa40452_salmon_nigiri.glb",
-      "marker": "/uploads/markers/1773452592740_c1ef8d61502a3381_Captura_de_pantalla_2026-03-10_093801.png",
-      "markerPatt": "/uploads/patterns/1773405466140_8d8a6f1d5460c950_sushi.patt",
-      "markerPreview": "/uploads/marker-previews/1773405466140_8d8a6f1d5460c950_sushi.png",
+      "model": "/uploads/models/1773514192405_9c2c11b4e64e7992_salmon_nigiri.glb",
+      "marker": "/uploads/markers/1773514192421_5906c7411a1c3732_Captura_de_pantalla_2026-03-10_093801.png",
       "scale": "1 1 1",
       "rotation": "0 0 0",
       "position": "0 0 0",
-      "createdAt": 1773405466285,
-      "updatedAt": 1773405466285
+      "createdAt": 1773514192616,
+      "updatedAt": 1773514192664
     }
   ]
 }

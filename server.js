@@ -1,18 +1,25 @@
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
+import http from 'http';
 import { fileURLToPath } from 'url';
 import fs from 'fs/promises';
 import crypto from 'crypto';
+import https from 'node:https';
 import { Low } from 'lowdb';
 import { JSONFile } from 'lowdb/node';
-import { generateMarkerArtifactsFromFile } from './backend-api/src/utils/markerGenerator.js';
+import sharp from 'sharp';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const PORT = Number(process.env.PORT) || 8000;
+const BASE_PORT = Number(process.env.PORT) || 8000;
 const HOST = process.env.HOST || '0.0.0.0';
+
+const ADMIN_USERNAME = String(process.env.ADMIN_USERNAME || '').trim() || 'admin';
+const ADMIN_PASSWORD = String(process.env.ADMIN_PASSWORD || '') || 'admin123';
+const ADMIN_TOKEN_TTL_MS = Number(process.env.ADMIN_TOKEN_TTL_MS || 1000 * 60 * 60 * 24 * 7);
+const adminTokens = new Map();
 
 function resolveDir(envValue, fallbackAbs) {
   const raw = String(envValue || '').trim();
@@ -34,6 +41,9 @@ const TARGETS_PATH = path.join(TARGETS_DIR, 'targets.mind');
 const FRONTEND_DIR = resolveDir(process.env.FRONTEND_DIR, path.join(__dirname, 'frontend-ar'));
 const ADMIN_DIST_DIR = resolveDir(process.env.ADMIN_DIST_DIR, path.join(__dirname, 'admin-dashboard', 'dist'));
 
+let cachedMindArCompilerJs = null;
+let cachedMindArCompilerJsAt = 0;
+
 async function ensureDirs() {
   await fs.mkdir(DATA_DIR, { recursive: true });
   await fs.mkdir(MODELS_DIR, { recursive: true });
@@ -48,8 +58,139 @@ async function ensureDirs() {
   }
 }
 
+async function ensureTargetsMindValid() {
+  const fallbacks = [path.join(FRONTEND_DIR, 'targets.mind')];
+  let size = 0;
+  try {
+    const st = await fs.stat(TARGETS_PATH);
+    size = Number(st.size) || 0;
+  } catch (e) {
+    size = 0;
+  }
+  if (size >= 1024) return;
+  for (const fb of fallbacks) {
+    try {
+      const st2 = await fs.stat(fb);
+      const size2 = Number(st2.size) || 0;
+      if (size2 < 1024) continue;
+      const tmp = `${TARGETS_PATH}.tmp`;
+      await fs.copyFile(fb, tmp);
+      await fs.rename(tmp, TARGETS_PATH);
+      return;
+    } catch (e2) {}
+  }
+}
+
 function newId() {
   return crypto.randomBytes(8).toString('hex');
+}
+
+function rotateCoord(x, y, size, rotation) {
+  const s = size - 1;
+  if (rotation === 0) return { x, y };
+  if (rotation === 90) return { x: s - y, y: x };
+  if (rotation === 180) return { x: s - x, y: s - y };
+  return { x: y, y: s - x };
+}
+
+function pattFromRgba(rgba, width, height) {
+  const size = Math.min(width, height);
+  const rotations = [0, 90, 180, 270];
+  const blocks = [];
+  for (const rot of rotations) {
+    const lines = [];
+    for (let y = 0; y < size; y++) {
+      const parts = [];
+      for (let x = 0; x < size; x++) {
+        const c = rotateCoord(x, y, size, rot);
+        const idx = (c.y * width + c.x) * 4;
+        const r = rgba[idx] ?? 0;
+        const g = rgba[idx + 1] ?? 0;
+        const b = rgba[idx + 2] ?? 0;
+        parts.push(`${r} ${g} ${b}`);
+      }
+      lines.push(parts.join(' '));
+    }
+    blocks.push(lines.join('\n'));
+  }
+  return blocks.join('\n\n');
+}
+
+async function buildPreviewPng(inputBuffer) {
+  const canvasSize = 512;
+  const border = 32;
+  const innerSize = canvasSize - border * 2;
+  const image = sharp(inputBuffer).rotate().resize(innerSize, innerSize, { fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 1 } });
+  const topBottom = Buffer.alloc(canvasSize * border * 3, 0);
+  const leftRight = Buffer.alloc(border * canvasSize * 3, 0);
+  const composed = sharp({
+    create: {
+      width: canvasSize,
+      height: canvasSize,
+      channels: 3,
+      background: { r: 255, g: 255, b: 255 }
+    }
+  })
+    .composite([
+      { input: topBottom, raw: { width: canvasSize, height: border, channels: 3 }, top: 0, left: 0 },
+      { input: topBottom, raw: { width: canvasSize, height: border, channels: 3 }, top: canvasSize - border, left: 0 },
+      { input: leftRight, raw: { width: border, height: canvasSize, channels: 3 }, top: 0, left: 0 },
+      { input: leftRight, raw: { width: border, height: canvasSize, channels: 3 }, top: 0, left: canvasSize - border },
+      { input: await image.png().toBuffer(), top: border, left: border }
+    ])
+    .png();
+  return await composed.toBuffer();
+}
+
+async function generateMarkerArtifactsFromFile({ markerAbsPath, patternsDir, previewsDir, baseName }) {
+  const inputBuffer = await fs.readFile(markerAbsPath);
+
+  const { data, info } = await sharp(inputBuffer)
+    .rotate()
+    .resize(16, 16, { fit: 'fill' })
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  const patt = pattFromRgba(data, info.width, info.height);
+  const pattFilename = `${baseName}.patt`;
+  const pattAbsPath = path.join(patternsDir, pattFilename);
+  await fs.writeFile(pattAbsPath, patt, 'utf8');
+
+  const previewBuffer = await buildPreviewPng(inputBuffer);
+  const previewFilename = `${baseName}.png`;
+  const previewAbsPath = path.join(previewsDir, previewFilename);
+  await fs.writeFile(previewAbsPath, previewBuffer);
+
+  return {
+    pattFilename,
+    previewFilename,
+    meta: { size: 16, sourceBytes: inputBuffer.length }
+  };
+}
+
+function parseBearerToken(req) {
+  const h = String(req?.headers?.authorization || '').trim();
+  if (!h) return '';
+  const m = h.match(/^Bearer\s+(.+)$/i);
+  return m ? String(m[1] || '').trim() : '';
+}
+
+function isAdminTokenValid(token) {
+  const t = String(token || '').trim();
+  if (!t) return false;
+  const exp = adminTokens.get(t);
+  if (!Number.isFinite(Number(exp))) return false;
+  if (Date.now() > Number(exp)) {
+    adminTokens.delete(t);
+    return false;
+  }
+  return true;
+}
+
+function requireAdmin(req, res, next) {
+  const token = parseBearerToken(req);
+  if (isAdminTokenValid(token)) return next();
+  return res.status(401).json({ message: 'Unauthorized' });
 }
 
 function safeName(input) {
@@ -167,6 +308,7 @@ async function tryRepairMissingUploads() {
 }
 
 await tryRepairMissingUploads();
+await ensureTargetsMindValid();
 
 const app = express();
 app.disable('x-powered-by');
@@ -187,6 +329,19 @@ app.use(express.json({ limit: '5mb' }));
 app.get('/api/health', (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   res.json({ ok: true, now: Date.now() });
+});
+
+app.post('/api/auth/login', (req, res) => {
+  const body = req.body || {};
+  const username = String(body.username || '').trim();
+  const password = String(body.password || '');
+  const ok = username === ADMIN_USERNAME && password === ADMIN_PASSWORD;
+  if (!ok) return res.status(401).json({ message: 'Credenciales inválidas' });
+  const token = crypto.randomBytes(24).toString('hex');
+  const ttl = Number.isFinite(ADMIN_TOKEN_TTL_MS) && ADMIN_TOKEN_TTL_MS > 0 ? ADMIN_TOKEN_TTL_MS : 1000 * 60 * 60 * 24 * 7;
+  adminTokens.set(token, Date.now() + ttl);
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ token, user: { username, role: 'admin' } });
 });
 
 app.get('/api/catalog', async (req, res) => {
@@ -221,6 +376,181 @@ app.get('/api/ar-objects', async (req, res) => {
     };
   });
   res.json(out);
+});
+
+function productToModelResponse(p) {
+  const n = normalizeProductForResponse(p);
+  return {
+    _id: n.id,
+    arId: n.id,
+    name: n.name || '',
+    description: n.description ?? '',
+    price: n.price ?? 0,
+    glb: n.model || '',
+    markerImage: n.marker || '',
+    markerPatt: n.markerPatt || '',
+    markerPreview: n.markerPreview || '',
+    targetIndex: n.targetIndex ?? null,
+    scale: n.scale || '1 1 1',
+    rotation: n.rotation || '0 0 0',
+    position: n.position || '0 0 0',
+    createdAt: n.createdAt ?? null,
+    updatedAt: n.updatedAt ?? null
+  };
+}
+
+app.get('/api/models', requireAdmin, async (req, res) => {
+  await db.read();
+  res.setHeader('Cache-Control', 'no-store');
+  res.json((db.data.products || []).map(productToModelResponse));
+});
+
+const uploadModelAndMarker = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 200 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const field = String(file.fieldname || '').toLowerCase();
+    if (field === 'glb') {
+      const ext = path.extname(String(file.originalname || '')).toLowerCase();
+      if (ext !== '.glb') return cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE', 'glb'));
+      return cb(null, true);
+    }
+    if (field === 'marker') {
+      const type = String(file.mimetype || '').toLowerCase();
+      if (!type.startsWith('image/')) return cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE', 'marker'));
+      return cb(null, true);
+    }
+    return cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE', field || 'file'));
+  }
+});
+
+app.post('/api/models', requireAdmin, uploadModelAndMarker.fields([{ name: 'glb', maxCount: 1 }, { name: 'marker', maxCount: 1 }]), async (req, res) => {
+  await db.read();
+  const files = req.files || {};
+  const glbFile = Array.isArray(files.glb) ? files.glb[0] : null;
+  const markerFile = Array.isArray(files.marker) ? files.marker[0] : null;
+  if (!glbFile || !markerFile) return res.status(400).json({ message: 'Falta glb o marker' });
+
+  const body = req.body || {};
+  const name = String(body.name || '').trim();
+  const description = String(body.description || '');
+  const price = String(body.price || '').trim();
+  const targetIndex = String(body.targetIndex || '').trim();
+  const scale = String(body.scale || '').trim() || '1 1 1';
+  const rotation = String(body.rotation || '').trim() || '0 0 0';
+  const position = String(body.position || '').trim() || '0 0 0';
+
+  const uploadedGlb = await saveUpload(req, glbFile, 'model');
+  const uploadedMarker = await saveUpload(req, markerFile, 'marker');
+
+  const now = Date.now();
+  const product = {
+    id: newId(),
+    barcodeValue: null,
+    targetIndex: Number.isFinite(Number(targetIndex)) ? Number(targetIndex) : null,
+    name,
+    price: price ? Number(price) : 0,
+    description,
+    model: normalizeUploadValue(uploadedGlb.url || ''),
+    marker: normalizeUploadValue(uploadedMarker.url || ''),
+    markerPatt: normalizeUploadValue(uploadedMarker.markerPatt || ''),
+    markerPreview: normalizeUploadValue(uploadedMarker.markerPreview || ''),
+    scale,
+    rotation,
+    position,
+    createdAt: now,
+    updatedAt: now
+  };
+  db.data.products ||= [];
+  db.data.products.push(product);
+  await db.write();
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(productToModelResponse(product));
+});
+
+app.put('/api/models/:arId', requireAdmin, uploadModelAndMarker.fields([{ name: 'glb', maxCount: 1 }, { name: 'marker', maxCount: 1 }]), async (req, res) => {
+  await db.read();
+  const id = String(req.params.arId || '').trim();
+  const idx = (db.data.products || []).findIndex((p) => p && p.id === id);
+  if (idx < 0) return res.status(404).json({ message: 'Not found' });
+
+  const files = req.files || {};
+  const glbFile = Array.isArray(files.glb) ? files.glb[0] : null;
+  const markerFile = Array.isArray(files.marker) ? files.marker[0] : null;
+  const body = req.body || {};
+
+  const prev = db.data.products[idx] || {};
+  const next = { ...prev };
+
+  if (body.name !== undefined) next.name = String(body.name || '').trim();
+  if (body.description !== undefined) next.description = String(body.description || '');
+  if (body.price !== undefined) next.price = String(body.price || '').trim() ? Number(body.price) : 0;
+  if (body.targetIndex !== undefined) next.targetIndex = String(body.targetIndex || '').trim() ? Number(body.targetIndex) : null;
+  if (body.scale !== undefined) next.scale = String(body.scale || '').trim() || '1 1 1';
+  if (body.rotation !== undefined) next.rotation = String(body.rotation || '').trim() || '0 0 0';
+  if (body.position !== undefined) next.position = String(body.position || '').trim() || '0 0 0';
+
+  if (glbFile) {
+    const uploadedGlb = await saveUpload(req, glbFile, 'model');
+    next.model = normalizeUploadValue(uploadedGlb.url || '');
+  }
+  if (markerFile) {
+    const uploadedMarker = await saveUpload(req, markerFile, 'marker');
+    next.marker = normalizeUploadValue(uploadedMarker.url || '');
+    next.markerPatt = normalizeUploadValue(uploadedMarker.markerPatt || '');
+    next.markerPreview = normalizeUploadValue(uploadedMarker.markerPreview || '');
+  }
+
+  next.updatedAt = Date.now();
+  db.data.products[idx] = next;
+  await db.write();
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(productToModelResponse(next));
+});
+
+app.delete('/api/models/:arId', requireAdmin, async (req, res) => {
+  await db.read();
+  const id = String(req.params.arId || '').trim();
+  const existing = (db.data.products || []).find((p) => p && p.id === id);
+  const before = (db.data.products || []).length;
+  db.data.products = (db.data.products || []).filter((p) => p && p.id !== id);
+  const after = (db.data.products || []).length;
+  await db.write();
+  if (existing) {
+    const tryDeleteUpload = async (value) => {
+      if (!value || typeof value !== 'string') return;
+      let pathname = '';
+      try {
+        pathname = value.startsWith('http') ? new URL(value).pathname : value;
+      } catch (e) {
+        pathname = value;
+      }
+      if (!pathname.startsWith('/uploads/')) return;
+      const rel = pathname.replace(/^\/+/, '');
+      const abs = path.join(__dirname, rel);
+      if (!abs.startsWith(UPLOADS_DIR)) return;
+      try {
+        await fs.unlink(abs);
+      } catch (e) {}
+    };
+    await Promise.all([tryDeleteUpload(existing.model), tryDeleteUpload(existing.marker), tryDeleteUpload(existing.markerPatt), tryDeleteUpload(existing.markerPreview)]);
+  }
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ ok: true, removed: before - after });
+});
+
+app.get('/api/analytics/summary', async (req, res) => {
+  const days = Math.max(1, Math.min(60, Number(req.query?.days || 7) || 7));
+  const now = new Date();
+  const daily = [];
+  for (let i = days - 1; i >= 0; i -= 1) {
+    const d = new Date(now);
+    d.setDate(now.getDate() - i);
+    const date = d.toISOString().slice(0, 10);
+    daily.push({ date, uniqueUsers: 0 });
+  }
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ days, uniqueUsersToday: 0, uniqueUsersLastNDays: 0, totalUniqueUsers: 0, daily });
 });
 
 function uploadBasenameFromValue(value) {
@@ -293,6 +623,7 @@ async function listOrphanFiles(dir, referenced) {
 }
 
 app.get('/api/uploads/stats', async (req, res) => {
+  if (!isAdminTokenValid(parseBearerToken(req))) return res.status(401).json({ message: 'Unauthorized' });
   await db.read();
   const referencedModels = new Set();
   const referencedMarkers = new Set();
@@ -316,6 +647,7 @@ app.get('/api/uploads/stats', async (req, res) => {
 });
 
 app.post('/api/uploads/cleanup', async (req, res) => {
+  if (!isAdminTokenValid(parseBearerToken(req))) return res.status(401).json({ message: 'Unauthorized' });
   await db.read();
   const referencedModels = new Set();
   const referencedMarkers = new Set();
@@ -370,7 +702,7 @@ app.post('/api/uploads/cleanup', async (req, res) => {
   res.json({ ok: errors.length === 0, dryRun: false, deletedModels, deletedMarkers, deletedBytes, errors: errors.slice(0, 50) });
 });
 
-app.put('/api/catalog', async (req, res) => {
+app.put('/api/catalog', requireAdmin, async (req, res) => {
   const incoming = req.body;
   if (!Array.isArray(incoming)) return res.status(400).json({ message: 'Expected an array' });
   const now = Date.now();
@@ -540,6 +872,7 @@ async function saveUpload(req, file, kind) {
 }
 
 app.post('/api/upload/model', uploadModel.single('file'), async (req, res) => {
+  if (!isAdminTokenValid(parseBearerToken(req))) return res.status(401).json({ message: 'Unauthorized' });
   const file = req.file;
   if (!file) return res.status(400).json({ message: 'Missing file' });
   const out = await saveUpload(req, file, 'model');
@@ -547,6 +880,7 @@ app.post('/api/upload/model', uploadModel.single('file'), async (req, res) => {
 });
 
 app.post('/api/upload/marker', uploadMarker.single('file'), async (req, res) => {
+  if (!isAdminTokenValid(parseBearerToken(req))) return res.status(401).json({ message: 'Unauthorized' });
   const file = req.file;
   if (!file) return res.status(400).json({ message: 'Missing file' });
   const out = await saveUpload(req, file, 'marker');
@@ -554,10 +888,14 @@ app.post('/api/upload/marker', uploadMarker.single('file'), async (req, res) => 
 });
 
 app.post('/api/upload/targets', express.json({ limit: '50mb' }), async (req, res) => {
+  if (!isAdminTokenValid(parseBearerToken(req))) return res.status(401).json({ message: 'Unauthorized' });
   const { base64 } = req.body || {};
   if (!base64 || typeof base64 !== 'string') return res.status(400).json({ message: 'Missing base64' });
   const buffer = Buffer.from(base64.replace(/\s+/g, ''), 'base64');
-  await fs.writeFile(TARGETS_PATH, buffer);
+  if (!buffer || buffer.length < 1024) return res.status(400).json({ message: 'Invalid targets.mind' });
+  const tmpPath = `${TARGETS_PATH}.tmp`;
+  await fs.writeFile(tmpPath, buffer);
+  await fs.rename(tmpPath, TARGETS_PATH);
   res.setHeader('Cache-Control', 'no-store');
   res.json({ url: absoluteUrl(req, '/api/targets.mind') });
 });
@@ -589,9 +927,114 @@ app.get('/api/targets.mind', async (req, res) => {
   }
 });
 
+function downloadText(url) {
+  return new Promise((resolve, reject) => {
+    const u = new URL(url);
+    const req = https.request(
+      {
+        method: 'GET',
+        protocol: u.protocol,
+        hostname: u.hostname,
+        port: u.port || (u.protocol === 'https:' ? 443 : 80),
+        path: `${u.pathname || ''}${u.search || ''}`,
+        headers: {
+          'user-agent': 'webar-server',
+          accept: '*/*'
+        }
+      },
+      (resp) => {
+        const status = Number(resp.statusCode) || 0;
+        const location = resp.headers.location ? String(resp.headers.location) : '';
+        if (status >= 300 && status < 400 && location) {
+          resp.resume();
+          return resolve(downloadText(new URL(location, url).toString()));
+        }
+        if (status < 200 || status >= 300) {
+          resp.resume();
+          return reject(new Error(`HTTP ${status}`));
+        }
+        resp.setEncoding('utf8');
+        let buf = '';
+        resp.on('data', (chunk) => {
+          buf += chunk;
+        });
+        resp.on('end', () => resolve(buf));
+      }
+    );
+    req.setTimeout(20000, () => req.destroy(new Error('timeout')));
+    req.on('error', reject);
+    req.end();
+  });
+}
+
+app.get('/vendor/mindar/compiler.js', async (req, res) => {
+  try {
+    const now = Date.now();
+    if (cachedMindArCompilerJs && now - cachedMindArCompilerJsAt < 1000 * 60 * 60 * 12) {
+      res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, max-age=86400, immutable');
+      return res.send(cachedMindArCompilerJs);
+    }
+
+    const urls = [
+      'https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/src/image-target/compiler.js',
+      'https://esm.sh/gh/hiukim/mind-ar-js@1.2.5/src/image-target/compiler.js'
+    ];
+    let lastErr = null;
+    for (const url of urls) {
+      try {
+        const js = await downloadText(url);
+        if (!js || js.length < 2000) throw new Error('compiler script too small');
+        cachedMindArCompilerJs = js;
+        cachedMindArCompilerJsAt = Date.now();
+        res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+        res.setHeader('Cache-Control', 'public, max-age=86400, immutable');
+        return res.send(js);
+      } catch (e) {
+        lastErr = e;
+      }
+    }
+    res.status(503).json({ message: `No se pudo obtener MindAR compiler: ${String(lastErr?.message || lastErr || 'error')}` });
+  } catch (e) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 app.use('/uploads', express.static(UPLOADS_DIR, { fallthrough: false, maxAge: '30d', immutable: true }));
-app.use('/admin', express.static(ADMIN_DIST_DIR, { maxAge: '1h' }));
-app.use(express.static(FRONTEND_DIR, { maxAge: '1h' }));
+app.use(
+  '/admin',
+  express.static(ADMIN_DIST_DIR, {
+    maxAge: '1h',
+    setHeaders(res, filePath) {
+      const p = String(filePath || '').toLowerCase();
+      if (p.endsWith('.html') || p.endsWith('.js') || p.endsWith('.css')) {
+        res.setHeader('Cache-Control', 'no-store');
+      }
+    }
+  })
+);
+app.get('/admin', (req, res) => res.redirect(302, '/admin/'));
+app.get('/admin/*', async (req, res) => {
+  try {
+    const indexAbs = path.join(ADMIN_DIST_DIR, 'index.html');
+    await fs.access(indexAbs);
+    res.setHeader('Cache-Control', 'no-store');
+    return res.sendFile(indexAbs);
+  } catch (e) {
+    return res.status(503).json({ message: 'Admin no compilado. Ejecuta build del admin-dashboard.' });
+  }
+});
+app.use(
+  express.static(FRONTEND_DIR, {
+    maxAge: '1h',
+    setHeaders(res, filePath) {
+      const p = String(filePath || '').toLowerCase();
+      if (p.endsWith('.html') || p.endsWith('.js') || p.endsWith('.css')) {
+        res.setHeader('Cache-Control', 'no-store');
+      }
+    }
+  })
+);
 
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
@@ -609,6 +1052,44 @@ app.use((err, req, res, next) => {
   return res.status(500).json({ message: 'Server error' });
 });
 
-app.listen(PORT, HOST, () => {
-  console.log(`Server running at http://${HOST}:${PORT}`);
-});
+function listenOnce(port) {
+  return new Promise((resolve, reject) => {
+    const server = http.createServer(app);
+    server.once('error', (err) => {
+      try {
+        server.close(() => {});
+      } catch (e) {}
+      reject(err);
+    });
+    server.once('listening', () => resolve(server));
+    server.listen(port, HOST);
+  });
+}
+
+async function listenWithFallback(startPort) {
+  const maxTries = Math.max(1, Math.min(50, Number(process.env.PORT_TRIES || 20) || 20));
+  let port = Number(startPort) || 8000;
+  for (let i = 0; i < maxTries; i += 1) {
+    try {
+      const server = await listenOnce(port);
+      return { server, port };
+    } catch (err) {
+      const code = String(err?.code || '');
+      if (code === 'EADDRINUSE') {
+        port += 1;
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw new Error(`No hay puerto disponible desde ${startPort}`);
+}
+
+listenWithFallback(BASE_PORT)
+  .then(({ port }) => {
+    console.log(`Server running at http://${HOST}:${port}`);
+  })
+  .catch((err) => {
+    console.error(err);
+    process.exitCode = 1;
+  });

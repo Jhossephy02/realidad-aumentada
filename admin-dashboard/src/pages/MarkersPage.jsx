@@ -44,6 +44,21 @@ export function MarkersPage() {
         <div className="text-sm text-slate-400">Gestión visual de imágenes target</div>
       </div>
 
+      <div className="mb-5 grid gap-3 md:grid-cols-3">
+        <div className="rounded-2xl border border-slate-900 bg-slate-950 p-4">
+          <div className="text-sm font-medium text-white">Qué ves aquí</div>
+          <div className="mt-1 text-sm text-slate-300">Lista de imágenes (targets) asociadas a cada modelo.</div>
+        </div>
+        <div className="rounded-2xl border border-slate-900 bg-slate-950 p-4">
+          <div className="text-sm font-medium text-white">Descargar .patt</div>
+          <div className="mt-1 text-sm text-slate-300">Archivo para sistemas que usan marcadores tipo patrón.</div>
+        </div>
+        <div className="rounded-2xl border border-slate-900 bg-slate-950 p-4">
+          <div className="text-sm font-medium text-white">Editar</div>
+          <div className="mt-1 text-sm text-slate-300">Toca un item para ir a “Modelos” y hacer cambios.</div>
+        </div>
+      </div>
+
       {error ? (
         <div className="mb-4 rounded-lg border border-red-900/60 bg-red-950/50 px-3 py-2 text-sm text-red-200">{error}</div>
       ) : null}

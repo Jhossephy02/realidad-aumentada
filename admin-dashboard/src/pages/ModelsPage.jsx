@@ -114,6 +114,21 @@ export function ModelsPage() {
         </div>
       </div>
 
+      <div className="mb-5 grid gap-3 md:grid-cols-3">
+        <div className="rounded-2xl border border-slate-900 bg-slate-950 p-4">
+          <div className="text-sm font-medium text-white">Nuevo modelo</div>
+          <div className="mt-1 text-sm text-slate-300">Sube un GLB y una imagen (marker).</div>
+        </div>
+        <div className="rounded-2xl border border-slate-900 bg-slate-950 p-4">
+          <div className="text-sm font-medium text-white">targets.mind</div>
+          <div className="mt-1 text-sm text-slate-300">Se actualiza automáticamente después de guardar.</div>
+        </div>
+        <div className="rounded-2xl border border-slate-900 bg-slate-950 p-4">
+          <div className="text-sm font-medium text-white">Escala/posición</div>
+          <div className="mt-1 text-sm text-slate-300">En cámara se ajusta solo al cargar el modelo.</div>
+        </div>
+      </div>
+
       {error ? (
         <div className="mb-4 rounded-lg border border-red-900/60 bg-red-950/50 px-3 py-2 text-sm text-red-200">{error}</div>
       ) : null}
@@ -185,4 +200,3 @@ export function ModelsPage() {
     </div>
   );
 }
-

@@ -1,18 +1,1 @@
-[
-  {
-    "id": "salmon-nigiri-test",
-    "barcodeValue": 0,
-    "targetIndex": 0,
-    "name": "Salmon Nigiri",
-    "description": "Test",
-    "price": 0,
-    "model": "/to-move-assets/models/salmon_nigiri.glb",
-    "marker": "/to-move-assets/markers/Captura%20de%20pantalla%202026-03-10%20093801.png",
-    "scale": "1 1 1",
-    "rotation": "0 0 0",
-    "position": "0 0 0",
-    "minScale": 0.1,
-    "maxScale": 5,
-    "rotationSpeed": 0
-  }
-]
+[]

@@ -38,6 +38,15 @@ export function DashboardPage() {
   const [modelsCount, setModelsCount] = useState(0);
   const [uploads, setUploads] = useState(null);
   const [analytics, setAnalytics] = useState(null);
+  const [cleanup, setCleanup] = useState(null);
+  const [cleanupBusy, setCleanupBusy] = useState(false);
+  const [cleanupError, setCleanupError] = useState('');
+
+  const toast = (detail) => {
+    try {
+      window.dispatchEvent(new CustomEvent('webar:toast', { detail }));
+    } catch (e) {}
+  };
 
   useEffect(() => {
     let alive = true;
@@ -63,6 +72,37 @@ export function DashboardPage() {
       alive = false;
     };
   }, [token]);
+
+  const analyzeCleanup = async () => {
+    setCleanupBusy(true);
+    setCleanupError('');
+    try {
+      const report = await apiFetch('/api/uploads/cleanup?dryRun=1', { method: 'POST', token });
+      setCleanup(report || null);
+      toast({ tone: 'success', message: 'Análisis listo (no se borró nada)', ttl: 2500 });
+    } catch (e) {
+      setCleanupError(e?.message ? String(e.message) : 'No se pudo analizar');
+    } finally {
+      setCleanupBusy(false);
+    }
+  };
+
+  const runCleanup = async () => {
+    if (!confirm('Esto eliminará archivos no usados en el servidor. ¿Continuar?')) return;
+    setCleanupBusy(true);
+    setCleanupError('');
+    try {
+      const result = await apiFetch('/api/uploads/cleanup', { method: 'POST', token });
+      setCleanup(result || null);
+      toast({ tone: 'success', message: 'Limpieza completada', ttl: 2500 });
+      const stats = await apiFetch('/api/uploads/stats', { token });
+      setUploads(stats || null);
+    } catch (e) {
+      setCleanupError(e?.message ? String(e.message) : 'No se pudo limpiar');
+    } finally {
+      setCleanupBusy(false);
+    }
+  };
 
   const cards = useMemo(() => {
     const models = uploads?.models;
@@ -114,6 +154,21 @@ export function DashboardPage() {
         <div className="text-sm text-slate-400">Resumen del sistema</div>
       </div>
 
+      <div className="mb-5 grid gap-3 md:grid-cols-3">
+        <div className="rounded-2xl border border-slate-900 bg-slate-950 p-4">
+          <div className="text-sm font-medium text-white">Estado</div>
+          <div className="mt-1 text-sm text-slate-300">Aquí ves si targets.mind está OK y cuántos recursos hay.</div>
+        </div>
+        <div className="rounded-2xl border border-slate-900 bg-slate-950 p-4">
+          <div className="text-sm font-medium text-white">Limpieza</div>
+          <div className="mt-1 text-sm text-slate-300">Detecta y borra archivos que ya no usa ningún modelo.</div>
+        </div>
+        <div className="rounded-2xl border border-slate-900 bg-slate-950 p-4">
+          <div className="text-sm font-medium text-white">Escala/posición</div>
+          <div className="mt-1 text-sm text-slate-300">El ajuste del 3D en cámara es automático (no aquí).</div>
+        </div>
+      </div>
+
       {error ? (
         <div className="mb-4 rounded-lg border border-red-900/60 bg-red-950/50 px-3 py-2 text-sm text-red-200">
           {error}
@@ -154,6 +209,60 @@ export function DashboardPage() {
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="mt-6 rounded-2xl border border-slate-900 bg-slate-950 p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <div className="text-sm font-medium text-white">Orden y limpieza de archivos</div>
+            <div className="mt-0.5 text-xs text-slate-400">Archivos GLB/imagenes que quedan “sueltos” después de borrar modelos</div>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={analyzeCleanup}
+              disabled={cleanupBusy}
+              className="rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-200 hover:bg-slate-900 disabled:opacity-60"
+            >
+              {cleanupBusy ? 'Analizando…' : 'Analizar'}
+            </button>
+            <button
+              onClick={runCleanup}
+              disabled={cleanupBusy}
+              className="rounded-lg border border-red-900/60 bg-red-950/20 px-3 py-2 text-sm text-red-200 hover:bg-red-950/40 disabled:opacity-60"
+            >
+              {cleanupBusy ? 'Procesando…' : 'Eliminar no usados'}
+            </button>
+          </div>
+        </div>
+
+        {cleanupError ? (
+          <div className="mt-3 rounded-lg border border-red-900/60 bg-red-950/50 px-3 py-2 text-sm text-red-200">{cleanupError}</div>
+        ) : null}
+
+        {cleanup ? (
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl border border-slate-900 bg-slate-950 p-4">
+              <div className="text-sm font-medium text-white">GLB</div>
+              <div className="mt-1 text-sm text-slate-300">
+                {cleanup.models?.count ?? 0} archivos no usados ({formatBytes(cleanup.models?.bytes ?? 0)})
+              </div>
+              {Array.isArray(cleanup.models?.sample) && cleanup.models.sample.length ? (
+                <div className="mt-2 text-xs text-slate-500">{cleanup.models.sample.join(', ')}</div>
+              ) : null}
+            </div>
+            <div className="rounded-2xl border border-slate-900 bg-slate-950 p-4">
+              <div className="text-sm font-medium text-white">Markers</div>
+              <div className="mt-1 text-sm text-slate-300">
+                {cleanup.markers?.count ?? 0} archivos no usados ({formatBytes(cleanup.markers?.bytes ?? 0)})
+              </div>
+              {Array.isArray(cleanup.markers?.sample) && cleanup.markers.sample.length ? (
+                <div className="mt-2 text-xs text-slate-500">{cleanup.markers.sample.join(', ')}</div>
+              ) : null}
+            </div>
+          </div>
+        ) : (
+          <div className="mt-3 text-sm text-slate-400">Tip: primero usa “Analizar” para ver qué se eliminaría.</div>
+        )}
       </div>
     </div>
   );

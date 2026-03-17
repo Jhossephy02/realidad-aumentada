@@ -2,87 +2,76 @@
 
 ## Objetivo
 
-El proyecto permite que cada imagen “marker/target” (por ejemplo, una hoja/página impresa de un catálogo) sea reconocida por la cámara y muestre un modelo 3D (.glb) encima.
+El proyecto permite que cada imagen “target” (por ejemplo, una hoja/página impresa de un catálogo) sea reconocida por la cámara y muestre un modelo 3D (.glb) encima del celular.
 
 La administración (cambiar/agregar modelos e imágenes target) se hace desde el panel administrativo, sin editar código.
 
+## URLs principales
+
+- AR: `/` (por ejemplo `http://localhost:8000/`)
+- Admin: `/admin/` (por ejemplo `http://localhost:8000/admin/`)
+
+## Comandos
+
+- `npm run dev` o `npm start`: inicia el servidor (AR + Admin + API)
+- `npm run build`: compila el panel admin (`admin-dashboard/dist`)
+
 ## Cómo funciona (resumen)
 
-1. En el panel administrativo se sube:
+1. En el panel administrativo (`/admin/`) se sube:
    - Modelo 3D (.glb)
    - Imagen target (la foto/imagen que se va a escanear)
-2. El sistema genera un archivo `targets.mind` con todas las imágenes target del catálogo.
-3. La experiencia AR carga:
-   - `targets.mind`
-   - `catalog/catalog.json`
+2. El sistema actualiza el catálogo y regenera `targets.mind`.
+3. La experiencia AR carga `targets.mind` desde `/api/targets.mind` y el catálogo desde `/api/catalog`.
 4. Cuando MindAR detecta una imagen target, usa `targetIndex` para mostrar el modelo correcto.
 
 ## Conceptos clave
 
-- **Imagen target**: la imagen que la cámara reconoce (una “hoja” del catálogo, una captura, una impresión, etc.).
-- **targets.mind**: archivo que contiene la versión “compilada” de todas las imágenes target. MindAR lo necesita para poder detectar rápido y estable.
+- **Imagen target**: la imagen que la cámara reconoce (una hoja del catálogo, una captura, una impresión, etc.).
+- **targets.mind**: archivo “compilado” de todas las imágenes target.
 - **targetIndex**: número entero que enlaza una imagen dentro de `targets.mind` con un producto del catálogo.
 
-## Repositorios (código vs assets)
-
-- **Repositorio del sistema (este proyecto)**: HTML/JS y lógica del panel.
-- **Repositorio de assets**: imágenes target, modelos 3D y el catálogo `catalog/catalog.json`.
-
-La URL del repo de assets se define en `config.js`.
-
-## Flujo de trabajo (Admin → AR)
-
-### 1) Cargar/editar un producto
-
-1. Abrir `admin/panel.html`.
-2. Iniciar sesión (credenciales del panel) y configurar el repo de assets (usuario/repo/token).
-3. Seleccionar un producto o crear uno nuevo.
-4. Subir:
-   - **Modelo 3D (.glb)**
-   - **Imagen Target (MindAR)** (la foto que vas a escanear)
-5. Guardar.
-
-Si cambiaste imagen o modelo, el sistema regenera `targets.mind` automáticamente.
-
-### 2) Generar targets.mind manualmente (opcional)
-
-En el panel, botón “Generar y subir targets.mind”.
-
-Útil cuando:
-- cargaste muchos productos de golpe,
-- quieres forzar una reconstrucción completa.
-
-### 3) Probar en AR
-
-1. Abrir `index.html` en un servidor (por ejemplo `python -m http.server`).
-2. Permitir cámara.
-3. Escanear la hoja/página (imagen target) y ver el modelo.
-
-## “Cada hoja del catálogo debe ser un marker”
+## “Cada hoja del catálogo debe ser un target”
 
 Sí se puede, con esta regla:
 
 - Cada hoja/página debe existir como **imagen** (PNG/JPG) en el panel.
 - Esa imagen se usa como “Imagen Target”.
 
-### Cómo convertir tu catálogo web en targets
+Si tu catálogo está en una web, MindAR no puede “usar la web” como target directamente. Necesitas una imagen estable por hoja, por ejemplo:
 
-Si tu catálogo está en una web (por ejemplo `https://zelva.icatafi.com/`), MindAR no puede “tomar la web” como target automáticamente. Necesitas una imagen estable por hoja, por ejemplo:
-
-- Captura de pantalla de cada hoja,
-- Exportar/convertir el catálogo a PDF y luego extraer cada página como imagen.
-
-Luego, subes cada imagen en el panel como “Imagen Target” y asignas su modelo 3D.
+- Captura de pantalla de cada hoja
+- Exportar el catálogo a PDF y extraer cada página como imagen
 
 Para escanear, puedes usar:
-- La hoja impresa,
-- La imagen en otra pantalla (tablet/otro celular), idealmente sin reflejos.
+
+- La hoja impresa
+- La imagen en otra pantalla (tablet/otro celular), idealmente sin reflejos
+
+## Colocación automática de modelos (misma “vista” para todos)
+
+La experiencia AR aplica una colocación estándar para que los modelos:
+
+- Salgan “encima” del celular (sobresalen)
+- No queden al revés
+
+Estos valores están centralizados en `MODEL_PLACEMENT` dentro de [index.html](file:///c:/Users/mjhos/OneDrive/Desktop/webAR/frontend-ar/index.html) (tamaño deseado, elevación, rotación base y distancia de sobresalir).
 
 ## Archivos importantes
 
-- `admin/panel.html`: interfaz del panel.
-- `js/admin-panel.js`: lógica de subida y generación de `targets.mind`.
-- `js/catalog-loader.js`: carga el catálogo y crea entidades MindAR usando `targetIndex`.
-- `index.html`: experiencia AR (carga `targets.mind` del repo de assets vía `config.js`).
-- `config.js`: configuración del repo de assets.
+- Servidor/API: [server.js](file:///c:/Users/mjhos/OneDrive/Desktop/webAR/server.js)
+- AR (cliente): [index.html](file:///c:/Users/mjhos/OneDrive/Desktop/webAR/frontend-ar/index.html)
+- Carga de catálogo/escena: [catalog-loader.js](file:///c:/Users/mjhos/OneDrive/Desktop/webAR/frontend-ar/js/catalog-loader.js)
+- Base de datos: [db.json](file:///c:/Users/mjhos/OneDrive/Desktop/webAR/storage/data/db.json)
+- Archivos subidos: `storage/uploads/` (models, markers, targets)
 
+## Variables de entorno (opcional)
+
+- `PORT`: puerto inicial (por defecto 8000, usa fallback si está ocupado)
+- `ADMIN_USERNAME`, `ADMIN_PASSWORD`: credenciales del panel
+- `DATA_DIR`, `UPLOADS_DIR`: rutas de almacenamiento
+- `FRONTEND_DIR`, `ADMIN_DIST_DIR`: rutas para servir AR/Admin
+
+## API base (opcional)
+
+Si necesitas apuntar el frontend a otro servidor, puedes configurar un `baseUrl` usando `CONFIG.getApiBaseUrl()` en [config.js](file:///c:/Users/mjhos/OneDrive/Desktop/webAR/frontend-ar/config.js) o usando `localStorage` con la clave `webar_api_base_url`.

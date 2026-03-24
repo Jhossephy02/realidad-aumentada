@@ -163,6 +163,7 @@ async function processCatalogDataAsync(data, options = {}) {
             name: item.name,
             desc: item.description,
             price: formatPrice(item.price),
+            aiLabels: Array.isArray(item.aiLabels) ? item.aiLabels.filter((v) => typeof v === 'string' && v.trim()) : [],
             modelSrc: await resolveAssetUrlAsync(item.model, assetsFromRepo),
             markerSrc: await resolveAssetUrlAsync(item.marker, assetsFromRepo),
             scale: item.scale || "1 1 1",
@@ -175,7 +176,8 @@ async function processCatalogDataAsync(data, options = {}) {
                 ingredients: "Ingredientes no disponibles",
                 calories: "N/A",
                 time: "N/A",
-                chefNote: ""
+                chefNote: "",
+                nutrients: null
             }
         };
     }));

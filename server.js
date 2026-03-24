@@ -224,6 +224,38 @@ function normalizeUploadValue(value) {
   return value;
 }
 
+function parseAiLabels(value) {
+  if (value === undefined) return null;
+  const raw = String(value || '');
+  const parts = raw
+    .split(',')
+    .map((v) => String(v || '').trim())
+    .filter(Boolean)
+    .slice(0, 50);
+  const seen = new Set();
+  const out = [];
+  for (const p of parts) {
+    const key = p.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(p);
+  }
+  return out;
+}
+
+function parseJsonObject(value) {
+  if (value === undefined) return null;
+  const raw = String(value || '').trim();
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
+    return parsed;
+  } catch (e) {
+    return null;
+  }
+}
+
 function normalizeProductForResponse(product) {
   if (!product || typeof product !== 'object') return product;
   return {
@@ -574,6 +606,8 @@ function productToModelResponse(p) {
     scale: n.scale || '1 1 1',
     rotation: n.rotation || '0 0 0',
     position: n.position || '0 0 0',
+    aiLabels: Array.isArray(n.aiLabels) ? n.aiLabels : [],
+    details: n.details ?? null,
     createdAt: n.createdAt ?? null,
     updatedAt: n.updatedAt ?? null
   };
@@ -630,6 +664,8 @@ app.post('/api/models', requireAdmin, uploadModelAndMarker.fields([{ name: 'glb'
   const scale = String(body.scale || '').trim() || '1 1 1';
   const rotation = String(body.rotation || '').trim() || '0 0 0';
   const position = String(body.position || '').trim() || '0 0 0';
+  const aiLabels = parseAiLabels(body.aiLabels);
+  const details = parseJsonObject(body.details);
 
   const uploadedGlb = await saveUpload(req, glbFile, 'model');
   const uploadedMarker = await saveUpload(req, markerFile, 'marker');
@@ -649,6 +685,8 @@ app.post('/api/models', requireAdmin, uploadModelAndMarker.fields([{ name: 'glb'
     scale,
     rotation,
     position,
+    aiLabels: aiLabels ?? [],
+    details: details ?? null,
     createdAt: now,
     updatedAt: now
   };
@@ -682,6 +720,8 @@ app.put('/api/models/:arId', requireAdmin, uploadModelAndMarker.fields([{ name: 
   if (body.scale !== undefined) next.scale = String(body.scale || '').trim() || '1 1 1';
   if (body.rotation !== undefined) next.rotation = String(body.rotation || '').trim() || '0 0 0';
   if (body.position !== undefined) next.position = String(body.position || '').trim() || '0 0 0';
+  if (body.aiLabels !== undefined) next.aiLabels = parseAiLabels(body.aiLabels) ?? [];
+  if (body.details !== undefined) next.details = parseJsonObject(body.details);
 
   if (glbFile) {
     const uploadedGlb = await saveUpload(req, glbFile, 'model');

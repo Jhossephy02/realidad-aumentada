@@ -21,6 +21,13 @@ const CONFIG = {
         baseUrl: ''
     },
 
+    yolo: {
+        modelUrl: 'https://huggingface.co/SpotLab/YOLOv8Detection/resolve/main/yolov8n.onnx?download=true',
+        confThreshold: 0.35,
+        iouThreshold: 0.5,
+        maxDetections: 10
+    },
+
     // Helper to generate Raw GitHub URLs
     getRawUrl: function(path) {
         return `https://raw.githubusercontent.com/${this.assets.owner}/${this.assets.repo}/${this.assets.branch}/${path}`;

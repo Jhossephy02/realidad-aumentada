@@ -173,6 +173,17 @@ export function ModelFormModal({ open, token, mode, model, onClose, onSaved }) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
+  const [aiLabels, setAiLabels] = useState('');
+  const [ingredients, setIngredients] = useState('');
+  const [calories, setCalories] = useState('');
+  const [time, setTime] = useState('');
+  const [chefNote, setChefNote] = useState('');
+  const [proteinG, setProteinG] = useState('');
+  const [carbsG, setCarbsG] = useState('');
+  const [fatG, setFatG] = useState('');
+  const [fiberG, setFiberG] = useState('');
+  const [sugarG, setSugarG] = useState('');
+  const [sodiumMg, setSodiumMg] = useState('');
   const [targetIndex, setTargetIndex] = useState('');
   const [scale, setScale] = useState('');
   const [rotation, setRotation] = useState('');
@@ -191,6 +202,17 @@ export function ModelFormModal({ open, token, mode, model, onClose, onSaved }) {
     setName(String(model?.name || ''));
     setDescription(String(model?.description || ''));
     setPrice(model?.price != null ? String(model.price) : '');
+    setAiLabels(Array.isArray(model?.aiLabels) ? model.aiLabels.join(', ') : '');
+    setIngredients(String(model?.details?.ingredients || ''));
+    setCalories(String(model?.details?.calories || ''));
+    setTime(String(model?.details?.time || ''));
+    setChefNote(String(model?.details?.chefNote || ''));
+    setProteinG(model?.details?.nutrients?.protein_g != null ? String(model.details.nutrients.protein_g) : '');
+    setCarbsG(model?.details?.nutrients?.carbs_g != null ? String(model.details.nutrients.carbs_g) : '');
+    setFatG(model?.details?.nutrients?.fat_g != null ? String(model.details.nutrients.fat_g) : '');
+    setFiberG(model?.details?.nutrients?.fiber_g != null ? String(model.details.nutrients.fiber_g) : '');
+    setSugarG(model?.details?.nutrients?.sugar_g != null ? String(model.details.nutrients.sugar_g) : '');
+    setSodiumMg(model?.details?.nutrients?.sodium_mg != null ? String(model.details.nutrients.sodium_mg) : '');
     setTargetIndex(model?.targetIndex != null ? String(model.targetIndex) : '');
     setScale(String(model?.scale || '1 1 1'));
     setRotation(String(model?.rotation || '0 0 0'));
@@ -235,6 +257,24 @@ export function ModelFormModal({ open, token, mode, model, onClose, onSaved }) {
       fd.set('name', String(name).trim());
       fd.set('description', String(description || ''));
       if (String(price || '').trim()) fd.set('price', String(price).trim());
+      if (String(aiLabels || '').trim()) fd.set('aiLabels', String(aiLabels).trim());
+      {
+        const nutrients = {};
+        if (String(proteinG || '').trim()) nutrients.protein_g = Number(proteinG);
+        if (String(carbsG || '').trim()) nutrients.carbs_g = Number(carbsG);
+        if (String(fatG || '').trim()) nutrients.fat_g = Number(fatG);
+        if (String(fiberG || '').trim()) nutrients.fiber_g = Number(fiberG);
+        if (String(sugarG || '').trim()) nutrients.sugar_g = Number(sugarG);
+        if (String(sodiumMg || '').trim()) nutrients.sodium_mg = Number(sodiumMg);
+        const details = {
+          ingredients: String(ingredients || '').trim(),
+          calories: String(calories || '').trim(),
+          time: String(time || '').trim(),
+          chefNote: String(chefNote || '').trim(),
+          nutrients: Object.keys(nutrients).length ? nutrients : null
+        };
+        fd.set('details', JSON.stringify(details));
+      }
       if (String(targetIndex || '').trim()) fd.set('targetIndex', String(targetIndex).trim());
       if (String(scale || '').trim()) fd.set('scale', String(scale).trim());
       if (String(rotation || '').trim()) fd.set('rotation', String(rotation).trim());
@@ -333,6 +373,132 @@ export function ModelFormModal({ open, token, mode, model, onClose, onSaved }) {
             <div className="text-xs font-medium text-slate-300">Escala y posición</div>
             <div className="mt-1 text-sm text-slate-200">Automático en cámara</div>
             <div className="mt-1 text-xs text-slate-500">El sistema centra y ajusta el tamaño del GLB al cargar.</div>
+          </div>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-300">Etiquetas IA (YOLO)</label>
+            <input
+              value={aiLabels}
+              onChange={(e) => setAiLabels(e.target.value)}
+              className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white outline-none ring-sky-500/30 focus:ring-4"
+              placeholder="ej: banana, apple, bottle"
+            />
+            <div className="mt-1 text-xs text-slate-500">Separadas por comas. Deben coincidir con las clases de tu modelo YOLO.</div>
+          </div>
+          <div className="rounded-2xl border border-slate-900 bg-slate-950 px-4 py-3">
+            <div className="text-xs font-medium text-slate-300">Ficha nutricional</div>
+            <div className="mt-1 text-sm text-slate-200">Se muestra en el modal de información</div>
+            <div className="mt-1 text-xs text-slate-500">Puedes llenar calorías y macros (g / mg).</div>
+          </div>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-300">Ingredientes</label>
+            <input
+              value={ingredients}
+              onChange={(e) => setIngredients(e.target.value)}
+              className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white outline-none ring-sky-500/30 focus:ring-4"
+              placeholder="Opcional"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-300">Calorías</label>
+            <input
+              value={calories}
+              onChange={(e) => setCalories(e.target.value)}
+              className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white outline-none ring-sky-500/30 focus:ring-4"
+              placeholder="ej: 250 kcal"
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-300">Tiempo</label>
+            <input
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white outline-none ring-sky-500/30 focus:ring-4"
+              placeholder="ej: 15 min"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-300">Nota</label>
+            <input
+              value={chefNote}
+              onChange={(e) => setChefNote(e.target.value)}
+              className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white outline-none ring-sky-500/30 focus:ring-4"
+              placeholder="Opcional"
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-300">Proteínas (g)</label>
+            <input
+              value={proteinG}
+              onChange={(e) => setProteinG(e.target.value)}
+              className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white outline-none ring-sky-500/30 focus:ring-4"
+              inputMode="decimal"
+              placeholder="0"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-300">Carbohidratos (g)</label>
+            <input
+              value={carbsG}
+              onChange={(e) => setCarbsG(e.target.value)}
+              className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white outline-none ring-sky-500/30 focus:ring-4"
+              inputMode="decimal"
+              placeholder="0"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-300">Grasas (g)</label>
+            <input
+              value={fatG}
+              onChange={(e) => setFatG(e.target.value)}
+              className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white outline-none ring-sky-500/30 focus:ring-4"
+              inputMode="decimal"
+              placeholder="0"
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-300">Fibra (g)</label>
+            <input
+              value={fiberG}
+              onChange={(e) => setFiberG(e.target.value)}
+              className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white outline-none ring-sky-500/30 focus:ring-4"
+              inputMode="decimal"
+              placeholder="0"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-300">Azúcar (g)</label>
+            <input
+              value={sugarG}
+              onChange={(e) => setSugarG(e.target.value)}
+              className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white outline-none ring-sky-500/30 focus:ring-4"
+              inputMode="decimal"
+              placeholder="0"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-300">Sodio (mg)</label>
+            <input
+              value={sodiumMg}
+              onChange={(e) => setSodiumMg(e.target.value)}
+              className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white outline-none ring-sky-500/30 focus:ring-4"
+              inputMode="decimal"
+              placeholder="0"
+            />
           </div>
         </div>
 

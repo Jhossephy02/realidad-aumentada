@@ -1,27 +1,30 @@
 {
   "products": [
     {
-      "id": "68bd72df26b118b3",
+      "id": "3cc1f37159bee0f4",
       "barcodeValue": null,
       "targetIndex": 0,
-      "name": "salmon_nigiri",
-      "price": 10,
-      "description": " compuesto por una bola de arroz que se moldea con la mano sobre la que se sirve un trozo de pescado crudo finamente fileteado",
-      "model": "/uploads/models/1773758473889_dde99a39e3406aa9_salmon_nigiri.glb",
-      "marker": "/uploads/markers/1773758067790_cbb74f945fd9d9fc_Captura_de_pantalla_2026-03-10_093801.png",
-      "scale": "0.2 0.2 0.2",
+      "name": "Udon",
+      "price": 20,
+      "description": "hola mundo",
+      "model": "/uploads/models/1773862148454_016fe1d0bc634fb8_shrimp_ramen_bowl.glb",
+      "marker": "/uploads/markers/1773862108252_570049ad16955aac_Captura_de_pantalla_2026-03-10_093847.png",
+      "markerPatt": "/uploads/patterns/1773862108252_570049ad16955aac_Captura_de_pantalla_2026-03-10_093847.patt",
+      "markerPreview": "/uploads/marker-previews/1773862108252_570049ad16955aac_Captura_de_pantalla_2026-03-10_093847.png",
+      "scale": "1 1 1",
       "rotation": "0 0 0",
       "position": "0 0 0",
-      "createdAt": 1773758067924,
-      "updatedAt": 1773758494596
+      "details": null,
+      "createdAt": 1773862108342,
+      "updatedAt": 1773862148491
     }
   ],
   "admins": [
     {
-      "username": "admin",
-      "passwordHash": "scrypt:df9c775cfc99a5dc87bbf8e90be472ca:e0466ce05442f70e7cedfb0707132eda768e14ef840e1fbea8a5e2524a7a2dfac02fe4133794d6b8a2db0319d2d0895863ab3860a139773308baa126443debc5",
-      "createdAt": 1773759264730,
-      "updatedAt": 1773759264730
+      "username": "angel",
+      "passwordHash": "scrypt:dc6d352a6bbb97714ccf4583724b5569:7fa75d981ce337fdf4e19c8bc8f5f4e2089ae104adbded0bb5f086c33325d140082ac77eb47fef21cd4ddc4e96b3e14b80c6b55b7b24a80e41528fc92efe2ab6",
+      "createdAt": 1773862180864,
+      "updatedAt": 1773862180864
     }
   ]
 }
